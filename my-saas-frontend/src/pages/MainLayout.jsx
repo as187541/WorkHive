@@ -11,18 +11,17 @@ import api from '../services/api';
 const MainLayout = () => {
   const [user, setUser] = useState(null);
   const [workspaces, setWorkspaces] = useState([]);
-  const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [collaborators, setCollaborators] = useState([]);
   const [loading, setLoading] = useState(true);
+  
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+
   const navigate = useNavigate();
   const { workspaceId } = useParams();
-  const openProfile = (id) => {
-    setSelectedProfileId(id);
-  };
 
+  // Load User and Workspaces
   useEffect(() => {
     setLoading(true);
     Promise.all([api.get('/auth/me'), api.get('/workspaces')])
@@ -37,47 +36,44 @@ const MainLayout = () => {
       .finally(() => setLoading(false));
   }, [navigate]);
 
+  // Load Members when workspace changes
   useEffect(() => {
     if (!workspaceId) {
-      setActiveWorkspace(null);
       setCollaborators([]);
       return;
     }
-    Promise.all([
-      api.get(`/workspaces/${workspaceId}`),
-      api.get(`/workspaces/${workspaceId}/members`)
-    ])
-    .then(([workspaceDetailsRes, membersRes]) => {
-      setActiveWorkspace(workspaceDetailsRes.data);
-      setCollaborators(membersRes.data);
-    })
-    .catch(err => {
-      console.error("Failed to fetch workspace details:", err);
-      navigate('/');
-    });
-  }, [workspaceId, navigate]);
+    api.get(`/workspaces/${workspaceId}/members`)
+      .then(res => setCollaborators(res.data))
+      .catch(() => setCollaborators([]));
+  }, [workspaceId]);
+
+  // --- FUNCTIONAL LOGIC ---
 
   const handleCreateWorkspace = async (formData) => {
     try {
       const res = await api.post('/workspaces', formData);
-      setWorkspaces(prev => [...prev, res.data]);
-      setIsCreateModalOpen(false);
-      navigate(`/workspaces/${res.data._id}`);
-    } catch (err) { alert(err.response?.data?.msg || "Failed to create."); }
+      setWorkspaces(prev => [...prev, res.data]); // Update sidebar list
+      setIsCreateModalOpen(false); // Close modal
+      navigate(`/workspaces/${res.data._id}`); // Go to new workspace
+    } catch (err) {
+      alert(err.response?.data?.msg || "Failed to create workspace.");
+    }
   };
 
   const handleInviteSubmit = async (email) => {
-    if (!workspaceId) return alert("No workspace selected.");
+    if (!workspaceId) return;
     try {
       const res = await api.post(`/workspaces/${workspaceId}/members`, { email });
-      alert(res.data.msg);
+      alert(res.data.msg); // "Invitation sent!"
       setIsInviteModalOpen(false);
-      const updatedMembers = await api.get(`/workspaces/${workspaceId}/members`);
-      setCollaborators(updatedMembers.data);
-    } catch (err) { alert(err.response?.data?.msg || "Failed to invite."); }
+    } catch (err) {
+      alert(err.response?.data?.msg || "Failed to send invitation.");
+    }
   };
 
-  if (loading) return <div>Loading Application...</div>;
+  const openProfile = (id) => setSelectedProfileId(id);
+
+  if (loading) return <div className="loading-screen">Loading WorkHive...</div>;
 
   return (
     <div className="app-layout">
@@ -91,24 +87,26 @@ const MainLayout = () => {
       <div className="main-content-wrapper">
         <Navbar user={user} onCreateWorkspaceClick={() => setIsCreateModalOpen(true)} />
         <main className="page-content">
-          <Outlet context={{ user, collaborators, openProfile }} />
+          <Outlet context={{ user, workspaces, collaborators, openProfile }} />
         </main>
       </div>
+
       <UserProfileModal 
         isOpen={!!selectedProfileId} 
         userId={selectedProfileId} 
         onClose={() => setSelectedProfileId(null)} 
       />
 
-       <InviteModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        onInviteSubmit={handleInviteSubmit}
+      <InviteModal 
+        isOpen={isInviteModalOpen} 
+        onClose={() => setIsInviteModalOpen(false)} 
+        onInviteSubmit={handleInviteSubmit} // Pass actual function
       />
-      <CreateWorkspaceModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreateSubmit={handleCreateWorkspace}
+
+      <CreateWorkspaceModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onCreateSubmit={handleCreateWorkspace} // Pass actual function
       />
     </div>
   );

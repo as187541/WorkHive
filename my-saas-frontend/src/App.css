@@ -1028,7 +1028,7 @@ p:last-child { margin-bottom: 0; }
   background: rgba(255,255,255,0.1);
   padding: 2px 6px;
   border-radius: 4px;
-  margin-left: auto;
+  margin-left: 40px;
   text-transform: uppercase;
 }
 /* --- Refined Project Sidebar --- */
@@ -1118,6 +1118,9 @@ p:last-child { margin-bottom: 0; }
   padding: 20px;
   color: var(--text-secondary);
   font-size: 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
 }
 
 .side-divider {
@@ -1152,7 +1155,8 @@ p:last-child { margin-bottom: 0; }
   font-size: 0.85rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
-  background-color: var(--bg-primary);
+  text-color: var(--text-primary);
+  background: var(--bg-primary);
   color: var(--text-primary);
 }
 
@@ -1171,4 +1175,112 @@ p:last-child { margin-bottom: 0; }
   border: none;
   border-color: transparent;
   border-radius: var(--border-radius-md);
+  color: var(--text-primary);
+}
+/* Invitation Banner */
+.invitations-banner {
+  background: var(--primary-500);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+.invitations-banner h3 { color: white; margin-bottom: 1rem; font-size: 1rem; }
+
+.invite-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.btn-accept {
+  background: white;
+  color: var(--primary-500);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-accept:hover { background: #f3f4f6; }
+
+/* Remove Member Button */
+.btn-remove-member {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-left: 100px;
+  line-height: 1;
+  padding: 5px 5px;
+  
+}
+
+.btn-remove-member:hover { color: var(--danger-500); }
+.workspace-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 180px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.workspace-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-500);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.workspace-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.workspace-card p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.card-footer-stats {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.arrow-icon {
+  color: var(--primary-500);
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+}
+
+.workspace-card:hover .arrow-icon {
+  transform: translateX(5px);
 }

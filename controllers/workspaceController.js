@@ -2,6 +2,7 @@
 
 const Workspace = require('../models/workspaceModel');
 const User = require('../models/userModel');
+const Invitation = require('../models/invitationModel');
 
 /**
  * @desc    Create a new workspace
@@ -56,7 +57,7 @@ const getWorkspaceById = async (req, res) => {
 };
 
 /**
- * @desc    Invite a user to a workspace
+ * @desc    Invite a user (Creates a PENDING invitation)
  */
 const inviteMember = async (req, res) => {
   try {
@@ -78,10 +79,88 @@ const inviteMember = async (req, res) => {
       return res.status(400).json({ msg: 'User is already a member.' });
     }
 
-    workspace.members.push({ user: userToInvite._id, role: 'Collaborator' });
+    const existingInvite = await Invitation.findOne({ 
+      workspace: workspaceId, 
+      invitedUser: userToInvite._id, 
+      status: 'Pending' 
+    });
+
+    if (existingInvite) return res.status(400).json({ msg: 'Invitation already sent.' });
+
+    await Invitation.create({
+      workspace: workspaceId,
+      invitedUser: userToInvite._id,
+      sender: req.user._id
+    });
+
+    res.status(200).json({ msg: `Invitation sent to ${userToInvite.name}.` });
+  } catch (error) {
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Get pending invitations for the logged-in user
+ */
+const getMyInvitations = async (req, res) => {
+  try {
+    const invitations = await Invitation.find({ 
+      invitedUser: req.user._id, 
+      status: 'Pending' 
+    })
+    .populate('workspace', 'name')
+    .populate('sender', 'name');
+
+    res.status(200).json(invitations);
+  } catch (error) {
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Accept a workspace invitation
+ */
+const acceptInvitation = async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+    const invite = await Invitation.findById(inviteId);
+
+    if (!invite || !invite.invitedUser.equals(req.user._id)) {
+      return res.status(404).json({ msg: 'Invitation not found.' });
+    }
+
+    const workspace = await Workspace.findById(invite.workspace);
+    if (!workspace) return res.status(404).json({ msg: 'Workspace no longer exists.' });
+
+    workspace.members.push({ user: req.user._id, role: 'Collaborator' });
     await workspace.save();
 
-    res.status(200).json({ msg: `Successfully invited ${userToInvite.name}.` });
+    invite.status = 'Accepted';
+    await invite.save();
+
+    res.status(200).json({ msg: 'Joined workspace!' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Remove a collaborator (Admin Only)
+ */
+const removeMember = async (req, res) => {
+  try {
+    const { workspaceId, userId } = req.params;
+    const workspace = await Workspace.findById(workspaceId);
+
+    const requester = workspace.members.find(m => m.user.equals(req.user._id));
+    if (!requester || requester.role !== 'Admin') {
+      return res.status(403).json({ msg: 'Only Admins can remove members.' });
+    }
+
+    workspace.members = workspace.members.filter(m => m.user.toString() !== userId);
+    await workspace.save();
+
+    res.status(200).json({ msg: 'Member removed successfully.' });
   } catch (error) {
     res.status(500).json({ msg: 'Server Error' });
   }
@@ -94,8 +173,7 @@ const getWorkspaceMembers = async (req, res) => {
   try {
     const workspace = await Workspace.findById(req.params.workspaceId).populate('members.user', 'name email');
     if (!workspace) return res.status(404).json({ msg: 'Workspace not found.' });
-    const activeMembers = workspace.members.filter(m => m.user !== null);
-    res.status(200).json(activeMembers);
+    res.status(200).json(workspace.members.filter(m => m.user !== null));
   } catch (error) {
     res.status(500).json({ msg: 'Server Error' });
   }
@@ -103,43 +181,37 @@ const getWorkspaceMembers = async (req, res) => {
 
 /**
  * @desc    Delete or Leave a workspace
- * @route   DELETE /api/v1/workspaces/:workspaceId
  */
 const deleteOrLeaveWorkspace = async (req, res) => {
   try {
     const workspace = await Workspace.findById(req.params.workspaceId);
     if (!workspace) return res.status(404).json({ msg: 'Workspace not found' });
 
-    // Find the person making the request in the members list
     const memberRecord = workspace.members.find(m => m.user.equals(req.user._id));
-    
-    if (!memberRecord) {
-      return res.status(403).json({ msg: 'You are not a member of this workspace' });
-    }
+    if (!memberRecord) return res.status(403).json({ msg: 'Not a member' });
 
-    // --- STRICK LOGIC ---
     if (memberRecord.role === 'Admin') {
-      // ONLY the Admin (Creator) can trigger a full database deletion
       await workspace.deleteOne();
-      return res.status(200).json({ msg: 'Workspace and all its data have been permanently deleted.' });
+      return res.status(200).json({ msg: 'Workspace deleted.' });
     } else {
-      // Collaborators can ONLY "Leave" (removes them from the array)
       workspace.members = workspace.members.filter(m => !m.user.equals(req.user._id));
       await workspace.save();
-      return res.status(200).json({ msg: 'You have successfully left the workspace.' });
+      return res.status(200).json({ msg: 'Left workspace.' });
     }
   } catch (error) {
-    console.error(error);
     res.status(500).json({ msg: 'Server Error' });
   }
 };
 
-// --- ONE SINGLE EXPORT BLOCK ---
+// --- CORRECT EXPORT BLOCK ---
 module.exports = {
   createWorkspace,
   getWorkspaces,
   getWorkspaceById,
   inviteMember,
+  getMyInvitations,
+  acceptInvitation,
+  removeMember,
   getWorkspaceMembers,
-  deleteOrLeaveWorkspace // <--- Now this will be defined!
+  deleteOrLeaveWorkspace
 };
