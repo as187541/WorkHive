@@ -1,6 +1,6 @@
 import React from 'react';
 
-const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, onTaskClick, currentUser, isAdmin }) => {
+const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, openProfile, onTaskClick, currentUser, isAdmin }) => {
   const columns = ['Todo', 'In Progress', 'Done'];
 
   return (
