@@ -18,7 +18,8 @@ const {
   getProjectTasks, 
   updateTask, 
   deleteTask,
-  uploadAttachment // <--- New Controller Function
+  uploadAttachment,
+  deleteAttachment 
 } = require('../controllers/taskController');
 
 const { 
@@ -28,9 +29,9 @@ const {
 
 const { protect } = require('../middleware/authMiddleware');
 
-// --- ATTACHMENT ROUTES ---
-// Endpoint: /api/v1/workspaces/:workspaceId/projects/tasks/:id/attachments
+
 router.post('/tasks/:id/attachments', protect, upload.single('file'), uploadAttachment);
+router.delete('/tasks/:id/attachments/:publicId', protect, deleteAttachment);
 
 // --- COMMENT ROUTES ---
 router.route('/tasks/:taskId/comments')

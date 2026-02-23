@@ -82,6 +82,25 @@ const TaskDetailDrawer = ({ task, isOpen, onClose, workspaceId, onTaskUpdate }) 
     }
   };
 
+  const handleDeleteAttachment = async (publicId) => {
+  if (!window.confirm("Delete this attachment permanently?")) return;
+
+  try {
+    await api.delete(`/workspaces/${workspaceId}/projects/tasks/${task._id}/attachments/${encodeURIComponent(publicId)}`);
+    
+    
+    const updatedAttachments = attachments.filter(att => att.publicId !== publicId);
+    setAttachments(updatedAttachments);
+
+    
+    if (onTaskUpdate) {
+      onTaskUpdate({ ...task, attachments: updatedAttachments });
+    }
+  } catch (err) {
+    alert("Failed to delete attachment.");
+  }
+};
+
   if (!isOpen || !task) return null;
 
   return (
@@ -91,11 +110,66 @@ const TaskDetailDrawer = ({ task, isOpen, onClose, workspaceId, onTaskUpdate }) 
         
         <div className="drawer-body-scrollable"> {/* Wrap everything in a scrollable container */}
           <div className="drawer-header">
-            <span className={`priority-tag ${task.priority?.toLowerCase()}`}>
-              {task.priority} Priority
-            </span>
             <h2>{task.title}</h2>
+            <div className="drawer-meta-section">
+              <div className="meta-item">
+                <span className="meta-label">Priority</span>
+                <span className={`priority-tag ${task.priority?.toLowerCase()}`}>
+                  {task.priority}
+                </span>
+              </div>
+
+              <div className="meta-item">
+                <span className="meta-label">Due Date</span>
+                <span className="meta-value">
+                  {task.dueDate ? (
+                    <>📅 {new Date(task.dueDate).toLocaleDateString(undefined, { 
+                      year: 'numeric', month: 'long', day: 'numeric' 
+                    })}</>
+                  ) : (
+                    <span style={{color: 'var(--text-secondary)'}}>No deadline</span>
+                  )}
+                </span>
+              </div>
+
+              <div className="meta-item">
+                <span className="meta-label">Assignee</span>
+                <span className="meta-value">
+                  {task.assignedTo?.name ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="assignee-avatar" style={{width: '20px', height: '20px', fontSize: '0.6rem'}}>
+                        {task.assignedTo.name.charAt(0).toUpperCase()}
+                      </div>
+                      {task.assignedTo.name}
+                    </div>
+                  ) : "Unassigned"}
+                </span>
+              </div>
+
+              <div className="meta-item">
+                <span className="meta-label">Status</span>
+                <span className="meta-value" style={{ textTransform: 'capitalize' }}>
+                  {task.status}
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Description Section */}
             <p className="drawer-desc">{task.description || 'No description provided.'}</p>
+                                  {task.tags && task.tags.length > 0 && (
+                        <div className="drawer-tags-section" style={{ marginTop: 'var(--spacing-6)' }}>
+                          <span className="meta-label" style={{ display: 'block', marginBottom: '8px' }}>
+                            Tags
+                          </span>
+                          <div className="task-tags">
+                            {task.tags.map((tag, index) => (
+                              <span key={index} className="tag-pill drawer-tag">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
           </div>
 
           <hr className="drawer-divider" />
@@ -104,12 +178,21 @@ const TaskDetailDrawer = ({ task, isOpen, onClose, workspaceId, onTaskUpdate }) 
           <div className="attachments-section">
             <h3>Attachments ({attachments.length})</h3>
             <div className="attachment-list">
-              {attachments.map((file, idx) => (
-                <div key={file.publicId || idx} className="attachment-item">
-                  <span className="file-icon">📎</span>
-                  <a href={file.url} target="_blank" rel="noopener noreferrer">
-                    {file.name}
-                  </a>
+              {attachments.map((file) => (
+                <div key={file.publicId} className="attachment-item">
+                  <div className="attachment-info">
+                    <span className="file-icon">📎</span>
+                    <a href={file.url} target="_blank" rel="noreferrer">{file.name}</a>
+                  </div>
+                  
+                  {/* NEW: Delete Button */}
+                  <button 
+                    className="btn-delete-attachment"
+                    onClick={() => handleDeleteAttachment(file.publicId)}
+                    title="Delete attachment"
+                  >
+                    &times;
+                  </button>
                 </div>
               ))}
             </div>

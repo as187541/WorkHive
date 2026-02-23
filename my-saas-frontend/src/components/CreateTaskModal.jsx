@@ -5,8 +5,11 @@ const CreateTaskModal = ({ isOpen, onClose, onCreateSubmit, members = [] }) => {
     title: '',
     description: '',
     priority: 'Medium',
-    assignedTo: ''
+    assignedTo: '',
+    dueDate: '',  // New field
+    tags: ''
   });
+  
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -14,11 +17,14 @@ const CreateTaskModal = ({ isOpen, onClose, onCreateSubmit, members = [] }) => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    onCreateSubmit(formData);
-    // Reset form for next time
-    setFormData({ title: '', description: '', priority: 'Medium', assignedTo: '' });
+  e.preventDefault();
+  const taskData = {
+    ...formData,
+    tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== "")
   };
+  onCreateSubmit(taskData);
+  setFormData({ title: '', description: '', priority: 'Medium', assignedTo: '', dueDate: '', tags: '' });
+};
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -55,6 +61,17 @@ const CreateTaskModal = ({ isOpen, onClose, onCreateSubmit, members = [] }) => {
             ></textarea>
           </div>
 
+           <div className="form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div className="form-group">
+              <label>Due Date</label>
+              <input 
+                type="date" 
+                name="dueDate" 
+                value={formData.dueDate} 
+                onChange={handleChange} 
+              />
+            </div>
+
           <div className="form-group">
             <label htmlFor="priority">Priority</label>
             <select
@@ -78,6 +95,19 @@ const CreateTaskModal = ({ isOpen, onClose, onCreateSubmit, members = [] }) => {
                 </option>
               ))}
             </select>
+          </div>
+         
+            <div className="form-group">
+              <label htmlFor="tags">Tags (comma separated)</label>
+              <input
+                type="text"
+                id="tags"
+                name="tags"
+                placeholder="Design, Bug, Urgent"
+                value={formData.tags}
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
           <div className="modal-actions">

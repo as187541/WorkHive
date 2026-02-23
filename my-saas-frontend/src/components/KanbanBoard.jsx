@@ -16,6 +16,17 @@ const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, onTaskClick, current
                 const creatorId = String(task.createdBy?._id || task.createdBy || "");
                 const currentUserId = String(currentUser?._id || currentUser?.id || "");
                 const canDelete = isAdmin || (creatorId !== "" && creatorId === currentUserId);
+                const dueDateObj = task.dueDate ? new Date(task.dueDate) : null;
+                const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                const isOverdue = dueDateObj && dueDateObj < today && task.status !== 'Done';
+                const isDueSoon = 
+                    dueDateObj && 
+                    dueDateObj >= today && 
+                    dueDateObj <= new Date(today.getTime() + (2 * 24 * 60 * 60 * 1000)) && 
+                    task.status !== 'Done';
+
+                    const dateClass = isOverdue ? 'overdue' : isDueSoon ? 'due-soon' : '';
 
                 return (
                   <div 
@@ -37,6 +48,16 @@ const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, onTaskClick, current
                         </button>
                       )}
                     </div>
+
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="task-tags">
+                        {task.tags.map((tag, index) => (
+                          <span key={index} className="tag-pill">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     
                     <p className="task-description">
                         {task.description || 'No description...'}
@@ -44,6 +65,14 @@ const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, onTaskClick, current
                     
                     <div className="task-footer">
                       <div className="task-meta">
+                        {task.dueDate && (
+                          <span className={`due-date-badge ${dateClass}`}>
+                          {isOverdue ? '⚠️ Overdue' : isDueSoon ? '⏳ Soon' : '📅'} {new Date(task.dueDate).toLocaleDateString(undefined, { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                        )}
                         {task.assignedTo?.name ? (
                           <div className="assignee-avatar" title={`Assigned to ${task.assignedTo.name}`}>
                             {task.assignedTo.name.charAt(0).toUpperCase()}

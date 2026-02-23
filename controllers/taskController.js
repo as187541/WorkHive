@@ -1,6 +1,6 @@
 // controllers/taskController.js
 const Task = require('../models/taskModel');
-
+const Workspace = require('../models/workspaceModel');
 /**
  * @desc    Create a new task within a project
  * @route   POST /api/v1/workspaces/:workspaceId/projects/:projectId/tasks
@@ -8,7 +8,7 @@ const Task = require('../models/taskModel');
 exports.createTask = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { title, description, priority, assignedTo } = req.body;
+    const { title, description, priority, assignedTo, dueDate, tags } = req.body;
 
     if (!title) {
       return res.status(400).json({ msg: 'Please provide a task title' });
@@ -20,7 +20,9 @@ exports.createTask = async (req, res) => {
       priority: priority || 'Medium',
       project: projectId,
       assignedTo: assignedTo && assignedTo !== "" ? assignedTo : null, 
-      createdBy: req.user._id 
+      createdBy: req.user._id,
+      dueDate,
+      tags 
     });
 
     res.status(201).json(task);
@@ -147,6 +149,27 @@ exports.uploadAttachment = async (req, res) => {
 
     uploadStream.end(req.file.buffer);
   } catch (error) {
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+exports.deleteAttachment = async (req, res) => {
+  try {
+    const { id, publicId } = req.params; 
+
+   
+    const task = await Task.findById(id);
+    if (!task) return res.status(404).json({ msg: 'Task not found' });
+
+  
+    await cloudinary.uploader.destroy(publicId);
+
+    
+    task.attachments = task.attachments.filter(att => att.publicId !== publicId);
+    await task.save();
+
+    res.status(200).json({ msg: 'Attachment deleted', attachments: task.attachments });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ msg: 'Server Error' });
   }
 };

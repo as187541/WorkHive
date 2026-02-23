@@ -166,6 +166,17 @@ const WorkspaceDetail = () => {
   if (loading) return <div className="page-content">Loading Workspace...</div>;
   if (!workspace) return <div className="page-content"><h1>Workspace Not Found</h1></div>;
 
+            const totalTasks = tasks.length;
+          const doneTasks = tasks.filter(t => t.status === 'Done').length;
+          const inProgressTasks = tasks.filter(t => t.status === 'In Progress').length;
+          const todoTasks = tasks.filter(t => t.status === 'Todo').length;
+
+          // Percentage of completion
+          const progressPercentage = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+          // Priority counts
+          const highPriorityCount = tasks.filter(t => t.priority === 'High').length;
+
   return (
     <div className="workspace-detail-container">
       <header className="page-header">
@@ -256,17 +267,67 @@ const WorkspaceDetail = () => {
           )}
         </main>
 
-        <aside className="project-details-container">
-           <h2 className="section-title">Stats</h2>
-           <div className="info-block">
-             <label>Team Members</label>
-             <p>{collaborators?.length || 0}</p>
-           </div>
-           <div className="info-block">
-             <label>Total Projects</label>
-             <p>{projects.length}</p>
-           </div>
-        </aside>
+         <aside className="project-details-container">
+              <h2 className="section-title">Project Insights</h2>
+
+              {/* 1. Overall Progress Section */}
+              <div className="insight-card">
+                <div className="insight-header">
+                  <label>Overall Progress</label>
+                  <span className="progress-value">{progressPercentage}%</span>
+                </div>
+                <div className="progress-bar-container">
+                  <div className="progress-bar-fill" style={{ width: `${progressPercentage}%` }}></div>
+                </div>
+              </div>
+
+              {/* 2. Task Breakdown Section */}
+              <div className="insight-group">
+                <label className="meta-label">Task Status</label>
+                <div className="stats-row">
+                  <div className="stat-box">
+                    <span className="stat-num">{todoTasks}</span>
+                    <span className="stat-label">Todo</span>
+                  </div>
+                  <div className="stat-box">
+                    <span className="stat-num">{inProgressTasks}</span>
+                    <span className="stat-label">Active</span>
+                  </div>
+                  <div className="stat-box">
+                    <span className="stat-num highlight">{doneTasks}</span>
+                    <span className="stat-label">Done</span>
+                  </div>
+                </div>
+              </div>
+
+              <hr className="drawer-divider-mini" />
+
+              {highPriorityCount > 0 && (
+                <div className="alert-card">
+                  <span className="alert-icon">🔥</span>
+                  <div>
+                    <label>High Priority</label>
+                    <p>{highPriorityCount} tasks need urgent attention</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. Team Members Section (Enhanced) */}
+              <div className="insight-group">
+                <label className="meta-label">Active Team</label>
+                <div className="team-stack">
+                  {collaborators.slice(0, 5).map((c, i) => (
+                    <div key={i} className="assignee-avatar" title={c.user?.name}>
+                      {c.user?.name.charAt(0).toUpperCase()}
+                    </div>
+                  ))}
+                  {collaborators.length > 5 && (
+                    <div className="avatar-more">+{collaborators.length - 5}</div>
+                  )}
+                </div>
+                <p className="team-caption">{collaborators.length} members in workspace</p>
+              </div>
+            </aside>
       </div>
 
       <CreateProjectModal 

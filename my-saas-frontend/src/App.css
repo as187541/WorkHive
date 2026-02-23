@@ -251,9 +251,15 @@ p:last-child { margin-bottom: 0; }
 }
 
 .project-list-item.active {
-  background-color: var(--bg-hover);
+  background-color: rgb(255, 255, 255);
   border-left-color: var(--primary-500);
-  color: var(--primary-500);
+  color: #e10505;
+  font-weight: 600;
+}
+.project-list-item:hover {
+  background-color: rgb(255, 255, 255);
+  border-left-color: var(--primary-500);
+  color: #e10505;
   font-weight: 600;
 }
 
@@ -497,7 +503,11 @@ p:last-child { margin-bottom: 0; }
 }
 
 .btn-upload-prominent:hover {
-  background: #ffffff00;
+  cursor: pointer;
+  background-color: rgb(255, 255, 255);
+  border-left-color: var(--primary-500);
+  color: #e10505;
+  font-weight: 600;
 }
 
 @keyframes slideIn {
@@ -604,12 +614,42 @@ p:last-child { margin-bottom: 0; }
 
 .attachment-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-3);
   background: var(--bg-secondary);
   border-radius: var(--border-radius-sm);
   font-size: 0.85rem;
+}
+
+.attachment-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden; /* Prevents long filenames from breaking the layout */
+}
+
+.attachment-info a {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+.btn-delete-attachment {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.btn-delete-attachment:hover {
+  color: var(--danger-500);
 }
 
 .upload-btn {
@@ -649,4 +689,245 @@ p:last-child { margin-bottom: 0; }
 
 .btn-send-action:active {
   transform: translateY(0);
+}
+/* Tags styling */
+.task-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.tag-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+/* Due Date Badge */
+.due-date-badge {
+
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.due-date-badge.overdue {
+  color: var(--danger-500);
+  background: var(--danger-100);
+  font-weight: 700;
+}
+
+/* Modal layout helper */
+.form-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+/* --- Professional Task Meta (Drawer & Card) --- */
+
+/* Metadata row in the Drawer */
+.drawer-meta-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+  background: var(--bg-secondary);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-md);
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.meta-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Enhanced Kanban Date Badge */
+.due-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.due-date-badge.overdue {
+  background: #fff1f2;
+  color: #e11d48;
+  border-color: #fecdd3;
+}
+
+.due-date-badge.due-soon {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #fef3c7;
+}
+/* Styling for tags specifically within the Drawer */
+.drawer-tag {
+  font-size: 0.75rem !important; /* Slightly larger than the card version */
+  padding: 4px 12px !important;
+  border-radius: 6px !important;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color-darker);
+  color: var(--text-primary);
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.drawer-tag:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-500);
+}
+/* --- Project Insights Sidebar --- */
+.project-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.insight-card {
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.insight-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.insight-header label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.progress-value {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary-500);
+}
+
+/* Progress Bar Styling */
+.progress-bar-container {
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--primary-500);
+  transition: width 0.5s ease-out;
+}
+
+/* Stats Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.stat-box {
+  text-align: center;
+  padding: 10px 5px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.stat-num {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.stat-num.highlight { color: #10b981; }
+
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* High Priority Alert */
+.alert-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.alert-card label { font-size: 0.75rem; font-weight: 700; color: #e11d48; }
+.alert-card p { font-size: 0.7rem; color: #be123c; margin: 0; }
+
+/* Team Stack */
+.team-stack {
+  display: flex;
+  margin-left: 5px;
+  margin-top: 10px;
+}
+
+.team-stack .assignee-avatar {
+  border: 2px solid var(--bg-primary);
+  margin-left: -8px;
+  transition: transform 0.2s;
+}
+
+.team-stack .assignee-avatar:hover {
+  transform: translateY(-5px);
+  z-index: 10;
+}
+
+.team-caption {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.drawer-divider-mini {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 5px 0;
 }

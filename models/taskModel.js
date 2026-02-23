@@ -22,6 +22,13 @@ const taskSchema = new mongoose.Schema({
     ref: 'Project', 
     required: true 
   },
+   dueDate: { 
+    type: Date 
+  },
+  tags: [{ 
+    type: String, 
+    trim: true 
+  }],
   // --- MAKE SURE THIS FIELD EXISTS ---
   assignedTo: { 
     type: mongoose.Schema.Types.ObjectId, 
