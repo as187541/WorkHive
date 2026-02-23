@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import InviteModal from '../components/InviteModal';
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal';
+import UserProfileModal from '../components/UserProfileModal';
 import api from '../services/api';
 
 const MainLayout = () => {
@@ -15,8 +16,12 @@ const MainLayout = () => {
   const [loading, setLoading] = useState(true);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
   const navigate = useNavigate();
   const { workspaceId } = useParams();
+  const openProfile = (id) => {
+    setSelectedProfileId(id);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -81,14 +86,21 @@ const MainLayout = () => {
         workspaces={workspaces}
         collaborators={collaborators}
         onInviteClick={() => setIsInviteModalOpen(true)}
+        onUserClick={openProfile}
       />
       <div className="main-content-wrapper">
         <Navbar user={user} onCreateWorkspaceClick={() => setIsCreateModalOpen(true)} />
         <main className="page-content">
-          <Outlet context={{ user, activeWorkspace, collaborators }} />
+          <Outlet context={{ user, collaborators, openProfile }} />
         </main>
       </div>
-      <InviteModal
+      <UserProfileModal 
+        isOpen={!!selectedProfileId} 
+        userId={selectedProfileId} 
+        onClose={() => setSelectedProfileId(null)} 
+      />
+
+       <InviteModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
         onInviteSubmit={handleInviteSubmit}

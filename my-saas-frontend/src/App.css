@@ -245,8 +245,13 @@ p:last-child { margin-bottom: 0; }
 
 /* Active Project Highlight */
 .project-list-item {
+  height: 42px; 
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-4);
+  margin-bottom: 4px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  border-radius: var(--border-radius-md);
   border-left: 4px solid transparent;
 }
 
@@ -930,4 +935,240 @@ p:last-child { margin-bottom: 0; }
   border: none;
   border-top: 1px solid var(--border-color);
   margin: 5px 0;
+}
+/* --- User Profile Modal --- */
+.profile-modal {
+  max-width: 380px !important;
+  text-align: center;
+}
+
+.profile-header-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.profile-avatar-xl {
+  width: 100px;
+  height: 100px;
+  background: var(--primary-500);
+  color: white;
+  border-radius: 50%;
+  font-size: 2.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.role-badge {
+  background: var(--bg-secondary);
+  color: var(--primary-500);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid var(--border-color);
+}
+
+.profile-details-list {
+  text-align: left;
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.detail-item {
+  margin-bottom: 1rem;
+}
+
+.detail-item label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  display: block;
+}
+
+.detail-item p {
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Interactivity Helpers */
+.clickable-user, .clickable-name {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clickable-user:hover, .clickable-name:hover {
+  color: var(--primary-500);
+  text-decoration: underline;
+}
+.collaborator-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.collaborator-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mini-role-tag {
+  font-size: 0.6rem;
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  text-transform: uppercase;
+}
+/* --- Refined Project Sidebar --- */
+
+.project-list-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Important for scroll */
+  padding: 0 !important; /* Reset padding to handle inner spacing */
+  overflow: hidden;
+}
+
+
+
+
+/* 2. Scrollable Project Area */
+.project-scroll-area {
+    max-height: 160px; 
+  overflow-y: auto;
+  padding: 0 var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  scroll-behavior: smooth;
+}
+
+.side-small-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  letter-spacing: 0.05rem;
+}
+
+/* 3. My Focus Feature */
+.my-focus-area {
+  flex: 1; /* Takes up all remaining space below */
+  overflow-y: auto;
+  padding: var(--spacing-4);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+.focus-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.focus-item:hover {
+  border-color: var(--primary-500);
+  transform: translateX(4px);
+}
+
+.focus-priority {
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+}
+.focus-priority.high { background: var(--danger-500); }
+.focus-priority.medium { background: var(--primary-500); }
+.focus-priority.low { background: var(--text-secondary); }
+
+.focus-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.focus-project-name {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.focus-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.side-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 0;
+}
+
+/* Custom Scrollbar for sidebars */
+.project-scroll-area::-webkit-scrollbar,
+.my-focus-area::-webkit-scrollbar {
+  width: 4px;
+}
+
+.project-scroll-area::-webkit-scrollbar-thumb,
+.my-focus-area::-webkit-scrollbar-thumb {
+  background: var(--border-color-darker);
+  border-radius: 10px;
+}
+.side-section-header {
+  padding: var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  
+}
+
+.side-search-wrapper {
+  position: relative;
+   width: 100%;
+  
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.search-icon-tiny {
+  position: absolute;
+  left: 2px;
+  top: 55%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+.side-search-wrapper input {
+  padding-left: 100px; 
+  background: var(--bg-primary);
+  border: none;
+  border-color: transparent;
+  border-radius: var(--border-radius-md);
 }

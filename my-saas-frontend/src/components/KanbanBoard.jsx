@@ -74,7 +74,13 @@ const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, onTaskClick, current
                         </span>
                         )}
                         {task.assignedTo?.name ? (
-                          <div className="assignee-avatar" title={`Assigned to ${task.assignedTo.name}`}>
+                          <div className="assignee-avatar" 
+                           title={`View ${task.assignedTo.name}'s profile`}
+                            onClick={(e) => {
+                                e.stopPropagation(); // Don't open task drawer
+                                openProfile(task.assignedTo._id || task.assignedTo); // Open profile modal
+                            }}
+                          >
                             {task.assignedTo.name.charAt(0).toUpperCase()}
                           </div>
                         ) : (

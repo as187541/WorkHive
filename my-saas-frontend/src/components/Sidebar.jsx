@@ -2,12 +2,12 @@
 import React from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 
-const Sidebar = ({ user, workspaces, collaborators, onInviteClick }) => {
-  const { workspaceId } = useParams(); // Hook to get the current workspaceId from the URL
+const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }) => {
+  const { workspaceId } = useParams(); 
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">🚀 ProjectSaaS</div>
+      <div className="sidebar-brand">🚀 WorkHive</div>
       <nav className="sidebar-nav">
         {/* Workspaces Section */}
         <div className="nav-section">
@@ -27,13 +27,19 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick }) => {
                 <button onClick={onInviteClick} className="invite-btn" title="Invite new member">+</button>
               </div>
               <ul>
-                {collaborators.map((c, index) => (
-                   <li key={c.user?._id || index}>
-                   <a href="#">
-        {/* If user is null, show 'Deleted User' instead of crashing */}
-        {c.user ? c.user.name : "Deleted User"} ({c.role})
-      </a>
-    </li>
+                {collaborators.map((c) => (
+                   <li 
+                    key={c.user?._id} 
+                    className="collaborator-item clickable-user"
+                    // --- This will work now because it is defined in the props above ---
+                    onClick={() => c.user && onUserClick(c.user._id)} 
+                   >
+                    <div className="profile-avatar" style={{width: '24px', height: '24px', fontSize: '0.7rem'}}>
+                      {c.user ? c.user.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <span>{c.user ? c.user.name : "Deleted User"}</span>
+                    <span className="mini-role-tag">{c.role}</span>
+                  </li>
                 ))}
               </ul>
             </div>

@@ -10,12 +10,13 @@ import TaskDetailDrawer from '../components/TaskDetailDrawer';
 const WorkspaceDetail = () => {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
-  const { user, collaborators } = useOutletContext();
+  const { user, collaborators, openProfile } = useOutletContext();
 
   // Data States
   const [workspace, setWorkspace] = useState(null);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [projectSearch, setProjectSearch] = useState('');
   const [tasks, setTasks] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAssignee, setFilterAssignee] = useState('all');
@@ -120,6 +121,17 @@ const WorkspaceDetail = () => {
       }
     }
   };
+  
+        // Filter projects based on search
+      const filteredProjects = projects.filter(p => 
+        p.name.toLowerCase().startsWith(projectSearch.toLowerCase())
+      );
+
+      // Filter tasks assigned to the CURRENT user (for the "My Focus" feature)
+      const myTasks = tasks.filter(t => 
+        (t.assignedTo?._id === currentUserIdStr || t.assignedTo === currentUserIdStr) && 
+        t.status !== 'Done'
+      );
 
   const handleCreateTask = async (taskData) => {
     try {
@@ -193,20 +205,64 @@ const WorkspaceDetail = () => {
       </header>
 
       <div className="project-layout">
-        <aside className="project-list-container">
-          <h2 className="section-title">Projects</h2>
-          <ul className="project-list">
-            {projects.map(p => (
-              <li 
-                key={p._id} 
-                className={`project-list-item ${selectedProject?._id === p._id ? 'active' : ''}`} 
-                onClick={() => handleProjectClick(p)}
-              >
-                <span>{p.name}</span>
-              </li>
-            ))}
-          </ul>
-        </aside>
+       
+  <aside className="project-list-container">
+  {/* Refined Header & Search */}
+  <div className="side-section-header">
+    <h3 className="side-small-title">Projects</h3>
+    <div className="side-search-wrapper">
+      <span className="search-icon-tiny">🔍</span>
+      <input 
+        type="text" 
+        placeholder="Search..." 
+        value={projectSearch}
+        onChange={(e) => setProjectSearch(e.target.value)}
+      />
+    </div>
+  </div>
+
+  <div className="project-scroll-area">
+    <ul className="project-list">
+      {filteredProjects.map(p => (
+        <li 
+          key={p._id} 
+          className={`project-list-item ${selectedProject?._id === p._id ? 'active' : ''}`} 
+          onClick={() => handleProjectClick(p)}
+        >
+          <span>{p.name}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <hr className="side-divider" />
+
+  {/* 3. NEW FEATURE: "My Focus" (Interactive Personal Queue) */}
+  <div className="my-focus-area">
+    <h3 className="side-small-title">My Focus ({myTasks.length})</h3>
+    <div className="focus-list">
+      {myTasks.length > 0 ? (
+        myTasks.map(task => (
+          <div 
+            key={task._id} 
+            className="focus-item" 
+            onClick={() => handleTaskClick(task)} /* Opens Task Drawer instantly */
+          >
+            <span className={`focus-priority ${task.priority.toLowerCase()}`}></span>
+            <div className="focus-text">
+              <p className="focus-title">{task.title}</p>
+              <span className="focus-project-name">{selectedProject?.name}</span>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="focus-empty">
+          <p>You're all caught up! 🚀</p>
+        </div>
+      )}
+    </div>
+  </div>
+</aside>
 
         <main className="file-explorer-container"> 
           {selectedProject ? (
@@ -254,6 +310,7 @@ const WorkspaceDetail = () => {
                     onStatusChange={handleStatusChange} 
                     onDeleteTask={handleDeleteTask}
                     onTaskClick={handleTaskClick}
+                    openProfile={openProfile}
                     currentUser={user}
                     isAdmin={isAdmin}
                 />

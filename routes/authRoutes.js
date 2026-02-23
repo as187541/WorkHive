@@ -8,7 +8,8 @@ const {
   getMe, 
   googleLogin,
   requestOTP, 
-  updateProfile 
+  updateProfile,
+  getUserProfile 
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -20,5 +21,6 @@ router.get('/me', protect, getMe);
 router.post('/google', googleLogin);
 router.post('/request-otp', protect, requestOTP);
 router.patch('/update-profile', protect, updateProfile);
+router.get('/user/:id', protect, getUserProfile);
 
 module.exports = router;

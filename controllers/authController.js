@@ -126,6 +126,16 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
+const getUserProfile = async (req, res) => {
+  try {
+    // Only select public info: name, email, role, and joined date
+    const user = await User.findById(req.params.id).select('name email role createdAt');
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
 
 // --- EXPORTS (Update this block) ---
 module.exports = {
@@ -134,5 +144,6 @@ module.exports = {
   getMe,
   googleLogin,
   requestOTP,
-  updateProfile
+  updateProfile,
+  getUserProfile
 };
