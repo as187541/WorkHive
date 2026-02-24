@@ -28,8 +28,12 @@ const UserProfileModal = ({ isOpen, userId, onClose }) => {
           <div className="profile-view">
             <div className="profile-header-large">
               <div className="profile-avatar-xl">
-                {profile.name.charAt(0).toUpperCase()}
-              </div>
+                    {profile.avatar ? (
+                        <img src={profile.avatar} alt="avatar" className="profile-avatar-img" />
+                    ) : (
+                        profile.name.charAt(0).toUpperCase()
+                    )}
+                    </div>
               <h2>{profile.name}</h2>
               <span className="role-badge">{profile.role}</span>
             </div>

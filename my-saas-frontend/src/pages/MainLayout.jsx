@@ -17,7 +17,7 @@ const MainLayout = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
-
+     const openInviteModal = () => setIsInviteModalOpen(true);
   const navigate = useNavigate();
   const { workspaceId } = useParams();
 
@@ -87,7 +87,7 @@ const MainLayout = () => {
       <div className="main-content-wrapper">
         <Navbar user={user} onCreateWorkspaceClick={() => setIsCreateModalOpen(true)} />
         <main className="page-content">
-          <Outlet context={{ user, workspaces, collaborators, openProfile }} />
+          <Outlet context={{ user, workspaces, collaborators, openProfile, openInviteModal }} />
         </main>
       </div>
 

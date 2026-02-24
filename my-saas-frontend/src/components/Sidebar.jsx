@@ -64,9 +64,13 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
                     className="collaborator-info clickable-user" 
                     onClick={() => c.user && onUserClick(c.user._id)}
                   >
-                    <div className="profile-avatar" style={{ width: '24px', height: '24px', fontSize: '0.7rem' }}>
-                      {c.user?.name.charAt(0).toUpperCase()}
-                    </div>
+                    <div className="profile-avatar" style={{ width: '44px', height: '44px', fontSize: '0.7rem' }}>
+                    {c.user?.avatar ? (
+                      <img src={c.user.avatar} alt="" className="profile-avatar-img" />
+                    ) : (
+                      c.user?.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
                     <span>{c.user?.name} {c.user?._id === user?._id ? '(You)' : ''}</span>
                   </div>
 
@@ -93,8 +97,13 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
       {/* --- USER PROFILE AT BOTTOM --- */}
       <div className="sidebar-profile">
         <NavLink to="/profile" className="profile-link">
-          <div className="profile-avatar">
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+           <div className="profile-avatar">
+            
+            {user?.avatar ? (
+              <img src={user.avatar} alt="" className="profile-avatar-img" />
+            ) : (
+              user?.name ? user.name.charAt(0).toUpperCase() : 'U'
+            )}
           </div>
           <span className="profile-name">{user?.name}</span>
         </NavLink>

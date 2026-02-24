@@ -24,8 +24,8 @@ exports.createTask = async (req, res) => {
       dueDate,
       tags 
     });
-
-    res.status(201).json(task);
+    const populatedTask = await task.populate('assignedTo', 'name email avatar');
+    res.status(201).json(populatedTask  );
   } catch (error) {
     console.error("TASK CREATION ERROR:", error);
     res.status(500).json({ msg: 'Server Error', error: error.message });
@@ -42,7 +42,7 @@ exports.getProjectTasks = async (req, res) => {
     
     // Find tasks belonging to this project
     const tasks = await Task.find({ project: projectId })
-    .populate('assignedTo', 'name email')
+    .populate('assignedTo', 'name email avatar')
     .sort({ createdAt: -1 });
     
     res.status(200).json(tasks);
@@ -69,8 +69,8 @@ exports.updateTask = async (req, res) => {
     if (!task) {
       return res.status(404).json({ msg: 'Task not found' });
     }
-
-    res.status(200).json(task);
+      const populatedTask = await task.populate('assignedTo', 'name email avatar');
+    res.status(200).json(populatedTask);
   } catch (error) {
     console.error("UPDATE TASK ERROR:", error);
     res.status(500).json({ msg: 'Server Error' });
@@ -87,22 +87,17 @@ exports.deleteTask = async (req, res) => {
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) return res.status(404).json({ msg: 'Workspace not found' });
 
-    // --- DEBUG LOGS ---
-    console.log("--- DELETE ATTEMPT ---");
-    console.log("User attempting:", req.user._id.toString());
 
-    // Find member and handle potential null users
+
+    
     const memberRecord = workspace.members.find(m => 
       m.user && m.user.toString() === req.user._id.toString()
     );
 
     const isAdmin = memberRecord?.role === 'Admin';
     
-    // Safety check for tasks created before we added the 'createdBy' field
     const isCreator = task.createdBy && task.createdBy.toString() === req.user._id.toString();
 
-    console.log("Is Admin?", isAdmin);
-    console.log("Is Creator?", isCreator);
 
     if (!isAdmin && !isCreator) {
       return res.status(403).json({ msg: 'Permission denied. You are not the Admin or Creator.' });

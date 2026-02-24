@@ -171,7 +171,7 @@ const removeMember = async (req, res) => {
  */
 const getWorkspaceMembers = async (req, res) => {
   try {
-    const workspace = await Workspace.findById(req.params.workspaceId).populate('members.user', 'name email');
+    const workspace = await Workspace.findById(req.params.workspaceId).populate('members.user', 'name email avatar');
     if (!workspace) return res.status(404).json({ msg: 'Workspace not found.' });
     res.status(200).json(workspace.members.filter(m => m.user !== null));
   } catch (error) {
