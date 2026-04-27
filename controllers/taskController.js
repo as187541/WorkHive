@@ -1,10 +1,11 @@
 // controllers/taskController.js
 const Task = require('../models/taskModel');
 const Workspace = require('../models/workspaceModel');
-/**
- * @desc    Create a new task within a project
- * @route   POST /api/v1/workspaces/:workspaceId/projects/:projectId/tasks
- */
+const User = require('../models/userModel');
+const cloudinary = require('cloudinary').v2;
+
+
+
 exports.createTask = async (req, res) => {
   try {
     const { projectId } = req.params;
@@ -24,8 +25,8 @@ exports.createTask = async (req, res) => {
       dueDate,
       tags 
     });
-
-    res.status(201).json(task);
+    const populatedTask = await task.populate('assignedTo', 'name email avatar');
+    res.status(201).json(populatedTask  );
   } catch (error) {
     console.error("TASK CREATION ERROR:", error);
     res.status(500).json({ msg: 'Server Error', error: error.message });
@@ -42,7 +43,7 @@ exports.getProjectTasks = async (req, res) => {
     
     // Find tasks belonging to this project
     const tasks = await Task.find({ project: projectId })
-    .populate('assignedTo', 'name email')
+    .populate('assignedTo', 'name email avatar')
     .sort({ createdAt: -1 });
     
     res.status(200).json(tasks);
@@ -59,18 +60,49 @@ exports.getProjectTasks = async (req, res) => {
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params; // This is the Task ID
-
-    const task = await Task.findByIdAndUpdate(
-      id, 
-      req.body, 
-      { new: true, runValidators: true }
-    );
-
+    const { status } = req.body;
+    const task = await Task.findById(id);
     if (!task) {
       return res.status(404).json({ msg: 'Task not found' });
     }
+    if (status === 'Done' && task.status !== 'Done' && !task.rewardProcessed) {
+      const now = new Date();
+      const dueDate = task.dueDate ? new Date(task.dueDate) : null;
 
-    res.status(200).json(task);
+      // Check if completed before deadline and has an assignee
+      if (dueDate && now < dueDate && task.assignedTo) {
+        const rewards = { High: 30, Medium: 20, Low: 10 };
+        const rewardAmount = rewards[task.priority] || 10;
+
+        // Atomic update to user wallet
+        await User.findByIdAndUpdate(task.assignedTo, {
+          $inc: { 'wallet.balance': rewardAmount },
+          $push: { 
+            'wallet.history': { 
+              amount: rewardAmount, 
+              reason: `Early completion: ${task.title}`, 
+              taskId: task._id,
+              date: now
+            } 
+          }
+        });
+        
+        // Set metadata on the update object
+        req.body.rewardProcessed = true;
+        req.body.completedAt = now;
+      } else {
+        // Mark as processed even if late so they can't get rewards later
+        req.body.rewardProcessed = true;
+        req.body.completedAt = now;
+      }
+    }
+      const updatedTask = await Task.findByIdAndUpdate(
+      id, 
+      req.body, 
+      { new: true, runValidators: true }
+    ).populate('assignedTo', 'name email avatar');
+
+    res.status(200).json(updatedTask);
   } catch (error) {
     console.error("UPDATE TASK ERROR:", error);
     res.status(500).json({ msg: 'Server Error' });
@@ -87,22 +119,17 @@ exports.deleteTask = async (req, res) => {
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) return res.status(404).json({ msg: 'Workspace not found' });
 
-    // --- DEBUG LOGS ---
-    console.log("--- DELETE ATTEMPT ---");
-    console.log("User attempting:", req.user._id.toString());
 
-    // Find member and handle potential null users
+
+    
     const memberRecord = workspace.members.find(m => 
       m.user && m.user.toString() === req.user._id.toString()
     );
 
     const isAdmin = memberRecord?.role === 'Admin';
     
-    // Safety check for tasks created before we added the 'createdBy' field
     const isCreator = task.createdBy && task.createdBy.toString() === req.user._id.toString();
 
-    console.log("Is Admin?", isAdmin);
-    console.log("Is Creator?", isCreator);
 
     if (!isAdmin && !isCreator) {
       return res.status(403).json({ msg: 'Permission denied. You are not the Admin or Creator.' });
@@ -115,7 +142,8 @@ exports.deleteTask = async (req, res) => {
     res.status(500).json({ msg: 'Server Error' });
   }
 };
-const cloudinary = require('cloudinary').v2;
+
+
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

@@ -4,7 +4,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 // 1. Register
 const register = async (req, res) => {
   try {
@@ -101,7 +106,9 @@ const requestOTP = async (req, res) => {
 // --- 2. UPDATE PROFILE WITH OTP ---
 const updateProfile = async (req, res) => {
   try {
+     
     const { name, password, otp } = req.body;
+    
     const user = await User.findById(req.user._id).select('+password');
 
     // If changing password, verify OTP first
@@ -119,20 +126,70 @@ const updateProfile = async (req, res) => {
     }
 
     if (name) user.name = name;
-    await user.save();
+    if (req.file) {
+     
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'workhive_avatars' },
+          (error, res) => {
+            if (error) reject(error);
+            else resolve(res);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+      user.avatar = result.secure_url;
+      
+    }
 
-    res.status(200).json({ message: 'Profile updated successfully' });
+    await user.save();
+    res.status(200).json({ message: 'Profile updated successfully', user });
+
   } catch (error) {
+    console.error("Update Profile Error:", error);
     res.status(500).json({ msg: 'Server error' });
   }
 };
 const getUserProfile = async (req, res) => {
   try {
     // Only select public info: name, email, role, and joined date
-    const user = await User.findById(req.params.id).select('name email role createdAt');
+    const user = await User.findById(req.params.id).select('name email role avatar createdAt');
     if (!user) return res.status(404).json({ msg: 'User not found' });
     res.status(200).json(user);
   } catch (error) {
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+const redeemTokens = async (req, res) => {
+  try {
+    const { cost, rewardTitle } = req.body;
+    
+    // Find user (req.user._id comes from protect middleware)
+    const user = await User.findById(req.user._id);
+
+    // Check balance
+    if (user.wallet.balance < cost) {
+      return res.status(400).json({ msg: "Insufficient HiveTokens for this reward." });
+    }
+
+    // Deduct tokens and log to history
+    user.wallet.balance -= cost;
+    
+    user.wallet.history.push({
+      amount: -cost,
+      reason: `Redeemed: ${rewardTitle}`,
+      date: new Date()
+    });
+
+    await user.save();
+
+    // Return new balance so frontend can update user state instantly
+    res.status(200).json({ 
+      msg: "Redeemed successfully!", 
+      newBalance: user.wallet.balance 
+    });
+  } catch (error) {
+    console.error("REDEEM TOKENS ERROR:", error);
     res.status(500).json({ msg: 'Server Error' });
   }
 };
@@ -145,5 +202,6 @@ module.exports = {
   googleLogin,
   requestOTP,
   updateProfile,
-  getUserProfile
+  getUserProfile,
+  redeemTokens
 };

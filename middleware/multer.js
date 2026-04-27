@@ -1,7 +1,11 @@
 const multer = require('multer');
 
-// We use memory storage because we will upload directly to Cloudinary
+// We must use memoryStorage so the file buffer is available for Cloudinary
 const storage = multer.memoryStorage();
-const upload = multer({ limits: { fileSize: 8 * 1024 * 1024 } }); // 8MB Limit
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 8 * 1024 * 1024 } // 8MB limit
+});
 
 module.exports = upload;

@@ -1,62 +1,65 @@
-import React, { useState } from 'react';
+// my-saas-frontend/src/pages/WorkspaceDashboard.jsx
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import InviteModal from '../components/InviteModal';
 import WorkspaceCard from '../components/WorkspaceCard';
 import api from '../services/api';
 
 const WorkspaceDashboard = () => {
-  // This is the key change. We provide a default empty object.
-  const { workspaces } = useOutletContext() || { workspaces: [] }; 
+  // Use a fallback to prevent "undefined" errors
+  const context = useOutletContext();
+  const workspaces = context?.workspaces || []; 
   
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+  const [invitations, setInvitations] = useState([]);
 
-  const handleOpenInviteModal = (workspace) => {
-    setSelectedWorkspace(workspace);
-    setIsInviteModalOpen(true);
-  };
-  const handleCloseInviteModal = () => setIsInviteModalOpen(false);
+  useEffect(() => {
+    api.get('/workspaces/invitations/me')
+      .then(res => setInvitations(res.data))
+      .catch(err => console.error("Could not fetch invitations"));
+  }, []);
 
-  const handleInviteSubmit = async (email) => {
-    if (!selectedWorkspace) return;
+  const handleAccept = async (id) => {
     try {
-      const endpoint = `/workspaces/${selectedWorkspace._id}/members`;
-      const response = await api.post(endpoint, { email });
-      alert(response.data.msg);
-      handleCloseInviteModal();
-    } catch (error) {
-      alert(error.response?.data?.msg || "Failed to send invite.");
+      await api.post(`/workspaces/invitations/${id}/accept`);
+      setInvitations(invitations.filter(i => i._id !== id));
+      window.location.reload(); 
+    } catch (err) {
+      alert("Failed to join workspace.");
     }
   };
 
   return (
-    <>
+    <div className="dashboard-container">
+      {invitations.length > 0 && (
+        <div className="invitations-banner">
+          <h3>📩 Pending Invitations</h3>
+          {invitations.map(invite => (
+            <div key={invite._id} className="invite-item">
+              <p>
+                <strong>{invite.sender?.name}</strong> invited you to <strong>{invite.workspace?.name}</strong>
+              </p>
+              <button onClick={() => handleAccept(invite._id)} className="btn-accept">Accept</button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <header className="page-header">
-        <h1>Workspaces</h1>
-        <button className="btn btn-primary">Create New Workspace</button>
+        <h1>My Workspaces</h1>
       </header>
+
       <div className="content-grid">
-        {workspaces && workspaces.length > 0 ? (
-          workspaces.map((ws) => (
-            <WorkspaceCard 
-              key={ws._id} 
-              workspace={ws} 
-              onInviteClick={handleOpenInviteModal} 
-            />
+        {workspaces.length > 0 ? (
+          workspaces.map(ws => (
+            <WorkspaceCard key={ws._id} workspace={ws} onInviteClick={() => {}} />
           ))
         ) : (
           <div className="empty-state">
-            <h3>Welcome!</h3>
-            <p>Select a Workspace from the left tab or Create your own by clicking on new workspace.</p>
+            <p>No workspaces found. Create one to get started!</p>
           </div>
         )}
       </div>
-      <InviteModal 
-        isOpen={isInviteModalOpen} 
-        onClose={handleCloseInviteModal} 
-        onInviteSubmit={handleInviteSubmit} 
-      />
-    </>
+    </div>
   );
 };
+
 export default WorkspaceDashboard;

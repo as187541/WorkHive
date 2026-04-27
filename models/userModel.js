@@ -16,8 +16,19 @@ const UserSchema = new mongoose.Schema({
     enum: ['User', 'SuperAdmin'], // Only allows these two values
     default: 'User',
   },
+  avatar: { type: String, default: '' },
   otp: { type: String },
-  otpExpires: { type: Date }
-}, { timestamps: true });
+  otpExpires: { type: Date },
+  wallet: {
+  balance: { type: Number, default: 0 },
+  history: [{
+    amount: Number,
+    reason: String,
+    taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+    date: { type: Date, default: Date.now }
+  }]
+}
+}, 
+{ timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -10,7 +10,7 @@ import TaskDetailDrawer from '../components/TaskDetailDrawer';
 const WorkspaceDetail = () => {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
-  const { user, collaborators, openProfile } = useOutletContext();
+  const { user, collaborators, openProfile, openInviteModal } = useOutletContext();
 
   // Data States
   const [workspace, setWorkspace] = useState(null);
@@ -32,6 +32,7 @@ const WorkspaceDetail = () => {
   // Modal States
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // Permission logic
   const currentUserIdStr = String(user?._id || user?.id || "");
@@ -57,6 +58,29 @@ const WorkspaceDetail = () => {
       .finally(() => setLoading(false));
     }
   }, [workspaceId, navigate]);
+
+  const handleDeleteWorkspace = async () => {
+  const confirmMsg = isAdmin
+    ? "⚠️ PERMANENT ACTION: Are you sure you want to DELETE this workspace and all its data? This cannot be undone."
+    : "Are you sure you want to LEAVE this workspace?";
+
+  if (window.confirm(confirmMsg)) {
+    try {
+      // Calls DELETE /api/v1/workspaces/:workspaceId
+      const res = await api.delete(`/workspaces/${workspaceId}`);
+      alert(res.data.msg);
+      
+      // Redirect to the dashboard
+      navigate('/');
+      
+      // Force a window reload to clear the deleted workspace from the Sidebar
+      window.location.reload(); 
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.msg || "Action failed.");
+    }
+  }
+};
 
   // --- NEW: Sync function to keep the Drawer and the Kanban board in sync ---
   const handleTaskUpdate = (updatedTask) => {
@@ -197,8 +221,8 @@ const WorkspaceDetail = () => {
           <p className="page-description">{workspace.description || 'Workspace overview'}</p>
         </div>
         <div className="header-actions">
-          <button className="btn btn-secondary" onClick={() => {/* Delete workspace logic */}}>
-             {isAdmin ? '🗑️ Delete Workspace' : '🚪 Leave Workspace'}
+          <button className="btn btn-secondary btn-danger-text" onClick={handleDeleteWorkspace}>
+            {isAdmin ? '🗑️ Delete Workspace' : '🚪 Leave Workspace'}
           </button>
           <button className="btn btn-primary" onClick={() => setIsProjectModalOpen(true)}>+ New Project</button>
         </div>
@@ -306,14 +330,16 @@ const WorkspaceDetail = () => {
               
               {tasksLoading ? <p>Loading tasks...</p> : (
                 <KanbanBoard 
-                    tasks={filteredTasks} 
-                    onStatusChange={handleStatusChange} 
-                    onDeleteTask={handleDeleteTask}
-                    onTaskClick={handleTaskClick}
-                    openProfile={openProfile}
-                    currentUser={user}
-                    isAdmin={isAdmin}
-                />
+                    
+                      tasks={filteredTasks} 
+                      onStatusChange={handleStatusChange} 
+                      onDeleteTask={handleDeleteTask}
+                      onTaskClick={handleTaskClick}
+                      openProfile={openProfile}
+                      currentUser={user}
+                      isAdmin={isAdmin}
+                  />
+
               )}
             </>
           ) : (
@@ -374,16 +400,30 @@ const WorkspaceDetail = () => {
                 <label className="meta-label">Active Team</label>
                 <div className="team-stack">
                   {collaborators.slice(0, 5).map((c, i) => (
-                    <div key={i} className="assignee-avatar" title={c.user?.name}>
-                      {c.user?.name.charAt(0).toUpperCase()}
-                    </div>
-                  ))}
+                    <div key={i} className="assignee-avatar" title={c.user?.name}
+                    onClick={() => openProfile(c.user?._id)}>
+                      {c.user?.avatar ? (
+                          <img src={c.user.avatar} className="profile-avatar-img" alt={c.user.name} />
+                        ) : (
+                          <span>{c.user?.name?.charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+                    ))}
                   {collaborators.length > 5 && (
                     <div className="avatar-more">+{collaborators.length - 5}</div>
                   )}
                 </div>
                 <p className="team-caption">{collaborators.length} members in workspace</p>
               </div>
+              {isAdmin && (
+                    <button 
+                      className="btn btn-secondary btn-sm" 
+                      style={{ width: '100%', marginTop: '10px' }}
+                      onClick={openInviteModal}
+                    >
+                      + Invite More
+                    </button>
+                  )}
             </aside>
       </div>
 
