@@ -26,8 +26,8 @@ const MainLayout = () => {
     setLoading(true);
     Promise.all([api.get('/auth/me'), api.get('/workspaces')])
       .then(([userRes, workspacesRes]) => {
-        setUser(userRes.data);
-        setWorkspaces(workspacesRes.data);
+        setUser(userRes.data.data || userRes.data);
+        setWorkspaces(workspacesRes.data.data || workspacesRes.data);
       })
       .catch(() => {
         localStorage.removeItem('token');
@@ -71,6 +71,26 @@ const MainLayout = () => {
     }
   };
 
+  //reward logic: when a task is updated and rewardProcessed becomes true, we should update the user's wallet balance in the UI. This can be done by re-fetching the user profile or by manually incrementing the balance in the state.
+  // When onTaskUpdate is called from TaskDetailDrawer:
+const handleTaskUpdate = (updatedTask) => {
+    const assigneeId = updatedTask.assignedTo?._id || updatedTask.assignedTo;
+
+    // Check if task just got rewarded and it belongs to current user
+    if (updatedTask.rewardProcessed && user?._id === assigneeId) {
+      const rewardMap = { High: 30, Medium: 20, Low: 10 };
+      const amount = rewardMap[updatedTask.priority] || 10;
+      
+      setUser(prev => ({
+        ...prev,
+        wallet: {
+          ...prev.wallet,
+          balance: (prev.wallet?.balance || 0) + amount
+        }
+      }));
+    }
+  };
+
   const openProfile = (id) => setSelectedProfileId(id);
 
   if (loading) return <div className="loading-screen">Loading WorkHive...</div>;
@@ -87,7 +107,15 @@ const MainLayout = () => {
       <div className="main-content-wrapper">
         <Navbar user={user} onCreateWorkspaceClick={() => setIsCreateModalOpen(true)} />
         <main className="page-content">
-          <Outlet context={{ user, workspaces, collaborators, openProfile, openInviteModal }} />
+          <Outlet context={{ 
+            user, 
+            setUser, // Required by RewardStore to update balance after purchase
+            workspaces, 
+            collaborators, 
+            openProfile, 
+            openInviteModal,
+            onTaskUpdate: handleTaskUpdate // Required by Kanban/Drawer to trigger rewards
+          }} />
         </main>
       </div>
 

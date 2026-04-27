@@ -1,6 +1,7 @@
 // src/components/Sidebar.jsx
 import React from 'react';
 import { NavLink, useParams } from 'react-router-dom';
+import { FiAward, FiPlus, FiUsers, FiLayout, FiShoppingBag } from 'react-icons/fi';
 import api from '../services/api';
 
 const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }) => {
@@ -25,8 +26,40 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">🚀 WorkHive</div>
+
+       {/* NEW: Wallet/Token Section */}
+      <div className="sidebar-wallet-card">
+  <div className="token-icon-container">
+    <FiAward />
+  </div>
+  <div className="wallet-details">
+    <span className="wallet-label">Hive Wallet</span>
+    <div className="flex items-baseline gap-1">
+      <span className={`wallet-balance ${user?.wallet?.balance > 0 ? 'balance-animate' : ''}`}>
+        {user?.wallet?.balance || 0}
+      </span>
+      <span style={{ fontSize: '0.6rem', color: 'var(--token-gold)' }}>HT</span>
+    </div>
+  </div>
+</div>
       
       <nav className="sidebar-nav">
+         {/* --- NEW: MAIN MENU SECTION --- */}
+        <div className="nav-section">
+          <h3 className="nav-title">General</h3>
+          <ul>
+            <li>
+              <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiLayout style={{marginRight: '10px'}} /> Dashboard
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/rewards" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiShoppingBag style={{marginRight: '10px'}} /> Reward Store
+              </NavLink>
+            </li>
+          </ul>
+        </div>
         {/* --- WORKSPACES SECTION --- */}
         <div className="nav-section">
           <h3 className="nav-title">Workspaces</h3>

@@ -1373,3 +1373,295 @@ p:last-child { margin-bottom: 0; }
 .btn-danger-text:hover {
   background-color: var(--danger-100) !important;
 }
+:root {
+  --token-gold: #ffb400;
+  --token-gold-light: rgba(255, 180, 0, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Wallet Card in Sidebar */
+.sidebar-wallet-card {
+  margin: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, var(--glass-bg), transparent);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-wallet-card:hover {
+  transform: translateY(-2px);
+  background: var(--glass-bg);
+}
+
+.token-icon-container {
+  width: 40px;
+  height: 40px;
+  background: var(--token-gold-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--token-gold);
+  font-size: 1.2rem;
+  box-shadow: 0 0 15px rgba(255, 180, 0, 0.2);
+}
+
+.wallet-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.wallet-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.wallet-balance {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Reward Badge for Kanban Task Cards */
+.reward-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--token-gold-light);
+  color: var(--token-gold);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 180, 0, 0.3);
+}
+
+/* Animation for when balance updates */
+@keyframes balancePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); color: var(--token-gold); }
+  100% { transform: scale(1); }
+}
+
+.balance-animate {
+  animation: balancePop 0.5s ease-out;
+}
+/* Reward Tags on Kanban Cards */
+.reward-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+}
+
+/* When the task is still in progress */
+.reward-tag.potential {
+  background: rgba(255, 180, 0, 0.1);
+  color: #ffb400;
+  border-color: rgba(255, 180, 0, 0.2);
+}
+
+/* When the reward has been claimed (Task is Done) */
+.reward-tag.earned {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.2);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+}
+
+/* Adjusting task-meta for better spacing */
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Subtle animation for the earned tag */
+.reward-tag.earned {
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.8; }
+}
+.reward-store { padding: 2rem; }
+
+.store-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  background: var(--glass-bg);
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+}
+
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.reward-card {
+  background: var(--bg-secondary);
+  border-radius: 24px;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid var(--glass-border);
+  transition: all 0.3s ease;
+}
+
+.reward-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.reward-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.price-tag {
+  color: var(--token-gold);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.redeem-btn {
+  background: var(--token-gold);
+  color: #000;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.redeem-btn:disabled {
+  background: #333;
+  color: #777;
+  cursor: not-allowed;
+}
+.sidebar-nav li a.active {
+  background: var(--glass-bg);
+  color: var(--token-gold); /* Or your primary theme color */
+  border-left: 3px solid var(--token-gold);
+}
+.transaction-history {
+  margin-top: 4rem;
+  background: var(--glass-bg);
+  padding: 2rem;
+  border-radius: 20px;
+}
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+.history-amount.positive { color: #22c55e; font-weight: bold; }
+.history-amount.negative { color: #ef4444; font-weight: bold; }
+.reward-store-container {
+  padding: 2.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.user-balance-pill {
+  background: var(--token-gold-light);
+  border: 1px solid rgba(255, 180, 0, 0.3);
+  padding: 0.8rem 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.balance-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-info .amount {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--token-gold);
+  line-height: 1;
+}
+
+.balance-info .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Transaction History Table */
+.transaction-history-section {
+  margin-top: 4rem;
+  background: var(--bg-secondary);
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px solid var(--glass-border);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.history-table td {
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.95rem;
+}
+
+.amount-col.positive { color: #22c55e; font-weight: 700; }
+.amount-col.negative { color: #ef4444; font-weight: 700; }
+
+.empty-history {
+  text-align: center;
+  padding: 3rem !important;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.text-right { text-align: right; }
+/* Helper Classes for Sidebar Alignment */
+.flex { display: flex; }
+.items-baseline { align-items: baseline; }
+.gap-1 { gap: 0.25rem; }

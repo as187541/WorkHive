@@ -18,7 +18,17 @@ const UserSchema = new mongoose.Schema({
   },
   avatar: { type: String, default: '' },
   otp: { type: String },
-  otpExpires: { type: Date }
-}, { timestamps: true });
+  otpExpires: { type: Date },
+  wallet: {
+  balance: { type: Number, default: 0 },
+  history: [{
+    amount: Number,
+    reason: String,
+    taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+    date: { type: Date, default: Date.now }
+  }]
+}
+}, 
+{ timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

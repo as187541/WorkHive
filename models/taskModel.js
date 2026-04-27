@@ -44,7 +44,10 @@ const taskSchema = new mongoose.Schema({
         name: { type: String, required: true },
         publicId: { type: String, required: true }, // Needed to delete the file later
         createdAt: { type: Date, default: Date.now }
-    }]
+    }],
+     completedAt: { type: Date },
+  rewardProcessed: { type: Boolean, default: false }
+
     }, { timestamps: true });
 
 

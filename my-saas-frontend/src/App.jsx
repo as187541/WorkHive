@@ -5,8 +5,8 @@ import LoginPage from './pages/LoginPage';
 import MainLayout from './pages/MainLayout';
 import WorkspaceDetail from './pages/WorkspaceDetail';
 import WorkspaceDashboard from './pages/WorkspaceDashboard';
-import ProfilePage from './pages/ProfilePage'; //
-
+import ProfilePage from './pages/ProfilePage'; 
+import RewardStore from './pages/RewardStore';
 import './App.css';
 
 // Small component for the profile
@@ -38,6 +38,9 @@ function App() {
           
           {/* Profile page */}
           <Route path="profile" element={<ProfilePage />} />
+          
+        <Route path="rewards" element={<RewardStore />} />
+          
         </Route>
 
         {/* Catch-all: Redirect any unknown routes to home */}

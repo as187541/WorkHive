@@ -160,6 +160,39 @@ const getUserProfile = async (req, res) => {
     res.status(500).json({ msg: 'Server Error' });
   }
 };
+const redeemTokens = async (req, res) => {
+  try {
+    const { cost, rewardTitle } = req.body;
+    
+    // Find user (req.user._id comes from protect middleware)
+    const user = await User.findById(req.user._id);
+
+    // Check balance
+    if (user.wallet.balance < cost) {
+      return res.status(400).json({ msg: "Insufficient HiveTokens for this reward." });
+    }
+
+    // Deduct tokens and log to history
+    user.wallet.balance -= cost;
+    
+    user.wallet.history.push({
+      amount: -cost,
+      reason: `Redeemed: ${rewardTitle}`,
+      date: new Date()
+    });
+
+    await user.save();
+
+    // Return new balance so frontend can update user state instantly
+    res.status(200).json({ 
+      msg: "Redeemed successfully!", 
+      newBalance: user.wallet.balance 
+    });
+  } catch (error) {
+    console.error("REDEEM TOKENS ERROR:", error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
 
 // --- EXPORTS (Update this block) ---
 module.exports = {
@@ -169,5 +202,6 @@ module.exports = {
   googleLogin,
   requestOTP,
   updateProfile,
-  getUserProfile
+  getUserProfile,
+  redeemTokens
 };

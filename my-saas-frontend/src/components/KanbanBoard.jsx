@@ -3,6 +3,10 @@ import React from 'react';
 
 const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, openProfile, onTaskClick, currentUser, isAdmin }) => {
   const columns = ['Todo', 'In Progress', 'Done'];
+  const getRewardAmount = (priority) => {
+    const rewards = { High: 30, Medium: 20, Low: 10 };
+    return rewards[priority] || 10;
+  };
 
   // DEBUG LOG 1: Check if the function arrived from the parent
   console.log("KanbanBoard Component Rendered. openProfile type:", typeof openProfile);
@@ -101,6 +105,9 @@ const KanbanBoard = ({ tasks, onStatusChange, onDeleteTask, openProfile, onTaskC
                           ) : (
                             <span>{assignee?.name ? assignee.name.charAt(0).toUpperCase() : '?'}</span>
                           )}
+                        </div>
+                        <div className={`reward-tag ${task.rewardProcessed ? 'earned' : 'potential'}`}>
+                           {task.rewardProcessed ? '✨' : '🪙'} {getRewardAmount(task.priority)}
                         </div>
 
                         {task.dueDate && (
