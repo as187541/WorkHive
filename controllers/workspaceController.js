@@ -46,7 +46,7 @@ const getWorkspaceById = async (req, res) => {
 
     if (!workspace) return res.status(404).json({ msg: 'Workspace not found.' });
 
-    if (!workspace.members.some(m => m.user.equals(req.user._id))) {
+    if (!workspace.members.some(m => m.user.equals(req.user._id)) && req.user.role !== 'SuperAdmin') {
       return res.status(403).json({ msg: 'You are not authorized to view this workspace.' });
     }
 

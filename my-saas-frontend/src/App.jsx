@@ -9,7 +9,14 @@ import ProfilePage from './pages/ProfilePage';
 import RewardStore from './pages/RewardStore';
 import './App.css';
 
-// Small component for the profile
+import AdminRoute from './components/AdminRoute';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminWorkspacesPage from './pages/AdminWorkspacesPage';
+import AdminLogsPage from './pages/AdminLogsPage';
+import AdminTokensPage from './pages/AdminTokensPage';
+import AdminRedemptionsPage from './pages/AdminRedemptionsPage';
+import MyRedemptionsPage from './pages/MyRedemptionsPage';
 
 // Helper component to protect routes
 const AuthCheck = ({ children }) => {
@@ -40,7 +47,19 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           
         <Route path="rewards" element={<RewardStore />} />
+        <Route path="my-redemptions" element={<MyRedemptionsPage />} />
+        <Route path="review-redemptions" element={<AdminRedemptionsPage />} />
           
+        </Route>
+
+        {/* Admin Routes - Protected by AdminRoute */}
+        <Route path="/admin" element={<AuthCheck><AdminRoute><MainLayout /></AdminRoute></AuthCheck>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="workspaces" element={<AdminWorkspacesPage />} />
+          <Route path="logs" element={<AdminLogsPage />} />
+          <Route path="tokens" element={<AdminTokensPage />} />
+          <Route path="redemptions" element={<AdminRedemptionsPage />} />
         </Route>
 
         {/* Catch-all: Redirect any unknown routes to home */}

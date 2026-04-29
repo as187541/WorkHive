@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import React from 'react';
 import { NavLink, useParams } from 'react-router-dom';
-import { FiAward, FiPlus, FiUsers, FiLayout, FiShoppingBag } from 'react-icons/fi';
+import { FiAward, FiPlus, FiUsers, FiLayout, FiShoppingBag, FiShield, FiClock, FiInbox } from 'react-icons/fi';
 import api from '../services/api';
 
 const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }) => {
@@ -58,6 +58,25 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
                 <FiShoppingBag style={{marginRight: '10px'}} /> Reward Store
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/my-redemptions" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiClock style={{marginRight: '10px'}} /> My Requests
+              </NavLink>
+            </li>
+            {(user?.approverScope?.adminWorkspaces?.length > 0 || user?.approverScope?.leadProjects?.length > 0) && (
+              <li>
+                <NavLink to="/review-redemptions" className={({ isActive }) => isActive ? 'active' : ''}>
+                  <FiInbox style={{marginRight: '10px'}} /> Review Requests
+                </NavLink>
+              </li>
+            )}
+            {user?.role === 'SuperAdmin' && (
+              <li>
+                <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : ''}>
+                  <FiShield style={{marginRight: '10px'}} /> Admin Panel
+                </NavLink>
+              </li>
+            )}
           </ul>
         </div>
         {/* --- WORKSPACES SECTION --- */}

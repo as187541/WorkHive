@@ -1,5 +1,7 @@
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/userModel');
+const Workspace = require('../models/workspaceModel');
+const Project = require('../models/projectModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -22,7 +24,7 @@ const register = async (req, res) => {
     const user = await User.create({ name, email, password: hashedPassword });
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
     res.status(500).json({ msg: 'Server error during registration' });
   }
@@ -32,22 +34,66 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ msg: 'Please provide email and password.' });
+    }
+
     const user = await User.findOne({ email }).select('+password');
-    if (!user) return res.status(401).json({ msg: 'Invalid credentials' });
+    
+    // User not found OR user has no password (Google-only account)
+    if (!user || !user.password) {
+      return res.status(401).json({ msg: 'Invalid email or password.' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ msg: 'Invalid credentials' });
+    if (!isMatch) {
+      return res.status(401).json({ msg: 'Invalid email or password.' });
+    }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.status(200).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.status(200).json({ 
+      token, 
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email,
+        role: user.role 
+      } 
+    });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ msg: 'Server error during login' });
   }
 };
 
 // 3. Get Current User
 const getMe = async (req, res) => {
-  res.status(200).json(req.user);
+  try {
+    const user = await User.findById(req.user._id);
+    
+    // Find workspaces where user is Admin
+    const adminWorkspaces = await Workspace.find({
+      'members.user': req.user._id,
+      'members.role': 'Admin'
+    }).select('_id name');
+
+    // Find projects where user is Lead
+    const leadProjects = await Project.find({ lead: req.user._id }).select('_id name');
+
+    const approverScope = {
+      isSuperAdmin: user.role === 'SuperAdmin',
+      adminWorkspaces: adminWorkspaces.map(w => ({ id: w._id, name: w.name })),
+      leadProjects: leadProjects.map(p => ({ id: p._id, name: p.name }))
+    };
+
+    res.status(200).json({
+      ...user.toObject(),
+      approverScope
+    });
+  } catch (error) {
+    res.status(500).json({ msg: 'Server Error' });
+  }
 };
 
 // 4. Google Login
@@ -194,6 +240,86 @@ const redeemTokens = async (req, res) => {
   }
 };
 
+// --- FORGOT PASSWORD: Send OTP ---
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ msg: 'Please provide your email address.' });
+    }
+
+    const user = await User.findOne({ email });
+    
+    // Don't reveal if user exists for security
+    if (!user) {
+      return res.status(200).json({ msg: 'If an account exists, a reset code has been sent.' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Save to DB with 10 min expiry
+    user.otp = otp;
+    user.otpExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    await sendEmail({
+      email: user.email,
+      subject: 'WorkHive Password Reset',
+      html: `<h3>Password Reset Request</h3>
+             <p>You requested to reset your password. Your reset code is:</p>
+             <h1 style="color: #4f46e5;">${otp}</h1>
+             <p>This code expires in 10 minutes.</p>
+             <p>If you didn't request this, please ignore this email.</p>`
+    });
+
+    res.status(200).json({ msg: 'If an account exists, a reset code has been sent.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ msg: 'Failed to send reset code.' });
+  }
+};
+
+// --- RESET PASSWORD: Verify OTP and update ---
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ msg: 'Please provide email, reset code, and new password.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ msg: 'Password must be at least 6 characters.' });
+    }
+
+    const user = await User.findOne({ email }).select('+password +otp +otpExpires');
+    
+    if (!user) {
+      return res.status(400).json({ msg: 'Invalid or expired reset code.' });
+    }
+
+    if (user.otp !== otp || !user.otpExpires || user.otpExpires < Date.now()) {
+      return res.status(400).json({ msg: 'Invalid or expired reset code.' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    
+    // Clear OTP
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ msg: 'Password reset successful! You can now log in.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ msg: 'Failed to reset password.' });
+  }
+};
+
 // --- EXPORTS (Update this block) ---
 module.exports = {
   register,
@@ -203,5 +329,7 @@ module.exports = {
   requestOTP,
   updateProfile,
   getUserProfile,
-  redeemTokens
+  redeemTokens,
+  forgotPassword,
+  resetPassword
 };

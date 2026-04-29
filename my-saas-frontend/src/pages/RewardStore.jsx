@@ -1,11 +1,15 @@
 // src/pages/RewardStore.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import api from '../services/api';
 import { FiAward, FiClock, FiCheckCircle } from 'react-icons/fi';
 
 const RewardStore = () => {
-  const { user, setUser } = useOutletContext();
+  const { user, workspaces } = useOutletContext();
+  const [selectedWorkspace, setSelectedWorkspace] = useState('');
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState('');
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   const availableRewards = [
     { id: '1', title: 'Early Log-off', cost: 200, icon: '🌅', desc: 'Leave 1 hour early on Friday' },
@@ -14,36 +18,52 @@ const RewardStore = () => {
     { id: '4', title: 'Paid Day Off', cost: 5000, icon: '🏖️', desc: 'One full day paid leave' },
   ];
 
+  // Fetch projects when workspace changes
+  useEffect(() => {
+    if (!selectedWorkspace) {
+      setProjects([]);
+      setSelectedProject('');
+      return;
+    }
+
+    const fetchProjects = async () => {
+      setLoadingProjects(true);
+      try {
+        const res = await api.get(`/workspaces/${selectedWorkspace}/projects`);
+        setProjects(res.data || []);
+      } catch {
+        setProjects([]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    fetchProjects();
+  }, [selectedWorkspace]);
+
   const handleRedeem = async (reward) => {
+    if (!selectedWorkspace) {
+      alert("Please select a workspace first.");
+      return;
+    }
+
     if (user.wallet.balance < reward.cost) {
       alert("Not enough tokens!");
       return;
     }
 
-    if (window.confirm(`Redeem "${reward.title}" for ${reward.cost} HT?`)) {
+    if (window.confirm(`Request "${reward.title}" for ${reward.cost} HT?\n\nAn admin will review your request.`)) {
       try {
-        // --- HIGHLIGHT: Updated endpoint and payload to match authController ---
-        const res = await api.post('/auth/redeem', { 
+        const res = await api.post('/redemptions', { 
           rewardTitle: reward.title, 
-          cost: reward.cost 
+          cost: reward.cost,
+          workspaceId: selectedWorkspace,
+          projectId: selectedProject || undefined
         });
         
-        // Update global user state (Balance + adding to History locally for instant feedback)
-        setUser(prev => ({
-          ...prev,
-          wallet: { 
-            ...prev.wallet, 
-            balance: res.data.newBalance,
-            history: [
-              ...prev.wallet.history, 
-              { amount: -reward.cost, reason: `Redeemed: ${reward.title}`, date: new Date() }
-            ]
-          }
-        }));
-        
-        alert("Success! Your request has been sent to the workspace admin.");
+        alert(res.data.msg);
       } catch (err) {
-        alert(err.response?.data?.msg || "Redemption failed.");
+        alert(err.response?.data?.msg || "Request failed.");
       }
     }
   };
@@ -64,6 +84,38 @@ const RewardStore = () => {
         </div>
       </header>
 
+      {/* Workspace & Project Selectors */}
+      <div className="reward-context-selectors">
+        <div className="selector-group">
+          <label>Workspace *</label>
+          <select 
+            value={selectedWorkspace} 
+            onChange={(e) => setSelectedWorkspace(e.target.value)}
+            className="selector-input"
+          >
+            <option value="">Select a workspace...</option>
+            {workspaces?.map(ws => (
+              <option key={ws._id} value={ws._id}>{ws.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="selector-group">
+          <label>Project (Optional)</label>
+          <select 
+            value={selectedProject} 
+            onChange={(e) => setSelectedProject(e.target.value)}
+            className="selector-input"
+            disabled={!selectedWorkspace || loadingProjects}
+          >
+            <option value="">Workspace-level request</option>
+            {projects.map(proj => (
+              <option key={proj._id} value={proj._id}>{proj.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Rewards Grid */}
       <div className="reward-grid">
         {availableRewards.map(reward => (
@@ -75,7 +127,7 @@ const RewardStore = () => {
               <span className="price-tag">{reward.cost} HT</span>
               <button 
                 className="redeem-btn"
-                disabled={user?.wallet?.balance < reward.cost}
+                disabled={user?.wallet?.balance < reward.cost || !selectedWorkspace}
                 onClick={() => handleRedeem(reward)}
               >
                 {user?.wallet?.balance < reward.cost ? 'Locked' : 'Redeem'}
@@ -85,7 +137,7 @@ const RewardStore = () => {
         ))}
       </div>
 
-      {/* --- NEW: TRANSACTION HISTORY SECTION --- */}
+      {/* Transaction History */}
       <section className="transaction-history-section">
         <div className="section-header">
           <FiClock /> <h2>Transaction History</h2>

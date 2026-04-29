@@ -10,6 +10,8 @@ dotenv.config();
 // --- THEN, IMPORT YOUR OWN FILES ---
 const authRouter = require('./routes/authRoutes');
 const workspaceRouter = require('./routes/workspaceRoutes');
+const adminRouter = require('./routes/adminRoutes');
+const redemptionRouter = require('./routes/redemptionRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -24,6 +26,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/workspaces', workspaceRouter);
+app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/redemptions', redemptionRouter);
 
 // --- STARTUP LOGIC ---
 const startServer = async () => {

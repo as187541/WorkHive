@@ -2,6 +2,7 @@
 const Task = require('../models/taskModel');
 const Workspace = require('../models/workspaceModel');
 const User = require('../models/userModel');
+const Project = require('../models/projectModel');
 const cloudinary = require('cloudinary').v2;
 
 
@@ -33,10 +34,7 @@ exports.createTask = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get all tasks for a specific project
- * @route   GET /api/v1/workspaces/:workspaceId/projects/:projectId/tasks
- */
+
 exports.getProjectTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
@@ -53,10 +51,7 @@ exports.getProjectTasks = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update a task (used for moving tasks between Kanban columns)
- * @route   PATCH /api/v1/workspaces/:workspaceId/projects/tasks/:id
- */
+
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params; // This is the Task ID
@@ -69,7 +64,7 @@ exports.updateTask = async (req, res) => {
       const now = new Date();
       const dueDate = task.dueDate ? new Date(task.dueDate) : null;
 
-      // Check if completed before deadline and has an assignee
+  
       if (dueDate && now < dueDate && task.assignedTo) {
         const rewards = { High: 30, Medium: 20, Low: 10 };
         const rewardAmount = rewards[task.priority] || 10;
@@ -87,11 +82,11 @@ exports.updateTask = async (req, res) => {
           }
         });
         
-        // Set metadata on the update object
+
         req.body.rewardProcessed = true;
         req.body.completedAt = now;
       } else {
-        // Mark as processed even if late so they can't get rewards later
+  
         req.body.rewardProcessed = true;
         req.body.completedAt = now;
       }
@@ -122,18 +117,25 @@ exports.deleteTask = async (req, res) => {
 
 
     
-    const memberRecord = workspace.members.find(m => 
+   const memberRecord = workspace.members.find(m => 
       m.user && m.user.toString() === req.user._id.toString()
     );
+    const isWorkspaceHead = memberRecord?.role === 'Admin';
 
-    const isAdmin = memberRecord?.role === 'Admin';
+
+    const project = await Project.findById(task.project);
+    const isProjectLead = project && project.lead && project.lead.toString() === req.user._id.toString();
     
+ 
     const isCreator = task.createdBy && task.createdBy.toString() === req.user._id.toString();
 
 
-    if (!isAdmin && !isCreator) {
-      return res.status(403).json({ msg: 'Permission denied. You are not the Admin or Creator.' });
+    if (!isWorkspaceHead && !isProjectLead && !isCreator) {
+      return res.status(403).json({ 
+        msg: 'Permission denied. You must be the Workspace Head, Project Lead, or Task Creator to delete this.' 
+      });
     }
+
 
     await task.deleteOne();
     res.status(200).json({ msg: 'Task removed' });
@@ -155,7 +157,7 @@ exports.uploadAttachment = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ msg: 'No file uploaded' });
 
-    // Upload to Cloudinary using the file buffer
+
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: 'workhive_attachments', resource_type: 'auto' },
       async (error, result) => {

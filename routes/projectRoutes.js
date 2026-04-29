@@ -10,7 +10,9 @@ const {
   createProject, 
   getProjectsForWorkspace, 
   updateProject, 
-  deleteProject 
+  deleteProject,
+  addProjectMember,
+  removeProjectMember
 } = require('../controllers/projectController');
 
 const { 
@@ -29,7 +31,8 @@ const {
 
 const { protect } = require('../middleware/authMiddleware');
 
-
+router.post('/:projectId/members', protect, addProjectMember);
+router.delete('/:projectId/members/:userId', protect, removeProjectMember);
 router.post('/tasks/:id/attachments', protect, upload.single('file'), uploadAttachment);
 router.delete('/tasks/:id/attachments/:publicId', protect, deleteAttachment);
 

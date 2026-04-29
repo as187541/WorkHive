@@ -26,7 +26,9 @@ const MainLayout = () => {
     setLoading(true);
     Promise.all([api.get('/auth/me'), api.get('/workspaces')])
       .then(([userRes, workspacesRes]) => {
-        setUser(userRes.data.data || userRes.data);
+        const userData = userRes.data.data || userRes.data;
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
         setWorkspaces(workspacesRes.data.data || workspacesRes.data);
       })
       .catch(() => {
