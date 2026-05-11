@@ -1498,6 +1498,1670 @@ p:last-child { margin-bottom: 0; }
 .balance-animate {
   animation: balancePop 0.5s ease-out;
 }
+
+/* ============================================
+   MESSAGING STYLES
+   ============================================ */
+
+/* Messages Page Layout */
+.messages-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: calc(100vh - var(--navbar-height));
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+/* Conversations Sidebar */
+.conversations-sidebar {
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+}
+
+.conversations-header {
+  padding: var(--spacing-4) var(--spacing-6);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.conversations-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.conversations-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.conversation-item:hover {
+  background: var(--bg-hover);
+}
+
+.conversation-item.active {
+  background: var(--bg-primary);
+  border-left: 3px solid var(--primary-500);
+}
+
+.conversation-item.unread {
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.conversation-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.conversation-avatar img,
+.conversation-avatar .avatar-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.conversation-avatar .avatar-placeholder {
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.unread-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  background: var(--primary-500);
+  border-radius: 50%;
+  border: 2px solid var(--bg-secondary);
+}
+
+.conversation-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversation-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.conversation-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.conversation-time {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.conversation-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.preview-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unread-badge {
+  background: var(--primary-500);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.delete-conversation-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.conversation-item:hover .delete-conversation-btn {
+  opacity: 1;
+}
+
+.delete-conversation-btn:hover {
+  color: var(--danger-500);
+}
+
+/* Chat Area */
+.chat-area {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+}
+
+.chat-header {
+  padding: var(--spacing-4) var(--spacing-6);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.chat-header-user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.chat-header-avatar,
+.chat-header-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.chat-header-avatar-placeholder {
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.chat-header-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Messages Container */
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-6);
+}
+
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.message-bubble {
+  display: flex;
+  gap: var(--spacing-2);
+  max-width: 70%;
+}
+
+.message-bubble.mine {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message-bubble.theirs {
+  align-self: flex-start;
+}
+
+.message-avatar,
+.message-avatar-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.message-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.message-avatar-placeholder {
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.message-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.message-bubble.mine .message-content-wrapper {
+  align-items: flex-end;
+}
+
+.message-content {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--border-radius-lg);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.message-bubble.mine .message-content {
+  background: var(--primary-500);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble.theirs .message-content {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-bottom-left-radius: 4px;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* Message Input */
+.message-input-form {
+  display: flex;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-6);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.message-input-form input {
+  flex: 1;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.message-input-form input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+}
+
+.message-input-form button {
+  padding: var(--spacing-3) var(--spacing-6);
+}
+
+/* Empty States */
+.chat-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-10);
+}
+
+.chat-empty-state .empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-4);
+}
+
+.chat-empty-state h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-2);
+}
+
+.chat-empty-state p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.chat-empty-state-sm {
+  text-align: center;
+  padding: var(--spacing-8);
+  color: var(--text-secondary);
+}
+
+.empty-state-sm {
+  text-align: center;
+  padding: var(--spacing-8);
+  color: var(--text-secondary);
+}
+
+.empty-state-sm p {
+  margin-bottom: var(--spacing-2);
+}
+
+.empty-hint {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.loading-state-sm {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-8);
+}
+
+/* Message Badge Button */
+.message-badge-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.message-badge-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.message-badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--primary-500);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Profile Actions */
+.profile-actions {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .messages-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .conversations-sidebar {
+    display: none;
+  }
+
+  .conversations-sidebar.open {
+    display: flex;
+    position: fixed;
+    top: var(--navbar-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+  }
+}
+
+/* ============================================
+   JOB POSTINGS STYLES
+   ============================================ */
+
+/* Job Postings Page */
+.job-postings-page {
+  padding: var(--spacing-8);
+}
+
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-6);
+}
+
+/* Job Posting Card */
+.job-posting-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.job-posting-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-500);
+}
+
+.job-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+
+.job-card-meta {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+.job-status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.job-status-badge.status-open {
+  background: var(--success-100);
+  color: var(--success-500);
+}
+
+.job-status-badge.status-filled {
+  background: var(--primary-100, #e0e7ff);
+  color: var(--primary-700, #4338ca);
+}
+
+.job-status-badge.status-closed {
+  background: var(--danger-100);
+  color: var(--danger-500);
+}
+
+.job-status-badge.status-in-progress {
+  background: var(--warning-100);
+  color: var(--warning-500);
+}
+
+.job-visibility-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+
+.job-posted-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.job-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-2);
+  line-height: 1.3;
+}
+
+.job-card-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-3);
+  line-height: 1.4;
+}
+
+.job-card-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+}
+
+.job-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.job-card-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+  margin-bottom: var(--spacing-3);
+}
+
+.skill-tag-sm {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.job-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--border-color);
+}
+
+.job-poster {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.poster-avatar-sm,
+.poster-avatar-placeholder-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.poster-avatar-placeholder-sm {
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.poster-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.job-card-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+/* Job Detail Page */
+.job-detail-page {
+  padding: var(--spacing-8);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.job-detail-header {
+  margin-bottom: var(--spacing-6);
+}
+
+.job-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--spacing-8);
+}
+
+.job-detail-meta {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+}
+
+.job-posted-date {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.job-detail-section {
+  margin-bottom: var(--spacing-6);
+}
+
+.job-detail-section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-3);
+}
+
+.job-description {
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+/* Proposals List */
+.proposals-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.proposal-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-5);
+}
+
+.proposal-freelancer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.proposal-avatar,
+.proposal-avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.proposal-avatar-placeholder {
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.proposal-freelancer-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.proposal-freelancer-info .freelancer-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.freelancer-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.proposal-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-3);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+}
+
+.proposal-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.proposal-cover-letter {
+  margin-bottom: var(--spacing-4);
+}
+
+.proposal-cover-letter h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-2);
+}
+
+.proposal-cover-letter p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.proposal-actions {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.proposal-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.proposal-status.status-pending {
+  background: var(--warning-100);
+  color: var(--warning-500);
+}
+
+.proposal-status.status-accepted {
+  background: var(--success-100);
+  color: var(--success-500);
+}
+
+.proposal-status.status-rejected {
+  background: var(--danger-100);
+  color: var(--danger-500);
+}
+
+.proposal-status.status-withdrawn {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* Job Sidebar */
+.job-detail-sidebar {
+  position: sticky;
+  top: var(--spacing-8);
+  height: fit-content;
+}
+
+.job-info-card,
+.job-poster-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-5);
+  margin-bottom: var(--spacing-4);
+}
+
+.job-info-card h3,
+.job-poster-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-4);
+}
+
+.job-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.info-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.poster-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.poster-avatar,
+.poster-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.poster-avatar-placeholder {
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.proposal-submitted-notice {
+  background: var(--success-100);
+  color: var(--success-500);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Proposal Job Summary */
+.proposal-job-summary {
+  background: var(--bg-secondary);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-4);
+}
+
+.proposal-job-summary h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-2);
+}
+
+.proposal-job-summary p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-2);
+}
+
+.proposal-job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  font-size: 0.8rem;
+}
+
+/* My Jobs Page */
+.my-jobs-page {
+  padding: var(--spacing-8);
+}
+
+/* Status Tabs */
+.status-tabs {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-4);
+}
+
+.status-tab {
+  padding: var(--spacing-2) var(--spacing-4);
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--border-radius-md);
+  transition: all 0.15s ease;
+}
+
+.status-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.status-tab.active {
+  background: var(--primary-500);
+  color: white;
+}
+
+.tab-count {
+  margin-left: var(--spacing-2);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-tab.active .tab-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* My Proposals Page */
+.my-proposals-page {
+  padding: var(--spacing-8);
+}
+
+.proposals-table-container {
+  overflow-x: auto;
+}
+
+.proposals-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.proposals-table th {
+  text-align: left;
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.proposals-table td {
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+
+.proposal-row:hover {
+  background: var(--bg-hover);
+}
+
+.proposal-job-title {
+  font-weight: 600;
+  color: var(--primary-500);
+  cursor: pointer;
+}
+
+.proposal-job-title:hover {
+  text-decoration: underline;
+}
+
+.proposal-job-poster {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.proposal-price {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.status-badge {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.status-pending {
+  background: var(--warning-100);
+  color: var(--warning-500);
+}
+
+.status-badge.status-accepted {
+  background: var(--success-100);
+  color: var(--success-500);
+}
+
+.status-badge.status-rejected {
+  background: var(--danger-100);
+  color: var(--danger-500);
+}
+
+.status-badge.status-withdrawn {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.proposal-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .job-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .job-detail-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .jobs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .job-card-details {
+    grid-template-columns: 1fr;
+  }
+
+  .proposals-table {
+    font-size: 0.8rem;
+  }
+
+  .proposals-table th,
+  .proposals-table td {
+    padding: var(--spacing-2);
+  }
+}
+
+/* ============================================
+   SERVICE PACKAGES STYLES
+   ============================================ */
+
+/* Service Package Card */
+.service-package-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.service-package-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-500);
+}
+
+.service-card-image {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.service-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.service-card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-hover));
+}
+
+.service-card-content {
+  padding: var(--spacing-4);
+}
+
+.service-card-freelancer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-3);
+  cursor: pointer;
+}
+
+.freelancer-avatar-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.freelancer-avatar-placeholder-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.freelancer-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.service-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-2);
+  line-height: 1.3;
+}
+
+.service-card-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-3);
+  line-height: 1.4;
+}
+
+.service-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-3);
+}
+
+.service-card-rating {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.rating-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.service-card-orders {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.service-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--border-color);
+}
+
+.service-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-1);
+}
+
+.price-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.price-currency {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Services Grid */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-6);
+}
+
+/* Service Card Wrapper (for My Services page) */
+.service-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.service-card-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  padding: 0 var(--spacing-4) var(--spacing-3);
+}
+
+.service-card-stats {
+  display: flex;
+  gap: var(--spacing-3);
+  padding: 0 var(--spacing-4) var(--spacing-3);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background: var(--success-100);
+  color: var(--success-500);
+}
+
+.status-paused {
+  background: var(--warning-100);
+  color: var(--warning-500);
+}
+
+.status-deleted {
+  background: var(--danger-100);
+  color: var(--danger-500);
+}
+
+/* Service Marketplace Page */
+.services-marketplace-page {
+  padding: var(--spacing-8);
+}
+
+.marketplace-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: var(--spacing-8);
+}
+
+.filters-sidebar {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-6);
+  height: fit-content;
+  position: sticky;
+  top: var(--spacing-8);
+}
+
+.filter-section {
+  margin-bottom: var(--spacing-6);
+}
+
+.filter-section h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-3);
+}
+
+.filter-section input,
+.filter-section select {
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.filter-section input:focus,
+.filter-section select:focus {
+  outline: none;
+  border-color: var(--primary-500);
+}
+
+.price-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.price-range-inputs input {
+  flex: 1;
+}
+
+.price-range-inputs span {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.marketplace-content {
+  min-width: 0;
+}
+
+.results-info {
+  margin-bottom: var(--spacing-4);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Service Detail Page */
+.service-detail-page {
+  padding: var(--spacing-8);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.service-detail-header {
+  margin-bottom: var(--spacing-6);
+}
+
+.service-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--spacing-8);
+}
+
+.service-detail-main h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-4);
+}
+
+.service-detail-freelancer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-4);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+}
+
+.freelancer-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.freelancer-avatar-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary-500);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.freelancer-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.freelancer-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.freelancer-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.availability-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.availability-badge.open-to-work {
+  background: var(--success-100);
+  color: var(--success-500);
+}
+
+.availability-badge.busy {
+  background: var(--warning-100);
+  color: var(--warning-500);
+}
+
+.availability-badge.not-available {
+  background: var(--danger-100);
+  color: var(--danger-500);
+}
+
+.service-detail-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+.service-detail-images img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--border-radius-md);
+}
+
+.service-image-placeholder {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+}
+
+.service-detail-section {
+  margin-bottom: var(--spacing-6);
+}
+
+.service-detail-section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-3);
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+}
+
+.feature-list li {
+  padding: var(--spacing-2) 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.service-detail-sidebar {
+  position: sticky;
+  top: var(--spacing-8);
+  height: fit-content;
+}
+
+.service-order-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-6);
+}
+
+.service-price {
+  text-align: center;
+  margin-bottom: var(--spacing-6);
+  padding-bottom: var(--spacing-6);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.service-price .price-value {
+  font-size: 2rem;
+}
+
+.service-price .price-currency {
+  font-size: 1rem;
+}
+
+.service-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+.service-meta-list .meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.service-meta-list .meta-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.service-meta-list .meta-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Order Summary in Modal */
+.order-summary {
+  background: var(--bg-secondary);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-4);
+}
+
+.order-summary h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-2);
+}
+
+.order-summary p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-3);
+}
+
+.order-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  font-size: 0.8rem;
+  margin-bottom: var(--spacing-2);
+}
+
+.order-freelancer {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Skill Input Row */
+.skill-input-row {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.skill-input-row input {
+  flex: 1;
+}
+
+/* Feature Input Row */
+.feature-input-row {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.feature-input-row input {
+  flex: 1;
+}
+
+/* Modal Large */
+.modal-lg {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* My Services Page */
+.my-services-page {
+  padding: var(--spacing-8);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-8);
+}
+
+.pagination button {
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.pagination span {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .marketplace-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-sidebar {
+    position: static;
+  }
+
+  .service-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .service-detail-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row-grid {
+    grid-template-columns: 1fr;
+  }
+}
 /* Reward Tags on Kanban Cards */
 .reward-tag {
   font-size: 0.7rem;

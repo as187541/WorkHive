@@ -17,8 +17,18 @@ import AdminLogsPage from './pages/AdminLogsPage';
 import AdminTokensPage from './pages/AdminTokensPage';
 import AdminRedemptionsPage from './pages/AdminRedemptionsPage';
 import MyRedemptionsPage from './pages/MyRedemptionsPage';
+import TalentMarketplace from './pages/TalentMarketplace';
+import TalentProfilePage from './pages/TalentProfilePage';
+import HireInvitationsPage from './pages/HireInvitationsPage';
+import MyServices from './pages/MyServices';
+import ServicePackagesMarketplace from './pages/ServicePackagesMarketplace';
+import ServicePackageDetail from './pages/ServicePackageDetail';
+import MessagesPage from './pages/MessagesPage';
+import JobPostingsPage from './pages/JobPostingsPage';
+import JobPostingDetail from './pages/JobPostingDetail';
+import MyJobPostings from './pages/MyJobPostings';
+import MyProposals from './pages/MyProposals';
 
-// Helper component to protect routes
 const AuthCheck = ({ children }) => {
   const isAuth = !!localStorage.getItem('token');
   return isAuth ? children : <Navigate to="/login" />;
@@ -28,31 +38,34 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Route */}
+  
         <Route path="/login" element={<LoginPage />} />
-        
-        {/* Protected Routes - All wrapped in ONE MainLayout block */}
+
         <Route path="/" element={<AuthCheck><MainLayout /></AuthCheck>}>
-          
-          {/* 
-             This is the "Home" page of your app. 
-             It shows all your workspace cards (WorkspaceDashboard).
-          */}
+
           <Route index element={<WorkspaceDashboard />} />
-          
-          {/* This shows a specific workspace when clicked */}
+ 
           <Route path="workspaces/:workspaceId" element={<WorkspaceDetail />} />
-          
-          {/* Profile page */}
+   
           <Route path="profile" element={<ProfilePage />} />
           
         <Route path="rewards" element={<RewardStore />} />
         <Route path="my-redemptions" element={<MyRedemptionsPage />} />
         <Route path="review-redemptions" element={<AdminRedemptionsPage />} />
+        <Route path="talent" element={<TalentMarketplace />} />
+        <Route path="talent/:userId" element={<TalentProfilePage />} />
+        <Route path="hire-invitations" element={<HireInvitationsPage />} />
+        <Route path="services" element={<ServicePackagesMarketplace />} />
+        <Route path="services/:serviceId" element={<ServicePackageDetail />} />
+        <Route path="my-services" element={<MyServices />} />
+        <Route path="messages" element={<MessagesPage />} />
+        <Route path="jobs" element={<JobPostingsPage />} />
+        <Route path="jobs/:jobId" element={<JobPostingDetail />} />
+        <Route path="my-jobs" element={<MyJobPostings />} />
+        <Route path="my-proposals" element={<MyProposals />} />
           
         </Route>
 
-        {/* Admin Routes - Protected by AdminRoute */}
         <Route path="/admin" element={<AuthCheck><AdminRoute><MainLayout /></AdminRoute></AuthCheck>}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsersPage />} />
@@ -62,7 +75,6 @@ function App() {
           <Route path="redemptions" element={<AdminRedemptionsPage />} />
         </Route>
 
-        {/* Catch-all: Redirect any unknown routes to home */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

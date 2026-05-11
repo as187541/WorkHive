@@ -20,11 +20,21 @@ const projectSchema = new mongoose.Schema({
   },
  
   members: [
-    { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     }
   ],
+  status: {
+    type: String,
+    enum: ['Active', 'Completed', 'Archived'],
+    default: 'Active'
+  },
+  contractors: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    role: { type: String, enum: ['Contractor', 'Guest'], required: true, default: 'Contractor' },
+    joinedAt: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Project', projectSchema);

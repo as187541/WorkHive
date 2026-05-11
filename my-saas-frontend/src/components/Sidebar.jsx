@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import React from 'react';
 import { NavLink, useParams } from 'react-router-dom';
-import { FiAward, FiPlus, FiUsers, FiLayout, FiShoppingBag, FiShield, FiClock, FiInbox } from 'react-icons/fi';
+import { FiAward, FiPlus, FiUsers, FiLayout, FiShoppingBag, FiShield, FiClock, FiInbox, FiBriefcase, FiPackage, FiMessageSquare, FiClipboard, FiFileText } from 'react-icons/fi';
 import api from '../services/api';
 
 const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }) => {
@@ -51,6 +51,46 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
             <li>
               <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
                 <FiLayout style={{marginRight: '10px'}} /> Dashboard
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/talent" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiUsers style={{marginRight: '10px'}} /> Talent Marketplace
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiPackage style={{marginRight: '10px'}} /> Service Marketplace
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/my-services" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiBriefcase style={{marginRight: '10px'}} /> My Services
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/messages" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiMessageSquare style={{marginRight: '10px'}} /> Messages
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/jobs" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiClipboard style={{marginRight: '10px'}} /> Job Board
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/my-jobs" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiFileText style={{marginRight: '10px'}} /> My Job Postings
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/my-proposals" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiFileText style={{marginRight: '10px'}} /> My Proposals
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/hire-invitations" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FiBriefcase style={{marginRight: '10px'}} /> My Hire Requests
               </NavLink>
             </li>
             <li>

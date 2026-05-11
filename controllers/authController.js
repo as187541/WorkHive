@@ -2,6 +2,7 @@ const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/userModel');
 const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
+const HireInvitation = require('../models/hireInvitationModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -320,6 +321,87 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// --- TALENT PROFILE MANAGEMENT ---
+
+/**
+ * @desc    Update talent profile fields (bio, skills, portfolio, availability, hourlyRate)
+ * @route   PATCH /api/v1/auth/update-talent-profile
+ * @access  Private
+ */
+const updateTalentProfile = async (req, res) => {
+  try {
+    const { bio, skills, portfolio, availabilityStatus, hourlyRate } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found.' });
+    }
+
+    if (bio !== undefined) user.bio = bio;
+    if (skills !== undefined) user.skills = skills;
+    if (portfolio !== undefined) user.portfolio = portfolio;
+    if (availabilityStatus !== undefined) user.availabilityStatus = availabilityStatus;
+    if (hourlyRate !== undefined) user.hourlyRate = hourlyRate;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      msg: 'Talent profile updated successfully.',
+      data: {
+        bio: user.bio,
+        skills: user.skills,
+        portfolio: user.portfolio,
+        availabilityStatus: user.availabilityStatus,
+        hourlyRate: user.hourlyRate
+      }
+    });
+  } catch (error) {
+    console.error('updateTalentProfile error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Get current user's talent stats
+ * @route   GET /api/v1/auth/me/talent-stats
+ * @access  Private
+ */
+const getMyTalentStats = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('ratingAverage totalCompletedProjects availabilityStatus bio skills portfolio hourlyRate');
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found.' });
+    }
+
+    // Count pending hire invitations
+    const pendingHires = await HireInvitation.countDocuments({
+      invitedUser: req.user._id,
+      status: 'Pending',
+      expiresAt: { $gt: new Date() }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ratingAverage: user.ratingAverage,
+        totalCompletedProjects: user.totalCompletedProjects,
+        availabilityStatus: user.availabilityStatus,
+        bio: user.bio,
+        skills: user.skills,
+        portfolio: user.portfolio,
+        hourlyRate: user.hourlyRate,
+        pendingHires
+      }
+    });
+  } catch (error) {
+    console.error('getMyTalentStats error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
 // --- EXPORTS (Update this block) ---
 module.exports = {
   register,
@@ -331,5 +413,7 @@ module.exports = {
   getUserProfile,
   redeemTokens,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  updateTalentProfile,
+  getMyTalentStats
 };

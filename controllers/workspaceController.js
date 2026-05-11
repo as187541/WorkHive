@@ -30,6 +30,7 @@ const createWorkspace = async (req, res) => {
 const getWorkspaces = async (req, res) => {
   try {
     const workspaces = await Workspace.find({ 'members.user': req.user._id });
+    // workspaces fetched successfully
     res.status(200).json(workspaces);
   } catch (error) {
     res.status(500).json({ msg: 'Server Error' });

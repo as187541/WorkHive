@@ -12,6 +12,13 @@ const authRouter = require('./routes/authRoutes');
 const workspaceRouter = require('./routes/workspaceRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const redemptionRouter = require('./routes/redemptionRoutes');
+const talentRouter = require('./routes/talentRoutes');
+const hireRouter = require('./routes/hireRoutes');
+const ratingRouter = require('./routes/ratingRoutes');
+const servicePackageRouter = require('./routes/servicePackageRoutes');
+const messageRouter = require('./routes/messageRoutes');
+const jobPostingRouter = require('./routes/jobPostingRoutes');
+const proposalRouter = require('./routes/proposalRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -28,6 +35,13 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/workspaces', workspaceRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/redemptions', redemptionRouter);
+app.use('/api/v1/talent', talentRouter);
+app.use('/api/v1/hires', hireRouter);
+app.use('/api/v1/ratings', ratingRouter);
+app.use('/api/v1/services', servicePackageRouter);
+app.use('/api/v1/messages', messageRouter);
+app.use('/api/v1/jobs', jobPostingRouter);
+app.use('/api/v1/proposals', proposalRouter);
 
 // --- STARTUP LOGIC ---
 const startServer = async () => {

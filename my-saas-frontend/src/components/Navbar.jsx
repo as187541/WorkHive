@@ -1,8 +1,10 @@
 // src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShield, FiBell } from 'react-icons/fi';
+import { FiShield, FiBell, FiUsers, FiPackage, FiClipboard } from 'react-icons/fi';
 import ThemeSwitcher from './ThemeSwitcher';
+import HireNotificationBadge from './HireNotificationBadge';
+import MessageBadge from './MessageBadge';
 import api from '../services/api';
 
 const Navbar = ({ user, onCreateWorkspaceClick }) => {
@@ -43,6 +45,15 @@ const Navbar = ({ user, onCreateWorkspaceClick }) => {
       {/* Left: Branding/Home Link */}
       <div className="navbar-left">
         <Link to="/" className="nav-home-link">Dashboard</Link>
+        <Link to="/talent" className="nav-home-link">
+          <FiUsers style={{ marginRight: '6px' }} /> Talent
+        </Link>
+        <Link to="/services" className="nav-home-link">
+          <FiPackage style={{ marginRight: '6px' }} /> Services
+        </Link>
+        <Link to="/jobs" className="nav-home-link">
+          <FiClipboard style={{ marginRight: '6px' }} /> Jobs
+        </Link>
         {user?.role === 'SuperAdmin' && (
           <Link to="/admin" className="nav-admin-link">
             <FiShield style={{ marginRight: '6px' }} /> Admin
@@ -61,6 +72,9 @@ const Navbar = ({ user, onCreateWorkspaceClick }) => {
 
       {/* Right: Actions & Profile */}
       <div className="navbar-user-actions">
+        <MessageBadge />
+        <HireNotificationBadge />
+        
         {/* Create Workspace Trigger */}
         <button 
           onClick={onCreateWorkspaceClick} 

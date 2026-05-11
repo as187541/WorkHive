@@ -20,15 +20,32 @@ const UserSchema = new mongoose.Schema({
   otp: { type: String },
   otpExpires: { type: Date },
   wallet: {
-  balance: { type: Number, default: 0 },
-  history: [{
-    amount: Number,
-    reason: String,
-    taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
-    date: { type: Date, default: Date.now }
-  }]
-}
-}, 
+    balance: { type: Number, default: 0 },
+    history: [{
+      amount: Number,
+      reason: String,
+      taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+      date: { type: Date, default: Date.now }
+    }]
+  },
+  // --- TALENT PROFILE FIELDS ---
+  bio: { type: String, maxlength: 500, default: '' },
+  skills: [{ type: String, trim: true }],
+  portfolio: [{
+    title: { type: String, required: true, trim: true },
+    description: { type: String, maxlength: 1000, default: '' },
+    url: { type: String, default: '' },
+    image: { type: String, default: '' }
+  }],
+  ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
+  totalCompletedProjects: { type: Number, default: 0, min: 0 },
+  availabilityStatus: {
+    type: String,
+    enum: ['Open to work', 'Busy', 'Not available'],
+    default: 'Open to work'
+  },
+  hourlyRate: { type: Number, min: 0, default: null }
+},
 { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);
