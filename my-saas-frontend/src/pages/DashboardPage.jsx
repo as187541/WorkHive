@@ -2,9 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
   FiFolder, FiCheckSquare, FiAward, FiUserPlus,
-  FiPlus, FiSearch, FiGift, FiClock
+  FiPlus, FiSearch, FiGift, FiClock, FiArrowRight,
+  FiFileText, FiMessageSquare
 } from 'react-icons/fi';
 import api from '../services/api';
+
+const ACTION_ICONS = {
+  task_created: FiFileText,
+  task_updated: FiCheckSquare,
+  task_completed: FiCheckSquare,
+  task_assigned: FiUserPlus,
+  hire_sent: FiUserPlus,
+  hire_accepted: FiCheckSquare,
+  hire_rejected: FiMessageSquare,
+  project_created: FiFolder,
+  project_joined: FiUserPlus,
+  workspace_joined: FiFolder,
+  workspace_created: FiFolder
+};
+
+const ACTION_LABELS = {
+  task_created: 'Created task',
+  task_updated: 'Updated task',
+  task_completed: 'Completed task',
+  task_assigned: 'Assigned task',
+  hire_sent: 'Sent hire invitation',
+  hire_accepted: 'Accepted hire invitation',
+  hire_rejected: 'Declined hire invitation',
+  project_created: 'Created project',
+  project_joined: 'Joined project',
+  workspace_joined: 'Joined workspace',
+  workspace_created: 'Created workspace',
+  message_sent: 'Sent message',
+  proposal_submitted: 'Submitted proposal',
+  proposal_accepted: 'Accepted proposal'
+};
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -27,9 +59,10 @@ const DashboardPage = () => {
 
     const fetchDashboardData = async () => {
       try {
-        const [tasksResult, hiresResult] = await Promise.allSettled([
+        const [tasksResult, hiresResult, activitiesResult] = await Promise.allSettled([
           api.get('/tasks/my'),
-          api.get('/hires/received')
+          api.get('/hires/received'),
+          api.get('/activities?limit=20')
         ]);
 
         const tasks = tasksResult.status === 'fulfilled'
@@ -37,6 +70,9 @@ const DashboardPage = () => {
           : [];
         const hires = hiresResult.status === 'fulfilled'
           ? (hiresResult.value.data.data || hiresResult.value.data || [])
+          : [];
+        const activitiesData = activitiesResult.status === 'fulfilled'
+          ? (activitiesResult.value.data.data || [])
           : [];
 
         if (tasksResult.status === 'rejected') {
@@ -75,33 +111,7 @@ const DashboardPage = () => {
           pendingHiresCount: pendingHires
         });
 
-        const activityList = [];
-        tasks.filter(t => t.status === 'Done').slice(0, 3).forEach(t => {
-          activityList.push({
-            id: `task-${t._id}`,
-            user: t.assignedTo?.name || 'Someone',
-            avatar: t.assignedTo?.avatar,
-            action: 'completed task',
-            target: t.title,
-            time: t.updatedAt,
-            type: 'task'
-          });
-        });
-
-        hires.filter(h => h.status === 'Accepted').slice(0, 2).forEach(h => {
-          activityList.push({
-            id: `hire-${h._id}`,
-            user: h.freelancer?.name || 'Someone',
-            avatar: h.freelancer?.avatar,
-            action: 'accepted hire invitation for',
-            target: h.workspace?.name || 'a workspace',
-            time: h.updatedAt,
-            type: 'hire'
-          });
-        });
-
-        activityList.sort((a, b) => new Date(b.time) - new Date(a.time));
-        setActivities(activityList.slice(0, 6));
+        setActivities(activitiesData);
       } catch (err) {
         console.error('Dashboard data fetch error:', err);
       } finally {
@@ -174,7 +184,7 @@ const DashboardPage = () => {
       onClick: () => navigate('/workspaces')
     },
     {
-      title: 'Post Project',
+      title: 'Post a Job',
       description: 'Find talent for your needs',
       icon: FiPlus,
       color: '#3b82f6',
@@ -237,36 +247,45 @@ const DashboardPage = () => {
       <div className="dashboard-content">
         <div className="activity-section">
           <div className="section-header">
-            <h2>Recent Activity</h2>
-            <p className="section-description">Latest updates from your workspaces</p>
+            <div>
+              <h2>Recent Activity</h2>
+              <p className="section-description">Latest updates from your workspaces</p>
+            </div>
+            <button className="btn-secondary" onClick={() => navigate('/activity-log')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              View All <FiArrowRight size={14} />
+            </button>
           </div>
 
           <div className="activity-list">
             {activities.length > 0 ? (
-              activities.map(activity => (
-                <div key={activity.id} className="activity-item">
-                  <div className="activity-avatar">
-                    {activity.avatar ? (
-                      <img src={activity.avatar} alt={activity.user} />
-                    ) : (
-                      <div className="activity-avatar-placeholder">
-                        {activity.user.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+              activities.map(activity => {
+                const ActionIcon = ACTION_ICONS[activity.action] || FiClock;
+                const actionLabel = ACTION_LABELS[activity.action] || activity.action;
+                return (
+                  <div key={activity._id} className="activity-item">
+                    <div className="activity-avatar">
+                      {activity.user?.avatar ? (
+                        <img src={activity.user.avatar} alt={activity.user.name} />
+                      ) : (
+                        <div className="activity-avatar-placeholder">
+                          <ActionIcon size={14} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="activity-content">
+                      <p>
+                        <strong>{activity.user?.name || 'You'}</strong>{' '}
+                        {actionLabel}{' '}
+                        <strong>{activity.target}</strong>
+                      </p>
+                      <span className="activity-time">
+                        <FiClock size={12} style={{ marginRight: '4px' }} />
+                        {formatTimeAgo(activity.createdAt)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="activity-content">
-                    <p>
-                      <strong>{activity.user}</strong>{' '}
-                      {activity.action}{' '}
-                      <strong>{activity.target}</strong>
-                    </p>
-                    <span className="activity-time">
-                      <FiClock size={12} style={{ marginRight: '4px' }} />
-                      {formatTimeAgo(activity.time)}
-                    </span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="empty-activity">
                 <p>No recent activity yet.</p>

@@ -4,6 +4,7 @@ const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
 const sendEmail = require('../utils/sendEmail');
 const { emitHireInvitation, emitNotification } = require('../utils/socket');
+const { logActivity } = require('./activityController');
 
 /**
  * @desc    Send a hire invitation to a user for a specific project
@@ -92,6 +93,13 @@ const sendHireInvitation = async (req, res) => {
         <p>This invitation expires in 7 days.</p>
       `
     });
+
+    // Log activity (non-blocking)
+    logActivity(req.user._id, 'hire_sent', `${invitedUser.name} to ${workspace.name}`, {
+      workspace: workspaceId,
+      project: projectId,
+      metadata: { invitedUser: userId, role }
+    }).catch(err => console.error('Activity log error:', err.message));
 
     res.status(201).json({
       success: true,
@@ -193,26 +201,42 @@ const acceptHireInvitation = async (req, res) => {
       return res.status(404).json({ msg: 'Workspace no longer exists.' });
     }
 
-    workspace.members.push({
-      user: req.user._id,
-      role: hireInvitation.role
-    });
-    await workspace.save();
+    // Check if user is already a member (prevent duplicate)
+    const isAlreadyMember = workspace.members.some(m => m.user.equals(req.user._id));
+    if (!isAlreadyMember) {
+      // Map hire role to valid workspace role (workspace only allows Admin/Collaborator)
+      const workspaceRole = hireInvitation.role === 'Admin' ? 'Admin' : 'Collaborator';
+      workspace.members.push({
+        user: req.user._id,
+        role: workspaceRole
+      });
+      await workspace.save();
+    }
 
     // Add user to project.contractors
     const project = await Project.findById(hireInvitation.project);
     if (project) {
-      project.contractors.push({
-        user: req.user._id,
-        role: hireInvitation.role,
-        joinedAt: new Date()
-      });
-      await project.save();
+      const isAlreadyContractor = project.contractors?.some(c => c.user.equals(req.user._id));
+      if (!isAlreadyContractor) {
+        project.contractors.push({
+          user: req.user._id,
+          role: hireInvitation.role,
+          joinedAt: new Date()
+        });
+        await project.save();
+      }
     }
 
     // Update invitation status
     hireInvitation.status = 'Accepted';
     await hireInvitation.save();
+
+    // Log activity (non-blocking)
+    logActivity(req.user._id, 'hire_accepted', `${workspace.name} as ${hireInvitation.role}`, {
+      workspace: hireInvitation.workspace,
+      project: hireInvitation.project,
+      metadata: { invitationId: hireInvitation._id }
+    }).catch(err => console.error('Activity log error:', err.message));
 
     // Update user availability to Busy
     await User.findByIdAndUpdate(req.user._id, { availabilityStatus: 'Busy' });
@@ -270,6 +294,13 @@ const rejectHireInvitation = async (req, res) => {
 
     hireInvitation.status = 'Rejected';
     await hireInvitation.save();
+
+    // Log activity (non-blocking)
+    logActivity(req.user._id, 'hire_rejected', `invitation from ${workspace?.name || 'a workspace'}`, {
+      workspace: hireInvitation.workspace,
+      project: hireInvitation.project,
+      metadata: { invitationId: hireInvitation._id }
+    }).catch(err => console.error('Activity log error:', err.message));
 
     // Notify sender
     const sender = await User.findById(hireInvitation.sender);

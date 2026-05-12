@@ -1,6 +1,6 @@
 // src/pages/WorkspaceDetail.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
+import { useParams, useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useSocket } from '../contexts/SocketContext';
 import CreateProjectModal from '../components/CreateProjectModal';
@@ -11,6 +11,7 @@ import TaskDetailDrawer from '../components/TaskDetailDrawer';
 const WorkspaceDetail = () => {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, collaborators, openProfile } = useOutletContext();
 
   const { socket, joinProject } = useSocket();
@@ -75,6 +76,41 @@ const WorkspaceDetail = () => {
       .finally(() => setLoading(false));
     }
   }, [workspaceId, navigate]);
+
+  // Auto-select project and open task from URL params
+  const [autoSelected, setAutoSelected] = useState(false);
+  useEffect(() => {
+    if (autoSelected || !projects.length) return;
+
+    const projectIdFromUrl = searchParams.get('project');
+    const taskIdFromUrl = searchParams.get('task');
+
+    if (projectIdFromUrl) {
+      const project = projects.find(p => p._id === projectIdFromUrl);
+      if (project) {
+        setSelectedProject(project);
+        setAutoSelected(true);
+
+        if (taskIdFromUrl) {
+          // Fetch tasks for this project, then open the task drawer
+          api.get(`/workspaces/${workspaceId}/projects/${project._id}/tasks`)
+            .then(res => {
+              const taskData = res.data || [];
+              setTasks(taskData);
+              const task = taskData.find(t => t._id === taskIdFromUrl);
+              if (task) {
+                setActiveTask(task);
+                setIsDrawerOpen(true);
+              }
+            })
+            .catch(err => console.error('Failed to fetch tasks for deep link:', err));
+        }
+
+        // Clear URL params so they don't re-trigger on re-renders
+        navigate(`/workspaces/${workspaceId}`, { replace: true });
+      }
+    }
+  }, [projects, searchParams, autoSelected, workspaceId, navigate]);
 
   // Socket: Listen for real-time task updates
   useEffect(() => {

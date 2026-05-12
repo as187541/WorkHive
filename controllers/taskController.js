@@ -5,6 +5,7 @@ const User = require('../models/userModel');
 const Project = require('../models/projectModel');
 const cloudinary = require('cloudinary').v2;
 const { emitTaskUpdate, emitNotification } = require('../utils/socket');
+const { logActivity } = require('./activityController');
 
 
 
@@ -41,6 +42,14 @@ exports.createTask = async (req, res) => {
         data: { taskId: task._id, projectId }
       });
     }
+
+    // Log activity (non-blocking)
+    const project = await Project.findById(projectId).lean();
+    logActivity(req.user._id, assignedTo && assignedTo !== '' ? 'task_assigned' : 'task_created', title, {
+      workspace: project?.workspace,
+      project: projectId,
+      metadata: { assignedTo: assignedTo || null, priority: priority || 'Medium' }
+    }).catch(err => console.error('Activity log error:', err.message));
 
     res.status(201).json(populatedTask  );
   } catch (error) {
@@ -126,6 +135,17 @@ exports.updateTask = async (req, res) => {
         message: `Task "${updatedTask.title}" status changed to ${status}`,
         data: { taskId: updatedTask._id, status }
       });
+    }
+
+    // Log activity for status changes (non-blocking)
+    if (status) {
+      const actionType = status === 'Done' ? 'task_completed' : 'task_updated';
+      const proj = await Project.findById(updatedTask.project?._id || updatedTask.project).lean();
+      logActivity(req.user._id, actionType, updatedTask.title, {
+        workspace: proj?.workspace,
+        project: updatedTask.project?._id || updatedTask.project,
+        metadata: { status, taskId: updatedTask._id }
+      }).catch(err => console.error('Activity log error:', err.message));
     }
 
     res.status(200).json(updatedTask);

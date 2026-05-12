@@ -1,6 +1,7 @@
 const Project = require('../models/projectModel');
 const Workspace = require('../models/workspaceModel');
 const Task = require('../models/taskModel');
+const { logActivity } = require('./activityController');
 
 /**
  * @desc    Create a new project
@@ -38,6 +39,14 @@ const createProject = async (req, res) => {
     });
 
     const populatedProject = await newProject.populate('lead', 'name email avatar');
+
+    // Log activity (non-blocking)
+    logActivity(userId, 'project_created', name, {
+      workspace: workspaceId,
+      project: newProject._id,
+      metadata: { leadId: finalLeadId }
+    }).catch(err => console.error('Activity log error:', err.message));
+
     res.status(201).json(populatedProject);
   } catch (error) {
     console.error("CREATE PROJECT ERROR:", error);

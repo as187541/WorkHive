@@ -3,6 +3,7 @@
 const Workspace = require('../models/workspaceModel');
 const User = require('../models/userModel');
 const Invitation = require('../models/invitationModel');
+const { logActivity } = require('./activityController');
 
 /**
  * @desc    Create a new workspace
@@ -17,6 +18,11 @@ const createWorkspace = async (req, res) => {
       description,
       members: [{ user: req.user._id, role: 'Admin' }], 
     });
+
+    // Log activity (non-blocking)
+    logActivity(req.user._id, 'workspace_created', name, {
+      workspace: newWorkspace._id
+    }).catch(err => console.error('Activity log error:', err.message));
 
     res.status(201).json(newWorkspace);
   } catch (error) {
@@ -138,6 +144,11 @@ const acceptInvitation = async (req, res) => {
 
     invite.status = 'Accepted';
     await invite.save();
+
+    // Log activity (non-blocking)
+    logActivity(req.user._id, 'workspace_joined', workspace.name, {
+      workspace: workspace._id
+    }).catch(err => console.error('Activity log error:', err.message));
 
     res.status(200).json({ msg: 'Joined workspace!' });
   } catch (error) {

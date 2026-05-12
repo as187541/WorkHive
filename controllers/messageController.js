@@ -231,7 +231,7 @@ const sendMessage = async (req, res) => {
     const otherUnreadEntry = otherParticipantUnread.unreadCounts?.find(
       u => String(u.user) === String(otherParticipant)
     );
-    emitUnreadCount(otherParticipant, otherUnreadEntry?.count || 1);
+    emitUnreadCount(otherParticipant, otherUnreadEntry?.count || 1, conversationId);
 
     res.status(201).json({
       success: true,

@@ -6,6 +6,7 @@ import PortfolioGallery from '../components/PortfolioGallery';
 import HireModal from '../components/HireModal';
 import ServicePackageCard from '../components/ServicePackageCard';
 import OrderServiceModal from '../components/OrderServiceModal';
+import { FiUserPlus, FiCheck, FiClock, FiX } from 'react-icons/fi';
 import './TalentProfilePage.css';
 const TalentProfilePage = () => {
   const { userId } = useParams();
@@ -17,6 +18,10 @@ const TalentProfilePage = () => {
   const [showHireModal, setShowHireModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('none'); // none, pending, accepted, declined
+  const [connectionId, setConnectionId] = useState(null);
+  const [isRequester, setIsRequester] = useState(false);
+  const [connectLoading, setConnectLoading] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,6 +33,16 @@ const TalentProfilePage = () => {
         ]);
         setProfile(profileRes.data.data);
         setServices(servicesRes.data.data || []);
+
+        // Fetch connection status
+        try {
+          const connRes = await api.get(`/connections/status/${userId}`);
+          setConnectionStatus(connRes.data.data.status);
+          setConnectionId(connRes.data.data.connectionId);
+          setIsRequester(connRes.data.data.isRequester || false);
+        } catch (e) {
+          // Connection status fetch failed - not critical
+        }
       } catch (err) {
         setError(err.response?.data?.msg || 'Failed to load profile');
       } finally {
@@ -37,6 +52,51 @@ const TalentProfilePage = () => {
 
     fetchProfile();
   }, [userId]);
+
+  const handleConnect = async () => {
+    setConnectLoading(true);
+    try {
+      const res = await api.post('/connections/request', { recipientId: userId });
+      setConnectionStatus('pending');
+      setConnectionId(res.data.data._id);
+      setIsRequester(true);
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to send connection request');
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!connectionId) return;
+    if (!window.confirm('Remove this connection?')) return;
+    setConnectLoading(true);
+    try {
+      await api.delete(`/connections/${connectionId}`);
+      setConnectionStatus('none');
+      setConnectionId(null);
+      setIsRequester(false);
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to remove connection');
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!connectionId) return;
+    setConnectLoading(true);
+    try {
+      await api.delete(`/connections/${connectionId}`);
+      setConnectionStatus('none');
+      setConnectionId(null);
+      setIsRequester(false);
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to cancel request');
+    } finally {
+      setConnectLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -106,6 +166,27 @@ const TalentProfilePage = () => {
           )}
 
           <div className="profile-actions">
+            {connectionStatus === 'accepted' ? (
+              <button className="btn btn-connected" onClick={handleDisconnect} disabled={connectLoading}>
+                <FiCheck size={16} /> Connected
+              </button>
+            ) : connectionStatus === 'pending' && isRequester ? (
+              <button className="btn btn-pending" onClick={handleCancelRequest} disabled={connectLoading}>
+                <FiClock size={16} /> Pending
+              </button>
+            ) : connectionStatus === 'pending' && !isRequester ? (
+              <button className="btn btn-pending" disabled>
+                <FiClock size={16} /> Wants to Connect
+              </button>
+            ) : connectionStatus === 'declined' ? (
+              <button className="btn btn-declined" onClick={handleConnect} disabled={connectLoading}>
+                <FiX size={16} /> Reconnect
+              </button>
+            ) : (
+              <button className="btn btn-connect" onClick={handleConnect} disabled={connectLoading}>
+                <FiUserPlus size={16} /> Connect
+              </button>
+            )}
             <button
               className="btn-hire"
               onClick={() => setShowHireModal(true)}

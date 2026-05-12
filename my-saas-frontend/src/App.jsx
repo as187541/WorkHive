@@ -30,6 +30,8 @@ import JobPostingDetail from './pages/JobPostingDetail';
 import MyJobPostings from './pages/MyJobPostings';
 import MyProposals from './pages/MyProposals';
 import MyTasksPage from './pages/MyTasksPage';
+import ActivityLogPage from './pages/ActivityLogPage';
+import ConnectionsPage from './pages/ConnectionsPage';
 
 import { SocketProvider } from './contexts/SocketContext';
 
@@ -64,11 +66,13 @@ function App() {
           <Route path="services/:serviceId" element={<ServicePackageDetail />} />
           <Route path="my-services" element={<MyServices />} />
           <Route path="messages" element={<MessagesPage />} />
+          <Route path="connections" element={<ConnectionsPage />} />
           <Route path="jobs" element={<JobPostingsPage />} />
           <Route path="jobs/:jobId" element={<JobPostingDetail />} />
           <Route path="my-jobs" element={<MyJobPostings />} />
           <Route path="my-proposals" element={<MyProposals />} />
           <Route path="my-tasks" element={<MyTasksPage />} />
+          <Route path="activity-log" element={<ActivityLogPage />} />
             
           </Route>
 

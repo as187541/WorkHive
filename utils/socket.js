@@ -26,7 +26,7 @@ const initSocket = (httpServer) => {
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id).select('-password');
+      const user = await User.findById(decoded.userId).select('-password');
       
       if (!user) {
         return next(new Error('Authentication error: User not found'));
@@ -80,7 +80,7 @@ const initSocket = (httpServer) => {
 
     // Handle typing indicator
     socket.on('typing', ({ conversationId }) => {
-      socket.to(`conversation:${conversationId}`).emit('typing', {
+      socket.to(`conversation:${conversationId}`).emit('user_typing', {
         conversationId,
         userId: socket.userId
       });
@@ -88,7 +88,7 @@ const initSocket = (httpServer) => {
 
     // Handle stop typing
     socket.on('stop_typing', ({ conversationId }) => {
-      socket.to(`conversation:${conversationId}`).emit('stop_typing', {
+      socket.to(`conversation:${conversationId}`).emit('user_stop_typing', {
         conversationId,
         userId: socket.userId
       });
@@ -118,7 +118,7 @@ const getIO = () => {
  */
 const emitMessage = (conversationId, message) => {
   if (!io) return;
-  io.to(`conversation:${conversationId}`).emit('message:received', {
+  io.to(`conversation:${conversationId}`).emit('new_message', {
     message,
     conversationId
   });
@@ -127,9 +127,9 @@ const emitMessage = (conversationId, message) => {
 /**
  * Emit unread count update to a user
  */
-const emitUnreadCount = (userId, count) => {
+const emitUnreadCount = (userId, count, conversationId) => {
   if (!io) return;
-  io.to(`user:${userId}`).emit('message:unread_count', { count });
+  io.to(`user:${userId}`).emit('unread_count', { conversationId, count });
 };
 
 /**

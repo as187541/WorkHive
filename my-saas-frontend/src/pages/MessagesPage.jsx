@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useSocket } from '../contexts/SocketContext';
+import { FiSearch, FiX } from 'react-icons/fi';
 
 const MessagesPage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,10 @@ const MessagesPage = () => {
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const [showNewMessage, setShowNewMessage] = useState(false);
+  const [connectionSearch, setConnectionSearch] = useState('');
+  const [connectionResults, setConnectionResults] = useState([]);
+  const [connectionSearchLoading, setConnectionSearchLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -229,6 +234,31 @@ const MessagesPage = () => {
     }
   };
 
+  // Search connections for new message
+  const handleConnectionSearch = async (query) => {
+    setConnectionSearch(query);
+    if (!query.trim()) {
+      setConnectionResults([]);
+      return;
+    }
+    setConnectionSearchLoading(true);
+    try {
+      const res = await api.get(`/connections/search?q=${encodeURIComponent(query)}`);
+      setConnectionResults(res.data.data || []);
+    } catch (err) {
+      console.error('Failed to search connections:', err);
+    } finally {
+      setConnectionSearchLoading(false);
+    }
+  };
+
+  const handleStartConversationFromSearch = async (userId) => {
+    setShowNewMessage(false);
+    setConnectionSearch('');
+    setConnectionResults([]);
+    await startConversation(userId);
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -280,7 +310,62 @@ const MessagesPage = () => {
         <div className="conversations-sidebar">
           <div className="conversations-header">
             <h2>Messages</h2>
+            <button
+              className="btn btn-primary btn-sm new-message-btn"
+              onClick={() => setShowNewMessage(!showNewMessage)}
+            >
+              ✏️ New
+            </button>
           </div>
+
+          {showNewMessage && (
+            <div className="new-message-search">
+              <div className="search-input-wrapper">
+                <FiSearch size={16} />
+                <input
+                  type="text"
+                  placeholder="Search your connections..."
+                  value={connectionSearch}
+                  onChange={(e) => handleConnectionSearch(e.target.value)}
+                  autoFocus
+                />
+                {connectionSearch && (
+                  <button className="clear-search-btn" onClick={() => { setConnectionSearch(''); setConnectionResults([]); }}>
+                    <FiX size={16} />
+                  </button>
+                )}
+              </div>
+              {connectionSearchLoading && <div className="search-loading">Searching...</div>}
+              {connectionResults.length > 0 && (
+                <div className="connection-search-results">
+                  {connectionResults.map(user => (
+                    <div
+                      key={user._id}
+                      className="connection-search-item"
+                      onClick={() => handleStartConversationFromSearch(user._id)}
+                    >
+                      <div className="connection-avatar-sm">
+                        {user.avatar ? (
+                          <img src={user.avatar} alt={user.name} />
+                        ) : (
+                          <div className="avatar-placeholder-sm">{user.name?.charAt(0)?.toUpperCase()}</div>
+                        )}
+                      </div>
+                      <div className="connection-search-info">
+                        <span className="connection-search-name">{user.name}</span>
+                        {user.skills?.length > 0 && (
+                          <span className="connection-search-skills">{user.skills.slice(0, 3).join(', ')}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {connectionSearch && !connectionSearchLoading && connectionResults.length === 0 && (
+                <div className="search-no-results">No connections found</div>
+              )}
+            </div>
+          )}
 
           {loading ? (
             <div className="loading-state-sm">

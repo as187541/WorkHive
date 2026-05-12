@@ -21,6 +21,8 @@ const messageRouter = require('./routes/messageRoutes');
 const jobPostingRouter = require('./routes/jobPostingRoutes');
 const proposalRouter = require('./routes/proposalRoutes');
 const taskRouter = require('./routes/taskRoutes');
+const activityRouter = require('./routes/activityRoutes');
+const connectionRouter = require('./routes/connectionRoutes');
 const { initSocket } = require('./utils/socket');
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,6 +48,8 @@ app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/jobs', jobPostingRouter);
 app.use('/api/v1/proposals', proposalRouter);
 app.use('/api/v1/tasks', taskRouter);
+app.use('/api/v1/activities', activityRouter);
+app.use('/api/v1/connections', connectionRouter);
 
 // --- STARTUP LOGIC ---
 const startServer = async () => {

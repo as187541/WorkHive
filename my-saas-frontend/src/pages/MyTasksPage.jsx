@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { FiFilter, FiCheckSquare, FiClock, FiAlertCircle, FiFolder } from 'react-icons/fi';
+import { FiFilter, FiCheckSquare, FiClock, FiAlertCircle, FiFolder, FiExternalLink } from 'react-icons/fi';
 import api from '../services/api';
 
 const MyTasksPage = () => {
@@ -217,28 +217,39 @@ const MyTasksPage = () => {
                 <span className="task-group-count">{group.tasks.length} task{group.tasks.length !== 1 ? 's' : ''}</span>
               </div>
               <div className="task-group-list">
-                {group.tasks.map(task => (
-                  <div key={task._id} className="my-task-item">
-                    <div className="my-task-item-left">
-                      {getStatusIcon(task.status)}
-                      <div className="my-task-item-info">
-                        <span className="my-task-item-title">{task.title}</span>
-                        <div className="my-task-item-meta">
-                          {getStatusBadge(task.status)}
-                          {getPriorityBadge(task.priority)}
-                          {task.assignedTo?.name && (
-                            <span className="my-task-assignee">
-                              Assigned to: {task.assignedTo.name}
-                            </span>
-                          )}
+                {group.tasks.map(task => {
+                  const projectId = task.project?._id || task.project;
+                  return (
+                    <div
+                      key={task._id}
+                      className="my-task-item clickable"
+                      onClick={() => navigate(`/workspaces/${group.workspaceId}?project=${projectId}&task=${task._id}`)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && navigate(`/workspaces/${group.workspaceId}?project=${projectId}&task=${task._id}`)}
+                    >
+                      <div className="my-task-item-left">
+                        {getStatusIcon(task.status)}
+                        <div className="my-task-item-info">
+                          <span className="my-task-item-title">{task.title}</span>
+                          <div className="my-task-item-meta">
+                            {getStatusBadge(task.status)}
+                            {getPriorityBadge(task.priority)}
+                            {task.assignedTo?.name && (
+                              <span className="my-task-assignee">
+                                Assigned to: {task.assignedTo.name}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      <div className="my-task-item-right">
+                        {task.dueDate && formatDueDate(task.dueDate)}
+                        <FiExternalLink size={14} style={{ marginLeft: '8px', color: 'var(--text-secondary)', opacity: 0.5 }} />
+                      </div>
                     </div>
-                    <div className="my-task-item-right">
-                      {task.dueDate && formatDueDate(task.dueDate)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
