@@ -65,7 +65,7 @@ const WorkspaceCard = ({ workspace }) => {
           </div>
           <div className="workspace-stat">
             <FiCheckSquare size={14} />
-            <span>{workspace.tasks?.length || 24} tasks</span>
+            <span>{workspace.taskCount ?? 0} tasks</span>
           </div>
         </div>
 

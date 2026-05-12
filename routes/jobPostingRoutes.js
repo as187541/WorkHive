@@ -8,13 +8,22 @@ const {
   getMyJobPostings,
   updateJobPosting,
   deleteJobPosting,
-  closeJobPosting
+  closeJobPosting,
+  getPendingJobs,
+  approveJobPosting,
+  rejectJobPosting
 } = require('../controllers/jobPostingController');
 
 const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/adminMiddleware');
 
 // My job postings (must be before /:id)
 router.get('/my/jobs', protect, getMyJobPostings);
+
+// Admin job approval routes
+router.get('/admin/pending', protect, authorizeRoles('Admin'), getPendingJobs);
+router.patch('/admin/:id/approve', protect, authorizeRoles('Admin'), approveJobPosting);
+router.patch('/admin/:id/reject', protect, authorizeRoles('Admin'), rejectJobPosting);
 
 // Browse and create
 router.get('/', protect, browseJobPostings);

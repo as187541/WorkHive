@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { SKILL_OPTIONS } from '../constants/skills';
 
@@ -10,11 +10,47 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
     skills: [],
     budget: { min: '', max: '', currency: 'HT' },
     deadline: '',
-    visibility: 'Public'
+    visibility: 'Public',
+    workspaceId: '',
+    projectId: ''
   });
   const [newSkill, setNewSkill] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchWorkspaces = async () => {
+      try {
+        const res = await api.get('/workspaces/my');
+        const adminWorkspaces = (res.data.data || res.data || []).filter(
+          ws => ws.members?.some(m => m.role === 'Admin')
+        );
+        setWorkspaces(adminWorkspaces);
+      } catch (err) {
+        console.error('Failed to fetch workspaces:', err);
+      }
+    };
+    fetchWorkspaces();
+  }, []);
+
+  useEffect(() => {
+    if (!formData.workspaceId) {
+      setProjects([]);
+      return;
+    }
+    const fetchProjects = async () => {
+      try {
+        const res = await api.get(`/workspaces/${formData.workspaceId}/projects`);
+        setProjects(res.data.data || res.data || []);
+      } catch (err) {
+        console.error('Failed to fetch projects:', err);
+        setProjects([]);
+      }
+    };
+    fetchProjects();
+  }, [formData.workspaceId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,6 +95,12 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
           currency: formData.budget.currency
         }
       };
+
+      // Only include workspace/project for workspace visibility
+      if (formData.visibility !== 'Workspace') {
+        delete payload.workspaceId;
+        delete payload.projectId;
+      }
 
       const res = await api.post('/jobs', payload);
       onSuccess(res.data.data);
@@ -132,6 +174,35 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
               </select>
             </div>
           </div>
+
+          {formData.visibility === 'Workspace' && (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Workspace *</label>
+                  <select name="workspaceId" value={formData.workspaceId} onChange={handleChange} required>
+                    <option value="">Select workspace</option>
+                    {workspaces.map(ws => (
+                      <option key={ws._id} value={ws._id}>{ws.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Project (Optional)</label>
+                  <select name="projectId" value={formData.projectId} onChange={handleChange} disabled={!formData.workspaceId}>
+                    <option value="">Select project</option>
+                    {projects.map(proj => (
+                      <option key={proj._id} value={proj._id}>{proj.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="alert alert-info" style={{ fontSize: '0.85rem', padding: '0.5rem 0.75rem' }}>
+                ℹ️ Workspace jobs require admin approval before they appear in the marketplace.
+              </div>
+            </>
+          )}
 
           <div className="form-row">
             <div className="form-group">

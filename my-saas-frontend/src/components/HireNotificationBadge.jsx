@@ -23,12 +23,12 @@ const HireNotificationBadge = () => {
     if (!socket) return;
 
     // Listen for new hire invitations via socket
-    socket.on('hire_invitation', () => {
+    socket.on('hire:invitation', () => {
       setCount(prev => prev + 1);
     });
 
     return () => {
-      socket.off('hire_invitation');
+      socket.off('hire:invitation');
     };
   }, [socket]);
 

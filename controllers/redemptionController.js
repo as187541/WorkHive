@@ -105,12 +105,21 @@ const createRequest = async (req, res) => {
 
     // Ensure wallet exists
     if (!user.wallet) {
-      user.wallet = { balance: 0, history: [] };
+      user.wallet = { balance: 0, workspaces: [], history: [] };
     }
 
-    // Check if user has enough balance
-    if (user.wallet.balance < cost) {
-      return res.status(400).json({ msg: 'Insufficient HiveTokens for this reward.' });
+    // Check workspace-specific balance
+    const workspaceBalance = (user.wallet.workspaces || []).find(
+      w => w.workspace.toString() === workspaceId
+    );
+    const availableBalance = workspaceBalance ? workspaceBalance.balance : 0;
+
+    if (availableBalance < cost) {
+      return res.status(400).json({
+        msg: `Insufficient HiveTokens in this workspace. You have ${availableBalance} HT in this workspace, but need ${cost} HT.`,
+        workspaceBalance: availableBalance,
+        totalBalance: user.wallet.balance
+      });
     }
 
     // Check for existing pending request for same reward in same workspace/project
@@ -136,18 +145,22 @@ const createRequest = async (req, res) => {
     });
 
     // Notify workspace admins about new redemption request
-    const adminWorkspaces = await Workspace.findById(workspaceId).populate('members.user', '_id');
-    if (adminWorkspaces) {
-      adminWorkspaces.members
-        .filter(m => m.role === 'Admin')
-        .forEach(m => {
-          emitRedemptionNotification(m.user._id.toString(), {
-            type: 'new_redemption',
-            title: 'New Redemption Request',
-            message: `${req.user.name} requested ${rewardTitle} (${cost} tokens)`,
-            data: { requestId: request._id, workspaceId, cost }
+    try {
+      const adminWorkspaces = await Workspace.findById(workspaceId).populate('members.user', '_id');
+      if (adminWorkspaces) {
+        adminWorkspaces.members
+          .filter(m => m.role === 'Admin' && m.user)
+          .forEach(m => {
+            emitRedemptionNotification(m.user._id.toString(), {
+              type: 'new_redemption',
+              title: 'New Redemption Request',
+              message: `${req.user.name} requested ${rewardTitle} (${cost} tokens)`,
+              data: { requestId: request._id, workspaceId, cost }
+            });
           });
-        });
+      }
+    } catch (notifyErr) {
+      console.error('Redemption notification error:', notifyErr.message);
     }
 
     res.status(201).json({
@@ -261,27 +274,42 @@ const approveRequest = async (req, res) => {
       return res.status(403).json({ msg: 'You are not authorized to approve this request.' });
     }
 
-    // Check user still has enough balance
+    // Self-approval check: user cannot approve their own request
+    if (request.user._id.toString() === req.user._id.toString()) {
+      return res.status(403).json({ msg: 'You cannot approve your own redemption request.' });
+    }
+
+    // Check user still has enough workspace-specific balance
     const user = await User.findById(request.user._id);
 
     // Ensure wallet exists
     if (!user.wallet) {
-      user.wallet = { balance: 0, history: [] };
+      user.wallet = { balance: 0, workspaces: [], history: [] };
     }
 
-    if (user.wallet.balance < request.cost) {
+    const workspaceId = request.workspace.toString();
+    const workspaceBalance = (user.wallet.workspaces || []).find(
+      w => w.workspace.toString() === workspaceId
+    );
+    const availableBalance = workspaceBalance ? workspaceBalance.balance : 0;
+
+    if (availableBalance < request.cost) {
       request.status = 'Denied';
       request.processedAt = new Date();
       request.processedBy = req.user._id;
       await request.save();
-      return res.status(400).json({ msg: 'User no longer has sufficient balance. Request auto-denied.' });
+      return res.status(400).json({ msg: `User no longer has sufficient balance in this workspace (${availableBalance} HT available). Request auto-denied.` });
     }
 
-    // Deduct tokens
+    // Deduct tokens from workspace-specific balance
     user.wallet.balance -= request.cost;
+    if (workspaceBalance) {
+      workspaceBalance.balance -= request.cost;
+    }
     user.wallet.history.push({
       amount: -request.cost,
       reason: `Redeemed: ${request.rewardTitle}`,
+      workspace: request.workspace,
       date: new Date()
     });
     await user.save();
@@ -341,6 +369,11 @@ const denyRequest = async (req, res) => {
     const canManage = await canManageRequest(request, req.user._id, req.user.role);
     if (!canManage) {
       return res.status(403).json({ msg: 'You are not authorized to deny this request.' });
+    }
+
+    // Self-approval check: user cannot deny their own request
+    if (request.user.toString() === req.user._id.toString()) {
+      return res.status(403).json({ msg: 'You cannot deny your own redemption request.' });
     }
 
     request.status = 'Denied';

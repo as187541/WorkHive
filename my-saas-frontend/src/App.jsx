@@ -17,7 +17,6 @@ import AdminWorkspacesPage from './pages/AdminWorkspacesPage';
 import AdminLogsPage from './pages/AdminLogsPage';
 import AdminTokensPage from './pages/AdminTokensPage';
 import AdminRedemptionsPage from './pages/AdminRedemptionsPage';
-import MyRedemptionsPage from './pages/MyRedemptionsPage';
 import TalentMarketplace from './pages/TalentMarketplace';
 import TalentProfilePage from './pages/TalentProfilePage';
 import HireInvitationsPage from './pages/HireInvitationsPage';
@@ -57,8 +56,6 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             
           <Route path="rewards" element={<RewardStore />} />
-          <Route path="my-redemptions" element={<MyRedemptionsPage />} />
-          <Route path="review-redemptions" element={<AdminRedemptionsPage />} />
           <Route path="talent" element={<TalentMarketplace />} />
           <Route path="talent/:userId" element={<TalentProfilePage />} />
           <Route path="hire-invitations" element={<HireInvitationsPage />} />

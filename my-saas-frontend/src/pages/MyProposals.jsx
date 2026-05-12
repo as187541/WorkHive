@@ -132,16 +132,20 @@ const MyProposals = () => {
                       <div
                         className="proposal-job-title"
                         onClick={() => navigate(`/jobs/${job._id}`)}
+                        style={{ cursor: 'pointer', color: 'var(--primary-500)' }}
                       >
                         {job.title || 'Unknown Job'}
                       </div>
-                      <span className="proposal-job-poster">
-                        by {job.postedBy?.name || 'Unknown'}
-                      </span>
+                      <div className="proposal-job-meta">
+                        <span className="proposal-job-category">{job.category || 'General'}</span>
+                        <span className="proposal-job-poster">
+                          by {job.postedBy?.name || 'Unknown'}
+                        </span>
+                      </div>
                     </td>
                     <td>
                       <span className="proposal-price">
-                        {proposal.proposedPrice} {proposal.currency}
+                        {proposal.proposedPrice} {proposal.currency || 'HT'}
                       </span>
                     </td>
                     <td>{proposal.deliveryDays} days</td>
@@ -149,6 +153,16 @@ const MyProposals = () => {
                       <span className={`status-badge ${getStatusColor(proposal.status)}`}>
                         {proposal.status}
                       </span>
+                      {proposal.status === 'Accepted' && (
+                        <div className="proposal-accepted-note" style={{ fontSize: '0.75rem', color: 'var(--success-500)', marginTop: '4px' }}>
+                          🎉 Check your invitations
+                        </div>
+                      )}
+                      {proposal.status === 'Rejected' && (
+                        <div className="proposal-rejected-note" style={{ fontSize: '0.75rem', color: 'var(--danger-500)', marginTop: '4px' }}>
+                          Keep applying!
+                        </div>
+                      )}
                     </td>
                     <td>{new Date(proposal.createdAt).toLocaleDateString()}</td>
                     <td>
@@ -157,7 +171,7 @@ const MyProposals = () => {
                           className="btn btn-sm btn-secondary"
                           onClick={() => navigate(`/jobs/${job._id}`)}
                         >
-                          View
+                          View Job
                         </button>
                         {proposal.status === 'Pending' && (
                           <button

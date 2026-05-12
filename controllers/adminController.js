@@ -129,7 +129,7 @@ const updateUserRole = async (req, res) => {
 const alterUserTokens = async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount, reason } = req.body;
+    const { amount, reason, workspaceId } = req.body;
 
     if (amount === undefined || amount === null) {
       return res.status(400).json({ msg: 'Please provide an amount.' });
@@ -145,20 +145,55 @@ const alterUserTokens = async (req, res) => {
       return res.status(404).json({ msg: 'User not found.' });
     }
 
+    // If workspaceId provided, validate it and ensure user is a member
+    if (workspaceId) {
+      const workspace = await Workspace.findById(workspaceId);
+      if (!workspace) {
+        return res.status(404).json({ msg: 'Workspace not found.' });
+      }
+      const isMember = workspace.members.some(m => m.user.toString() === id);
+      if (!isMember) {
+        return res.status(400).json({ msg: 'User is not a member of the specified workspace.' });
+      }
+    }
+
     const previousBalance = user.wallet?.balance || 0;
     const newBalance = previousBalance + numericAmount;
 
-    // Update wallet balance and push to history
+    // Build history entry
+    const historyEntry = {
+      amount: numericAmount,
+      reason: reason || `Admin adjustment by ${req.user.name}`,
+      date: new Date()
+    };
+    if (workspaceId) {
+      historyEntry.workspace = workspaceId;
+    }
+
+    // Update global wallet balance and push to history
     await User.findByIdAndUpdate(id, {
       $inc: { 'wallet.balance': numericAmount },
       $push: {
-        'wallet.history': {
-          amount: numericAmount,
-          reason: reason || `Admin adjustment by ${req.user.name}`,
-          date: new Date()
-        }
+        'wallet.history': historyEntry
       }
     });
+
+    // If workspaceId provided, also credit workspace-specific balance
+    if (workspaceId) {
+      // Try to increment existing workspace entry
+      const incResult = await User.updateOne(
+        { _id: id, 'wallet.workspaces.workspace': workspaceId },
+        { $inc: { 'wallet.workspaces.$.balance': numericAmount } }
+      );
+
+      // If no existing workspace entry, push a new one
+      if (incResult.modifiedCount === 0) {
+        await User.updateOne(
+          { _id: id },
+          { $push: { 'wallet.workspaces': { workspace: workspaceId, balance: numericAmount } } }
+        );
+      }
+    }
 
     // Log audit
     await logAuditAction(req, 'TOKEN_ALTER', 'User', id, {
@@ -166,18 +201,20 @@ const alterUserTokens = async (req, res) => {
       amount: numericAmount,
       newBalance,
       reason: reason || 'No reason provided',
-      targetUserEmail: user.email
+      targetUserEmail: user.email,
+      workspaceId: workspaceId || null
     });
 
     res.status(200).json({
       success: true,
-      msg: `Tokens ${numericAmount >= 0 ? 'added' : 'deducted'} successfully.`,
+      msg: `Tokens ${numericAmount >= 0 ? 'added' : 'deducted'} successfully.${workspaceId ? ' Credited to workspace.' : ' Credited to global balance only (not redeemable without a workspace).'}`,
       data: {
         userId: id,
         previousBalance,
         amount: numericAmount,
         newBalance,
-        reason
+        reason,
+        workspaceId: workspaceId || null
       }
     });
   } catch (error) {

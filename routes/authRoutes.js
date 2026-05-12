@@ -14,7 +14,8 @@ const {
   forgotPassword,
   resetPassword,
   updateTalentProfile,
-  getMyTalentStats
+  getMyTalentStats,
+  getWorkspaceBalances
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -36,5 +37,6 @@ router.post('/redeem', protect, redeemTokens);
 // Talent profile routes
 router.patch('/update-talent-profile', protect, updateTalentProfile);
 router.get('/me/talent-stats', protect, getMyTalentStats);
+router.get('/workspace-balances', protect, getWorkspaceBalances);
 
 module.exports = router;

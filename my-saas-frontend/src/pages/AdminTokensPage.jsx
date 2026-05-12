@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiAward, FiTrendingUp, FiTrendingDown, FiUsers, FiPieChart, FiActivity } from 'react-icons/fi';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiAward, FiTrendingUp, FiTrendingDown, FiUsers, FiPieChart, FiActivity, FiSearch } from 'react-icons/fi';
 import api from '../services/api';
 
 const AdminTokensPage = () => {
@@ -9,11 +9,60 @@ const AdminTokensPage = () => {
   const [quickUserId, setQuickUserId] = useState('');
   const [quickAmount, setQuickAmount] = useState('');
   const [quickReason, setQuickReason] = useState('');
+  const [quickWorkspaceId, setQuickWorkspaceId] = useState('');
+  const [adminWorkspaces, setAdminWorkspaces] = useState([]);
   const [quickLoading, setQuickLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    api.get('/workspaces')
+      .then(res => setAdminWorkspaces(res.data.data || res.data || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    api.get('/admin/users')
+      .then(res => setAllUsers(res.data.data || []))
+      .catch(() => {});
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleUserSearch = (query) => {
+    setUserSearch(query);
+    if (!query || query.length < 1) {
+      setSearchResults([]);
+      setQuickUserId('');
+      return;
+    }
+    const filtered = allUsers.filter(u =>
+      u.name?.toLowerCase().includes(query.toLowerCase()) ||
+      u.email?.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 8);
+    setSearchResults(filtered);
+  };
+
+  const selectUser = (user) => {
+    setQuickUserId(user._id);
+    setUserSearch(`${user.name} (${user.email})`);
+    setSearchResults([]);
+  };
 
   const fetchStats = async () => {
     try {
@@ -30,21 +79,27 @@ const AdminTokensPage = () => {
 
   const handleQuickAlter = async () => {
     if (!quickUserId || !quickAmount) {
-      alert('Please provide both User ID and Amount');
+      alert('Please select a user and provide an amount');
       return;
     }
 
     try {
       setQuickLoading(true);
-      await api.post(`/admin/users/${quickUserId}/tokens`, {
+      const payload = {
         amount: Number(quickAmount),
         reason: quickReason || 'Quick admin adjustment'
-      });
+      };
+      if (quickWorkspaceId) {
+        payload.workspaceId = quickWorkspaceId;
+      }
+      await api.post(`/admin/users/${quickUserId}/tokens`, payload);
       
       alert('Tokens altered successfully!');
       setQuickUserId('');
       setQuickAmount('');
       setQuickReason('');
+      setQuickWorkspaceId('');
+      setUserSearch('');
       fetchStats(); // Refresh stats
     } catch (err) {
       alert(err.response?.data?.msg || 'Failed to alter tokens');
@@ -173,14 +228,54 @@ const AdminTokensPage = () => {
         <div className="quick-action-card">
           <div className="form-row">
             <div className="form-group">
-              <label>User ID</label>
-              <input
-                type="text"
-                value={quickUserId}
-                onChange={(e) => setQuickUserId(e.target.value)}
-                placeholder="Paste user ID here"
-                className="form-input"
-              />
+              <label>User</label>
+              <div ref={searchRef} style={{ position: 'relative' }}>
+                <FiSearch style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: '0.875rem', zIndex: 1 }} />
+                <input
+                  type="text"
+                  value={userSearch}
+                  onChange={(e) => handleUserSearch(e.target.value)}
+                  placeholder="Search by name or email..."
+                  className="form-input"
+                  style={{ paddingLeft: '2rem' }}
+                />
+                {searchResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0,
+                    background: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                    borderRadius: '0 0 8px 8px', maxHeight: '240px', overflowY: 'auto',
+                    zIndex: 1000, boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  }}>
+                    {searchResults.map(u => (
+                      <div
+                        key={u._id}
+                        onClick={() => selectUser(u)}
+                        style={{
+                          padding: '10px 12px', cursor: 'pointer',
+                          borderBottom: '1px solid var(--border-color)',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          transition: 'background 0.15s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{u.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{u.email}</div>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--token-gold, #f59e0b)', fontWeight: 600 }}>
+                          {u.wallet?.balance || 0} HT
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {quickUserId && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--success-500, #10b981)', marginTop: 4 }}>
+                  ✓ User selected
+                </div>
+              )}
             </div>
             
             <div className="form-group">
@@ -203,6 +298,20 @@ const AdminTokensPage = () => {
                 placeholder="e.g. Monthly bonus"
                 className="form-input"
               />
+            </div>
+
+            <div className="form-group">
+              <label>Workspace <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>(required for spending)</span></label>
+              <select
+                value={quickWorkspaceId}
+                onChange={(e) => setQuickWorkspaceId(e.target.value)}
+                className="form-input"
+              >
+                <option value="">Global only (not redeemable)</option>
+                {adminWorkspaces.map(ws => (
+                  <option key={ws._id} value={ws._id}>{ws.name}</option>
+                ))}
+              </select>
             </div>
           </div>
           

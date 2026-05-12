@@ -21,10 +21,15 @@ const UserSchema = new mongoose.Schema({
   otpExpires: { type: Date },
   wallet: {
     balance: { type: Number, default: 0 },
+    workspaces: [{
+      workspace: { type: mongoose.Schema.Types.ObjectId, ref: 'Workspace' },
+      balance: { type: Number, default: 0 }
+    }],
     history: [{
       amount: Number,
       reason: String,
       taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+      workspace: { type: mongoose.Schema.Types.ObjectId, ref: 'Workspace' },
       date: { type: Date, default: Date.now }
     }]
   },

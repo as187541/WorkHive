@@ -3,44 +3,17 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
   FiFolder, FiCheckSquare, FiAward, FiUserPlus,
   FiPlus, FiSearch, FiGift, FiClock, FiArrowRight,
-  FiFileText, FiMessageSquare
+  FiFileText, FiMessageSquare, FiFilter, FiChevronDown,
+  FiChevronUp
 } from 'react-icons/fi';
 import api from '../services/api';
-
-const ACTION_ICONS = {
-  task_created: FiFileText,
-  task_updated: FiCheckSquare,
-  task_completed: FiCheckSquare,
-  task_assigned: FiUserPlus,
-  hire_sent: FiUserPlus,
-  hire_accepted: FiCheckSquare,
-  hire_rejected: FiMessageSquare,
-  project_created: FiFolder,
-  project_joined: FiUserPlus,
-  workspace_joined: FiFolder,
-  workspace_created: FiFolder
-};
-
-const ACTION_LABELS = {
-  task_created: 'Created task',
-  task_updated: 'Updated task',
-  task_completed: 'Completed task',
-  task_assigned: 'Assigned task',
-  hire_sent: 'Sent hire invitation',
-  hire_accepted: 'Accepted hire invitation',
-  hire_rejected: 'Declined hire invitation',
-  project_created: 'Created project',
-  project_joined: 'Joined project',
-  workspace_joined: 'Joined workspace',
-  workspace_created: 'Created workspace',
-  message_sent: 'Sent message',
-  proposal_submitted: 'Submitted proposal',
-  proposal_accepted: 'Accepted proposal'
-};
+import { ACTION_CONFIG, formatTimeAgo, useActivityData } from '../hooks/useActivityData';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user, workspaces } = useOutletContext();
+  const [selectedWorkspace, setSelectedWorkspace] = useState('all');
+  const [showAllActivities, setShowAllActivities] = useState(false);
   const [stats, setStats] = useState({
     activeWorkspaces: 0,
     pendingTasks: 0,
@@ -50,19 +23,23 @@ const DashboardPage = () => {
     tasksDueThisWeek: 0,
     pendingHiresCount: 0
   });
-  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { activities, loading: activitiesLoading } = useActivityData(workspaces, {
+    workspace: selectedWorkspace,
+    limit: 50
+  });
+
+  const displayedActivities = showAllActivities ? activities : activities.slice(0, 8);
+
   useEffect(() => {
-    // Wait for user data before fetching dashboard
     if (!user) return;
 
     const fetchDashboardData = async () => {
       try {
-        const [tasksResult, hiresResult, activitiesResult] = await Promise.allSettled([
+        const [tasksResult, hiresResult] = await Promise.allSettled([
           api.get('/tasks/my'),
-          api.get('/hires/received'),
-          api.get('/activities?limit=20')
+          api.get('/hires/received')
         ]);
 
         const tasks = tasksResult.status === 'fulfilled'
@@ -71,21 +48,10 @@ const DashboardPage = () => {
         const hires = hiresResult.status === 'fulfilled'
           ? (hiresResult.value.data.data || hiresResult.value.data || [])
           : [];
-        const activitiesData = activitiesResult.status === 'fulfilled'
-          ? (activitiesResult.value.data.data || [])
-          : [];
-
-        if (tasksResult.status === 'rejected') {
-          console.error('Tasks fetch error:', tasksResult.reason);
-        }
-        if (hiresResult.status === 'rejected') {
-          console.error('Hires fetch error:', hiresResult.reason);
-        }
 
         const pendingTasks = tasks.filter(t => t.status !== 'Done').length;
         const pendingHires = hires.filter(h => h.status === 'Pending').length;
 
-        // Compute dynamic subtitle values
         const now = new Date();
         const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -110,8 +76,6 @@ const DashboardPage = () => {
           tasksDueThisWeek,
           pendingHiresCount: pendingHires
         });
-
-        setActivities(activitiesData);
       } catch (err) {
         console.error('Dashboard data fetch error:', err);
       } finally {
@@ -121,19 +85,6 @@ const DashboardPage = () => {
 
     fetchDashboardData();
   }, [workspaces, user]);
-
-  const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours} hours ago`;
-    if (days === 1) return '1 day ago';
-    return `${days} days ago`;
-  };
 
   const statCards = [
     {
@@ -251,24 +202,42 @@ const DashboardPage = () => {
               <h2>Recent Activity</h2>
               <p className="section-description">Latest updates from your workspaces</p>
             </div>
-            <button className="btn-secondary" onClick={() => navigate('/activity-log')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              View All <FiArrowRight size={14} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FiFilter size={14} />
+                <select
+                  value={selectedWorkspace}
+                  onChange={(e) => setSelectedWorkspace(e.target.value)}
+                  className="filter-select"
+                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                >
+                  <option value="all">All Workspaces</option>
+                  {(workspaces || []).map(ws => (
+                    <option key={ws._id} value={ws._id}>{ws.name}</option>
+                  ))}
+                </select>
+              </div>
+              <button className="btn-secondary" onClick={() => navigate('/activity-log')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                View All <FiArrowRight size={14} />
+              </button>
+            </div>
           </div>
 
           <div className="activity-list">
-            {activities.length > 0 ? (
-              activities.map(activity => {
-                const ActionIcon = ACTION_ICONS[activity.action] || FiClock;
-                const actionLabel = ACTION_LABELS[activity.action] || activity.action;
+            {activitiesLoading ? (
+              <div className="loading-state"><div className="spinner"></div></div>
+            ) : displayedActivities.length > 0 ? (
+              displayedActivities.map(activity => {
+                const config = ACTION_CONFIG[activity.action] || { label: activity.action, icon: 'FiClock', color: '#6b7280', bg: '#f3f4f6' };
+                const actionLabel = config.label;
                 return (
                   <div key={activity._id} className="activity-item">
                     <div className="activity-avatar">
                       {activity.user?.avatar ? (
                         <img src={activity.user.avatar} alt={activity.user.name} />
                       ) : (
-                        <div className="activity-avatar-placeholder">
-                          <ActionIcon size={14} />
+                        <div className="activity-avatar-placeholder" style={{ backgroundColor: config.bg, color: config.color }}>
+                          <FiClock size={14} />
                         </div>
                       )}
                     </div>
@@ -291,6 +260,15 @@ const DashboardPage = () => {
                 <p>No recent activity yet.</p>
                 <p className="empty-hint">Complete tasks and hire talent to see updates here.</p>
               </div>
+            )}
+            {activities.length > 8 && (
+              <button
+                className="btn-secondary"
+                onClick={() => setShowAllActivities(!showAllActivities)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', marginTop: '0.75rem' }}
+              >
+                {showAllActivities ? <>Show Less <FiChevronUp size={14} /></> : <>Show More <FiChevronDown size={14} /></>}
+              </button>
             )}
           </div>
         </div>

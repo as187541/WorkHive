@@ -2,6 +2,7 @@ const HireInvitation = require('../models/hireInvitationModel');
 const User = require('../models/userModel');
 const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
+const JobPosting = require('../models/jobPostingModel');
 const sendEmail = require('../utils/sendEmail');
 const { emitHireInvitation, emitNotification } = require('../utils/socket');
 const { logActivity } = require('./activityController');
@@ -123,6 +124,7 @@ const getSentHireInvitations = async (req, res) => {
       .populate('invitedUser', 'name avatar email')
       .populate('workspace', 'name')
       .populate('project', 'name')
+      .populate('jobPosting', 'title budget')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -152,6 +154,7 @@ const getReceivedHireInvitations = async (req, res) => {
       .populate('sender', 'name avatar')
       .populate('workspace', 'name description')
       .populate('project', 'name')
+      .populate('jobPosting', 'title budget')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -240,6 +243,16 @@ const acceptHireInvitation = async (req, res) => {
 
     // Update user availability to Busy
     await User.findByIdAndUpdate(req.user._id, { availabilityStatus: 'Busy' });
+
+    // Update associated job posting status to "In Progress" if linked
+    if (hireInvitation.jobPosting) {
+      const job = await JobPosting.findById(hireInvitation.jobPosting);
+      if (job && job.status === 'Open') {
+        job.status = 'In Progress';
+        job.hiredFreelancer = req.user._id;
+        await job.save();
+      }
+    }
 
     // Send confirmation email to sender
     const sender = await User.findById(hireInvitation.sender);

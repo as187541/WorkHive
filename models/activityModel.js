@@ -24,7 +24,8 @@ const activitySchema = new mongoose.Schema({
       'workspace_created',
       'message_sent',
       'proposal_submitted',
-      'proposal_accepted'
+      'proposal_accepted',
+      'proposal_rejected'
     ]
   },
   target: {

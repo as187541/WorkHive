@@ -209,27 +209,44 @@ const getUserProfile = async (req, res) => {
 };
 const redeemTokens = async (req, res) => {
   try {
-    const { cost, rewardTitle } = req.body;
+    const { cost, rewardTitle, workspaceId } = req.body;
+
+    if (!workspaceId) {
+      return res.status(400).json({ msg: 'Please provide a workspaceId for redemption.' });
+    }
     
     // Find user (req.user._id comes from protect middleware)
     const user = await User.findById(req.user._id);
 
     // Ensure wallet exists
     if (!user.wallet) {
-      user.wallet = { balance: 0, history: [] };
+      user.wallet = { balance: 0, workspaces: [], history: [] };
     }
 
-    // Check balance
-    if (user.wallet.balance < cost) {
-      return res.status(400).json({ msg: "Insufficient HiveTokens for this reward." });
+    // Check workspace-specific balance
+    const workspaceBalance = (user.wallet.workspaces || []).find(
+      w => w.workspace.toString() === workspaceId
+    );
+    const availableBalance = workspaceBalance ? workspaceBalance.balance : 0;
+
+    if (availableBalance < cost) {
+      return res.status(400).json({ 
+        msg: `Insufficient HiveTokens in this workspace. You have ${availableBalance} HT in this workspace, but need ${cost} HT.`,
+        workspaceBalance: availableBalance,
+        totalBalance: user.wallet.balance
+      });
     }
 
-    // Deduct tokens and log to history
+    // Deduct tokens from global and workspace-specific balance
     user.wallet.balance -= cost;
+    if (workspaceBalance) {
+      workspaceBalance.balance -= cost;
+    }
     
     user.wallet.history.push({
       amount: -cost,
       reason: `Redeemed: ${rewardTitle}`,
+      workspace: workspaceId,
       date: new Date()
     });
 
@@ -238,7 +255,8 @@ const redeemTokens = async (req, res) => {
     // Return new balance so frontend can update user state instantly
     res.status(200).json({ 
       msg: "Redeemed successfully!", 
-      newBalance: user.wallet.balance 
+      newBalance: user.wallet.balance,
+      newWorkspaceBalance: workspaceBalance ? workspaceBalance.balance : 0
     });
   } catch (error) {
     console.error("REDEEM TOKENS ERROR:", error);
@@ -407,6 +425,41 @@ const getMyTalentStats = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Get user's per-workspace token balances
+ * @route   GET /api/v1/auth/workspace-balances
+ */
+const getWorkspaceBalances = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('wallet')
+      .populate('wallet.workspaces.workspace', 'name');
+
+    if (!user || !user.wallet) {
+      return res.status(200).json({
+        success: true,
+        totalBalance: 0,
+        workspaces: []
+      });
+    }
+
+    const workspaces = (user.wallet.workspaces || []).map(w => ({
+      workspaceId: w.workspace?._id || w.workspace,
+      workspaceName: w.workspace?.name || 'Unknown',
+      balance: w.balance
+    }));
+
+    res.status(200).json({
+      success: true,
+      totalBalance: user.wallet.balance,
+      workspaces
+    });
+  } catch (error) {
+    console.error('getWorkspaceBalances error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
 // --- EXPORTS (Update this block) ---
 module.exports = {
   register,
@@ -420,5 +473,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   updateTalentProfile,
-  getMyTalentStats
+  getMyTalentStats,
+  getWorkspaceBalances
 };

@@ -4,6 +4,7 @@ const User = require('../models/userModel');
 const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
 const HireInvitation = require('../models/hireInvitationModel');
+const Activity = require('../models/activityModel');
 const sendEmail = require('../utils/sendEmail');
 const { emitNewProposal, emitProposalStatus, emitNotification } = require('../utils/socket');
 
@@ -67,6 +68,19 @@ const submitProposal = async (req, res) => {
       message: `${req.user.name} submitted a proposal for "${job.title}"`,
       data: { proposalId: proposal._id, jobId }
     });
+
+    // Log activity for the job poster
+    try {
+      await Activity.create({
+        user: job.postedBy,
+        action: 'proposal_submitted',
+        target: `${req.user.name} submitted a proposal for "${job.title}"`,
+        workspace: job.workspace || null,
+        project: job.project || null
+      });
+    } catch (actErr) {
+      console.error('Activity log error:', actErr);
+    }
 
     // Notify job poster via email
     const poster = await User.findById(job.postedBy);
@@ -206,8 +220,15 @@ const acceptProposal = async (req, res) => {
           invitedUser: proposal.freelancer,
           sender: req.user._id,
           role: 'Contractor',
+          jobPosting: job._id,
           message: `Hired via job posting: ${job.title}. Proposed price: ${proposal.proposedPrice} ${proposal.currency}`
         });
+
+        // Add freelancer to project members if not already a member
+        if (!project.members.includes(proposal.freelancer)) {
+          project.members.push(proposal.freelancer);
+          await project.save();
+        }
       }
     }
 
@@ -219,6 +240,19 @@ const acceptProposal = async (req, res) => {
       message: `Your proposal for "${job.title}" has been accepted!`,
       data: { proposalId: proposal._id, jobId: job._id }
     });
+
+    // Log activity for the freelancer
+    try {
+      await Activity.create({
+        user: proposal.freelancer,
+        action: 'proposal_accepted',
+        target: `Proposal for "${job.title}" was accepted`,
+        workspace: job.workspace || null,
+        project: job.project || null
+      });
+    } catch (actErr) {
+      console.error('Activity log error:', actErr);
+    }
 
     // Notify other rejected freelancers
     const rejectedProposals = await Proposal.find({
@@ -287,6 +321,38 @@ const rejectProposal = async (req, res) => {
 
     proposal.status = 'Rejected';
     await proposal.save();
+
+    // Notify the freelancer that their proposal was rejected
+    try {
+      emitNotification(proposal.freelancer.toString(), {
+        type: 'proposal_rejected',
+        message: `Your proposal for "${proposal.jobPosting.title}" was not selected.`,
+        proposalId: proposal._id,
+        jobPostingId: proposal.jobPosting._id
+      });
+
+      await Activity.create({
+        user: proposal.freelancer,
+        action: 'proposal_rejected',
+        target: `Proposal for "${proposal.jobPosting.title}" was rejected`,
+        workspace: proposal.jobPosting.workspace || null,
+        project: proposal.jobPosting.project || null
+      });
+
+      const freelancer = await User.findById(proposal.freelancer);
+      if (freelancer?.email) {
+        sendEmail(
+          freelancer.email,
+          'Proposal Update - WorkHive',
+          `<p>Hi ${freelancer.username},</p>
+           <p>Your proposal for "<strong>${proposal.jobPosting.title}</strong>" was not selected at this time.</p>
+           <p>Keep applying — the right opportunity is out there!</p>
+           <p>— The WorkHive Team</p>`
+        ).catch(err => console.error('Rejection email error:', err));
+      }
+    } catch (notifErr) {
+      console.error('Rejection notification error:', notifErr);
+    }
 
     res.status(200).json({
       success: true,

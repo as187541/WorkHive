@@ -22,7 +22,7 @@ const SubmitProposalModal = ({ job, onClose, onSuccess }) => {
     setError(null);
 
     try {
-      const res = await api.post(`/jobs/${job._id}/proposals`, {
+      const res = await api.post(`/proposals/jobs/${job._id}/proposals`, {
         coverLetter: formData.coverLetter,
         proposedPrice: Number(formData.proposedPrice),
         currency: formData.currency,

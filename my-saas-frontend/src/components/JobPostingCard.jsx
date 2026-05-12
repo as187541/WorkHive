@@ -88,6 +88,11 @@ const JobPostingCard = ({ job, showActions = false, onEdit, onClose, onDelete })
         </div>
 
         <div className="job-card-badges">
+          {job.approvalStatus && job.approvalStatus !== 'Approved' && (
+            <span className={`approval-badge approval-${job.approvalStatus.toLowerCase()}`}>
+              {job.approvalStatus === 'Pending' ? '⏳ Pending Approval' : '❌ Rejected'}
+            </span>
+          )}
           <span className="level-badge">Expert</span>
           <span className="posted-time">{postedTime}</span>
         </div>

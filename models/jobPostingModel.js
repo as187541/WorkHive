@@ -60,6 +60,19 @@ const jobPostingSchema = new mongoose.Schema({
   hiredFreelancer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  approvalStatus: {
+    type: String,
+    enum: ['Pending', 'Approved', 'Rejected'],
+    default: 'Approved'
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  rejectionReason: {
+    type: String,
+    trim: true
   }
 }, { timestamps: true });
 

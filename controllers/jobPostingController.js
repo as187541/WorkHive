@@ -4,7 +4,9 @@ const User = require('../models/userModel');
 const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
 const HireInvitation = require('../models/hireInvitationModel');
+const Activity = require('../models/activityModel');
 const sendEmail = require('../utils/sendEmail');
+const { emitNotification } = require('../utils/socket');
 
 /**
  * @desc    Create a new job posting
@@ -43,7 +45,8 @@ const createJobPosting = async (req, res) => {
       deadline: deadline || undefined,
       visibility: visibility || 'Public',
       workspace: workspaceId || undefined,
-      project: projectId || undefined
+      project: projectId || undefined,
+      approvalStatus: visibility === 'Workspace' ? 'Pending' : 'Approved'
     });
 
     res.status(201).json({
@@ -64,7 +67,7 @@ const createJobPosting = async (req, res) => {
 const browseJobPostings = async (req, res) => {
   try {
     const { category, skills, minBudget, maxBudget, search, status, visibility, sort, page = 1, limit = 12 } = req.query;
-    const query = { status: { $in: ['Open', 'In Progress'] } };
+    const query = { status: { $in: ['Open', 'In Progress'] }, approvalStatus: 'Approved' };
 
     if (category) {
       query.category = { $regex: category, $options: 'i' };
@@ -309,6 +312,141 @@ const closeJobPosting = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Get pending job postings (admin only)
+ * @route   GET /api/v1/admin/jobs/pending
+ * @access  Private (admin only)
+ */
+const getPendingJobs = async (req, res) => {
+  try {
+    const pendingJobs = await JobPosting.find({ approvalStatus: 'Pending' })
+      .populate('postedBy', 'name avatar email')
+      .populate('workspace', 'name')
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: pendingJobs.length,
+      data: pendingJobs
+    });
+  } catch (error) {
+    console.error('getPendingJobs error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Approve a job posting (admin only)
+ * @route   PATCH /api/v1/admin/jobs/:id/approve
+ * @access  Private (admin only)
+ */
+const approveJobPosting = async (req, res) => {
+  try {
+    const job = await JobPosting.findById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ msg: 'Job posting not found.' });
+    }
+
+    if (job.approvalStatus === 'Approved') {
+      return res.status(400).json({ msg: 'Job posting is already approved.' });
+    }
+
+    job.approvalStatus = 'Approved';
+    job.approvedBy = req.user._id;
+    job.rejectionReason = undefined;
+    await job.save();
+
+    // Notify the job poster
+    try {
+      emitNotification(job.postedBy.toString(), {
+        type: 'job_approved',
+        message: `Your job posting "${job.title}" has been approved!`,
+        jobPostingId: job._id
+      });
+
+      const poster = await User.findById(job.postedBy);
+      if (poster?.email) {
+        sendEmail(
+          poster.email,
+          'Job Posting Approved - WorkHive',
+          `<p>Hi ${poster.username},</p>
+           <p>Your job posting "<strong>${job.title}</strong>" has been approved and is now visible to freelancers.</p>
+           <p>— The WorkHive Team</p>`
+        ).catch(err => console.error('Approval email error:', err));
+      }
+    } catch (notifErr) {
+      console.error('Approval notification error:', notifErr);
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: 'Job posting approved successfully.',
+      data: job
+    });
+  } catch (error) {
+    console.error('approveJobPosting error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Reject a job posting (admin only)
+ * @route   PATCH /api/v1/admin/jobs/:id/reject
+ * @access  Private (admin only)
+ */
+const rejectJobPosting = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const job = await JobPosting.findById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ msg: 'Job posting not found.' });
+    }
+
+    if (job.approvalStatus === 'Rejected') {
+      return res.status(400).json({ msg: 'Job posting is already rejected.' });
+    }
+
+    job.approvalStatus = 'Rejected';
+    job.approvedBy = req.user._id;
+    job.rejectionReason = reason || 'Not specified';
+    await job.save();
+
+    // Notify the job poster
+    try {
+      emitNotification(job.postedBy.toString(), {
+        type: 'job_rejected',
+        message: `Your job posting "${job.title}" was not approved. Reason: ${job.rejectionReason}`,
+        jobPostingId: job._id
+      });
+
+      const poster = await User.findById(job.postedBy);
+      if (poster?.email) {
+        sendEmail(
+          poster.email,
+          'Job Posting Update - WorkHive',
+          `<p>Hi ${poster.username},</p>
+           <p>Your job posting "<strong>${job.title}</strong>" was not approved.</p>
+           <p><strong>Reason:</strong> ${job.rejectionReason}</p>
+           <p>You can edit and resubmit your posting for review.</p>
+           <p>— The WorkHive Team</p>`
+        ).catch(err => console.error('Rejection email error:', err));
+      }
+    } catch (notifErr) {
+      console.error('Rejection notification error:', notifErr);
+    }
+
+    res.status(200).json({
+      success: true,
+      msg: 'Job posting rejected.',
+      data: job
+    });
+  } catch (error) {
+    console.error('rejectJobPosting error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
 module.exports = {
   createJobPosting,
   browseJobPostings,
@@ -316,5 +454,8 @@ module.exports = {
   getMyJobPostings,
   updateJobPosting,
   deleteJobPosting,
-  closeJobPosting
+  closeJobPosting,
+  getPendingJobs,
+  approveJobPosting,
+  rejectJobPosting
 };

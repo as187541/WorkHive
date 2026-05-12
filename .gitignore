@@ -1,2 +1,6 @@
 .env
+.env.*
+
+# Markdown documentation files
 *.md
+!README.md

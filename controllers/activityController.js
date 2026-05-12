@@ -1,4 +1,5 @@
 const Activity = require('../models/activityModel');
+const Workspace = require('../models/workspaceModel');
 
 /**
  * @desc    Log an activity
@@ -23,7 +24,7 @@ const logActivity = async (userId, action, target, options = {}) => {
 };
 
 /**
- * @desc    Get activities for the current user (across their workspaces)
+ * @desc    Get activities for the current user across their workspaces
  * @route   GET /api/v1/activities
  * @access  Private
  */
@@ -32,12 +33,19 @@ const getActivities = async (req, res) => {
     const { workspace, action, page = 1, limit = 20 } = req.query;
     const userId = req.user._id;
 
-    const query = { user: userId };
+    // Find all workspaces the user belongs to
+    const userWorkspaces = await Workspace.find({ 'members.user': userId }).select('_id');
+    const workspaceIds = userWorkspaces.map(ws => ws._id);
+
+    // Build query: activities from any user in the current user's workspaces
+    const query = { workspace: { $in: workspaceIds } };
     if (workspace && workspace !== 'all') {
       query.workspace = workspace;
     }
     if (action) {
-      query.action = action;
+      // Support multiple action types via repeated query params (e.g. ?action=task_created&action=task_assigned)
+      const actions = Array.isArray(action) ? action : [action];
+      query.action = actions.length === 1 ? actions[0] : { $in: actions };
     }
 
     const skip = (Number(page) - 1) * Number(limit);

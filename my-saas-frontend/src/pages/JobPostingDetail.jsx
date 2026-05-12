@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import RatingStars from '../components/RatingStars';
 import SubmitProposalModal from '../components/SubmitProposalModal';
+import AcceptProposalModal from '../components/AcceptProposalModal';
 
 const JobPostingDetail = () => {
   const { jobId } = useParams();
@@ -12,6 +13,7 @@ const JobPostingDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showProposalModal, setShowProposalModal] = useState(false);
+  const [acceptingProposal, setAcceptingProposal] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
@@ -27,7 +29,7 @@ const JobPostingDetail = () => {
       setLoading(true);
       const [jobRes, proposalsRes, myProposalsRes] = await Promise.all([
         api.get(`/jobs/${jobId}`),
-        api.get(`/jobs/${jobId}/proposals`).catch(() => ({ data: { data: [] } })),
+        api.get(`/proposals/jobs/${jobId}/proposals`).catch(() => ({ data: { data: [] } })),
         api.get('/proposals/my').catch(() => ({ data: { data: [] } }))
       ]);
 
@@ -47,17 +49,13 @@ const JobPostingDetail = () => {
     }
   };
 
-  const handleAcceptProposal = async (proposalId) => {
-    try {
-      setActionLoading(proposalId);
-      const res = await api.patch(`/proposals/${proposalId}/accept`);
-      alert(res.data.msg || 'Proposal accepted!');
-      fetchJobDetails();
-    } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to accept proposal');
-    } finally {
-      setActionLoading(null);
-    }
+  const handleAcceptProposal = (proposal) => {
+    setAcceptingProposal(proposal);
+  };
+
+  const handleAcceptSuccess = () => {
+    setAcceptingProposal(null);
+    fetchJobDetails();
   };
 
   const handleRejectProposal = async (proposalId) => {
@@ -189,7 +187,7 @@ const JobPostingDetail = () => {
                         <div className="proposal-actions">
                           <button
                             className="btn btn-success"
-                            onClick={() => handleAcceptProposal(proposal._id)}
+                            onClick={() => handleAcceptProposal(proposal)}
                             disabled={actionLoading === proposal._id}
                           >
                             {actionLoading === proposal._id ? 'Processing...' : '✓ Accept'}
@@ -303,6 +301,15 @@ const JobPostingDetail = () => {
             setHasSubmitted(true);
             fetchJobDetails();
           }}
+        />
+      )}
+
+      {acceptingProposal && (
+        <AcceptProposalModal
+          proposal={acceptingProposal}
+          job={job}
+          onClose={() => setAcceptingProposal(null)}
+          onSuccess={handleAcceptSuccess}
         />
       )}
     </div>

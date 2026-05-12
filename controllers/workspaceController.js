@@ -3,6 +3,8 @@
 const Workspace = require('../models/workspaceModel');
 const User = require('../models/userModel');
 const Invitation = require('../models/invitationModel');
+const Project = require('../models/projectModel');
+const Task = require('../models/taskModel');
 const { logActivity } = require('./activityController');
 
 /**
@@ -36,8 +38,40 @@ const createWorkspace = async (req, res) => {
 const getWorkspaces = async (req, res) => {
   try {
     const workspaces = await Workspace.find({ 'members.user': req.user._id });
-    // workspaces fetched successfully
-    res.status(200).json(workspaces);
+
+    // Attach task count per workspace by looking up projects -> tasks
+    const workspaceIds = workspaces.map(ws => ws._id);
+    const projects = await Project.find({ workspace: { $in: workspaceIds } }).select('_id workspace');
+    const projectIds = projects.map(p => p._id);
+
+    // Build a map: workspaceId -> [projectIds]
+    const wsProjectMap = {};
+    projects.forEach(p => {
+      const key = p.workspace.toString();
+      if (!wsProjectMap[key]) wsProjectMap[key] = [];
+      wsProjectMap[key].push(p._id);
+    });
+
+    // Count tasks grouped by project
+    const taskCounts = await Task.aggregate([
+      { $match: { project: { $in: projectIds } } },
+      { $group: { _id: '$project', count: { $sum: 1 } } }
+    ]);
+
+    // Build a map: projectId -> taskCount
+    const projectTaskMap = {};
+    taskCounts.forEach(tc => {
+      projectTaskMap[tc._id.toString()] = tc.count;
+    });
+
+    // Attach taskCount to each workspace
+    const workspacesWithCounts = workspaces.map(ws => {
+      const wsProjects = wsProjectMap[ws._id.toString()] || [];
+      const taskCount = wsProjects.reduce((sum, pid) => sum + (projectTaskMap[pid.toString()] || 0), 0);
+      return { ...ws.toObject(), taskCount };
+    });
+
+    res.status(200).json(workspacesWithCounts);
   } catch (error) {
     res.status(500).json({ msg: 'Server Error' });
   }

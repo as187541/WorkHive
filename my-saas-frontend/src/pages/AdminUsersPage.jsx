@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiAward, FiUsers, FiTrash2, FiEdit3, FiPlus, FiMinus, FiSearch, FiShield, FiUser } from 'react-icons/fi';
+import { FiUsers, FiTrash2, FiSearch, FiShield, FiUser, FiAward } from 'react-icons/fi';
 import api from '../services/api';
 
 const AdminUsersPage = () => {
@@ -7,10 +7,6 @@ const AdminUsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showTokenModal, setShowTokenModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [tokenAmount, setTokenAmount] = useState('');
-  const [tokenReason, setTokenReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -56,49 +52,7 @@ const AdminUsersPage = () => {
     }
   };
 
-  const openTokenModal = (user) => {
-    setSelectedUser(user);
-    setTokenAmount('');
-    setTokenReason('');
-    setShowTokenModal(true);
-  };
-
-  const handleTokenAlter = async () => {
-    if (!tokenAmount || isNaN(tokenAmount)) {
-      alert('Please enter a valid number');
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      await api.post(`/admin/users/${selectedUser._id}/tokens`, {
-        amount: Number(tokenAmount),
-        reason: tokenReason || 'Admin adjustment'
-      });
-      
-      // Update local state
-      setUsers(users.map(u => {
-        if (u._id === selectedUser._id) {
-          return {
-            ...u,
-            wallet: {
-              ...u.wallet,
-              balance: (u.wallet?.balance || 0) + Number(tokenAmount)
-            }
-          };
-        }
-        return u;
-      }));
-      
-      setShowTokenModal(false);
-    } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to alter tokens');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -179,14 +133,6 @@ const AdminUsersPage = () => {
                 <td>
                   <div className="action-buttons">
                     <button
-                      onClick={() => openTokenModal(user)}
-                      className="btn btn-icon btn-token"
-                      title="Alter Tokens"
-                      disabled={actionLoading}
-                    >
-                      <FiEdit3 />
-                    </button>
-                    <button
                       onClick={() => handleDeleteUser(user._id)}
                       className="btn btn-icon btn-danger"
                       title="Delete User"
@@ -202,66 +148,6 @@ const AdminUsersPage = () => {
         </table>
       </div>
 
-      {/* Token Alter Modal */}
-      {showTokenModal && selectedUser && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Alter Tokens for {selectedUser.name}</h3>
-              <button onClick={() => setShowTokenModal(false)} className="modal-close">×</button>
-            </div>
-            <div className="modal-body">
-              <p className="current-balance">
-                Current Balance: <strong>{selectedUser.wallet?.balance || 0} HT</strong>
-              </p>
-              <div className="form-group">
-                <label>Amount (use negative to deduct)</label>
-                <div className="token-input-group">
-                  <button 
-                    onClick={() => setTokenAmount(prev => String((Number(prev) || 0) - 10))}
-                    className="btn btn-sm"
-                  >
-                    <FiMinus /> 10
-                  </button>
-                  <input
-                    type="number"
-                    value={tokenAmount}
-                    onChange={(e) => setTokenAmount(e.target.value)}
-                    placeholder="e.g. 100 or -50"
-                    className="form-input"
-                  />
-                  <button 
-                    onClick={() => setTokenAmount(prev => String((Number(prev) || 0) + 10))}
-                    className="btn btn-sm"
-                  >
-                    <FiPlus /> 10
-                  </button>
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Reason (optional)</label>
-                <input
-                  type="text"
-                  value={tokenReason}
-                  onChange={(e) => setTokenReason(e.target.value)}
-                  placeholder="e.g. Bug bounty reward"
-                  className="form-input"
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button onClick={() => setShowTokenModal(false)} className="btn btn-secondary">Cancel</button>
-              <button 
-                onClick={handleTokenAlter} 
-                className="btn btn-primary"
-                disabled={actionLoading || !tokenAmount}
-              >
-                {actionLoading ? 'Processing...' : 'Confirm'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

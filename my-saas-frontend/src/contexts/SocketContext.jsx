@@ -19,13 +19,14 @@ export const SocketProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      timeout: 10000
     });
 
     newSocket.on('connect', () => {
@@ -33,13 +34,13 @@ export const SocketProvider = ({ children }) => {
       setConnected(true);
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('🔌 Socket disconnected');
+    newSocket.on('disconnect', (reason) => {
+      console.log('🔌 Socket disconnected:', reason);
       setConnected(false);
     });
 
     newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message);
+      console.warn('Socket connection error — server may be unavailable:', error.message);
       setConnected(false);
     });
 

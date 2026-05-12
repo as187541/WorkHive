@@ -36,6 +36,10 @@ const hireInvitationSchema = new mongoose.Schema({
     maxlength: [500, 'Message cannot exceed 500 characters'],
     default: ''
   },
+  jobPosting: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'JobPosting'
+  },
   expiresAt: {
     type: Date,
     default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from creation

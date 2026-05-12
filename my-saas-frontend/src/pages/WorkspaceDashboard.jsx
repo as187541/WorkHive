@@ -8,6 +8,7 @@ import api from '../services/api';
 const WorkspaceDashboard = () => {
   const context = useOutletContext();
   const workspaces = context?.workspaces || [];
+  const openCreateModal = context?.openCreateModal;
   const [invitations, setInvitations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -60,7 +61,7 @@ const WorkspaceDashboard = () => {
           <h1>Workspaces</h1>
           <p className="page-description">Manage your collaborative projects</p>
         </div>
-        <button className="btn btn-primary">
+        <button className="btn btn-primary" onClick={openCreateModal}>
           <FiPlus style={{ marginRight: '6px' }} /> Create Workspace
         </button>
       </header>

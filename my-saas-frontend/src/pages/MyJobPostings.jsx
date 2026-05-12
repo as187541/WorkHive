@@ -64,13 +64,17 @@ const MyJobPostings = () => {
 
   const filteredJobs = filterStatus === 'all'
     ? jobs
-    : jobs.filter(j => j.status.toLowerCase() === filterStatus);
+    : filterStatus === 'pending approval'
+      ? jobs.filter(j => j.approvalStatus === 'Pending')
+      : jobs.filter(j => j.status.toLowerCase() === filterStatus);
 
   const statusCounts = {
     all: jobs.length,
     open: jobs.filter(j => j.status === 'Open').length,
+    'in progress': jobs.filter(j => j.status === 'In Progress').length,
     filled: jobs.filter(j => j.status === 'Filled').length,
-    closed: jobs.filter(j => j.status === 'Closed').length
+    closed: jobs.filter(j => j.status === 'Closed').length,
+    'pending approval': jobs.filter(j => j.approvalStatus === 'Pending').length
   };
 
   if (loading) {
@@ -102,13 +106,13 @@ const MyJobPostings = () => {
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="status-tabs">
-        {['all', 'open', 'filled', 'closed'].map(status => (
+        {['all', 'open', 'in progress', 'filled', 'closed', 'pending approval'].map(status => (
           <button
             key={status}
             className={`status-tab ${filterStatus === status ? 'active' : ''}`}
             onClick={() => setFilterStatus(status)}
           >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status === 'in progress' ? 'In Progress' : status === 'pending approval' ? '⏳ Pending' : status.charAt(0).toUpperCase() + status.slice(1)}
             <span className="tab-count">{statusCounts[status]}</span>
           </button>
         ))}

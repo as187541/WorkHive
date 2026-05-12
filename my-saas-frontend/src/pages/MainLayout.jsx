@@ -18,6 +18,7 @@ const MainLayout = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
      const openInviteModal = () => setIsInviteModalOpen(true);
+     const openCreateModal = () => setIsCreateModalOpen(true);
   const navigate = useNavigate();
   const { workspaceId } = useParams();
 
@@ -116,6 +117,7 @@ const handleTaskUpdate = (updatedTask) => {
             collaborators, 
             openProfile, 
             openInviteModal,
+            openCreateModal,
             onTaskUpdate: handleTaskUpdate // Required by Kanban/Drawer to trigger rewards
           }} />
         </main>

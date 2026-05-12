@@ -1,18 +1,39 @@
 // src/components/Sidebar.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import {
   FiLayout, FiFolder, FiUsers, FiPackage, FiBriefcase,
   FiMessageSquare, FiClipboard, FiShoppingBag,
-  FiClock, FiInbox, FiShield, FiCheckSquare, FiActivity, FiUserPlus
+  FiShield, FiCheckSquare, FiActivity, FiUserPlus, FiEdit3, FiSend
 } from 'react-icons/fi';
 import api from '../services/api';
 
 const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }) => {
   const { workspaceId } = useParams();
+  const [pendingRedemptions, setPendingRedemptions] = useState(0);
 
   const currentUserRecord = collaborators.find(c => c.user?._id === user?._id);
   const isAdmin = currentUserRecord?.role === 'Admin';
+
+  const isApprover = user?.role === 'SuperAdmin' ||
+    user?.approverScope?.adminWorkspaces?.length > 0 ||
+    user?.approverScope?.leadProjects?.length > 0;
+
+  // Fetch pending redemption count for approvers
+  useEffect(() => {
+    if (!isApprover) return;
+    const fetchPending = async () => {
+      try {
+        const res = await api.get('/redemptions/pending-count');
+        setPendingRedemptions(res.data.count || 0);
+      } catch {
+        // Silently fail
+      }
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    return () => clearInterval(interval);
+  }, [isApprover]);
 
   const handleRemoveMember = async (userId) => {
     if (window.confirm("Are you sure you want to remove this member?")) {
@@ -33,11 +54,12 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
     { to: '/talent', icon: FiUsers, label: 'Talent Marketplace' },
     { to: '/services', icon: FiPackage, label: 'Services' },
     { to: '/jobs', icon: FiClipboard, label: 'Jobs' },
+    { to: '/my-jobs', icon: FiEdit3, label: 'My Job Postings' },
+    { to: '/my-proposals', icon: FiSend, label: 'My Proposals' },
     { to: '/messages', icon: FiMessageSquare, label: 'Messages' },
     { to: '/connections', icon: FiUserPlus, label: 'Connections' },
     { to: '/hire-invitations', icon: FiBriefcase, label: 'Hire Invitations' },
     { to: '/rewards', icon: FiShoppingBag, label: 'Reward Store' },
-    { to: '/my-redemptions', icon: FiClock, label: 'My Redemptions' },
   ];
 
   return (
@@ -61,17 +83,12 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
                 >
                   <item.icon style={{ marginRight: '10px', fontSize: '1.1rem' }} />
                   {item.label}
+                  {item.to === '/rewards' && isApprover && pendingRedemptions > 0 && (
+                    <span className="sidebar-badge">{pendingRedemptions > 9 ? '9+' : pendingRedemptions}</span>
+                  )}
                 </NavLink>
               </li>
             ))}
-            {(user?.approverScope?.adminWorkspaces?.length > 0 || user?.approverScope?.leadProjects?.length > 0) && (
-              <li>
-                <NavLink to="/review-redemptions" className={({ isActive }) => isActive ? 'active' : ''}>
-                  <FiInbox style={{ marginRight: '10px', fontSize: '1.1rem' }} />
-                  Review Requests
-                </NavLink>
-              </li>
-            )}
             {user?.role === 'SuperAdmin' && (
               <li>
                 <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : ''}>

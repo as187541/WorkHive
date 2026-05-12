@@ -147,7 +147,9 @@ const HireInvitationsPage = () => {
                   </div>
                 </div>
                 <div className="hire-invitation-actions">
-                  <span className="hire-rate">${inv.hourlyRate || 85}/hr</span>
+                  {inv.message && (
+                    <span className="hire-rate" title={inv.message}>{inv.message.substring(0, 40)}{inv.message.length > 40 ? '...' : ''}</span>
+                  )}
                   {inv.status === 'Pending' && (
                     <button
                       className="btn btn-secondary btn-sm"
@@ -195,7 +197,9 @@ const HireInvitationsPage = () => {
                   </div>
                 </div>
                 <div className="hire-invitation-actions">
-                  <span className="hire-rate">${inv.hourlyRate || 85}/hr</span>
+                  {inv.message && (
+                    <span className="hire-rate" title={inv.message}>{inv.message.substring(0, 40)}{inv.message.length > 40 ? '...' : ''}</span>
+                  )}
                   {inv.status === 'Pending' && (
                     <>
                       <button

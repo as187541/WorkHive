@@ -1,37 +1,14 @@
 // src/components/Navbar.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBell, FiLogOut, FiUser } from 'react-icons/fi';
+import { FiLogOut, FiUser } from 'react-icons/fi';
 import ThemeSwitcher from './ThemeSwitcher';
-import HireNotificationBadge from './HireNotificationBadge';
+import NotificationDropdown from './NotificationDropdown';
 import MessageBadge from './MessageBadge';
-import api from '../services/api';
 
 const Navbar = ({ user }) => {
-  const [pendingCount, setPendingCount] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
-
-  // Fetch pending redemption count for approvers
-  useEffect(() => {
-    const hasApproverScope = user?.approverScope?.isSuperAdmin ||
-      user?.approverScope?.adminWorkspaces?.length > 0 ||
-      user?.approverScope?.leadProjects?.length > 0;
-    if (!hasApproverScope) return;
-
-    const fetchPending = async () => {
-      try {
-        const res = await api.get('/redemptions/pending-count');
-        setPendingCount(res.data.count);
-      } catch {
-        // Silently fail
-      }
-    };
-
-    fetchPending();
-    const interval = setInterval(fetchPending, 30000);
-    return () => clearInterval(interval);
-  }, [user?.approverScope]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -50,8 +27,6 @@ const Navbar = ({ user }) => {
     localStorage.removeItem('theme');
     window.location.href = '/login';
   };
-
-  const totalNotifications = (user?.unreadMessages || 0) + (user?.unreadHires || 0) + pendingCount;
 
   return (
     <nav className="navbar">
@@ -81,15 +56,7 @@ const Navbar = ({ user }) => {
         </div>
 
         <MessageBadge />
-        <HireNotificationBadge />
-
-        {/* Notifications */}
-        <button className="notification-btn">
-          <FiBell size={18} />
-          {totalNotifications > 0 && (
-            <span className="notification-badge">{totalNotifications > 9 ? '9+' : totalNotifications}</span>
-          )}
-        </button>
+        <NotificationDropdown user={user} />
 
         <ThemeSwitcher />
 

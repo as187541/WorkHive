@@ -93,19 +93,41 @@ exports.updateTask = async (req, res) => {
         const rewards = { High: 30, Medium: 20, Low: 10 };
         const rewardAmount = rewards[task.priority] || 10;
 
-        // Atomic update to user wallet
-        await User.findByIdAndUpdate(task.assignedTo, {
+        // Look up the workspace for this task's project
+        const taskProject = await Project.findById(task.project).lean();
+        const workspaceId = taskProject?.workspace;
+
+        // Atomic update: credit global balance + workspace-specific balance + history
+        const updateOps = {
           $inc: { 'wallet.balance': rewardAmount },
           $push: { 
             'wallet.history': { 
               amount: rewardAmount, 
               reason: `Early completion: ${task.title}`, 
               taskId: task._id,
+              workspace: workspaceId,
               date: now
             } 
           }
-        });
-        
+        };
+
+        // Credit workspace-specific balance using positional operator or $inc
+        // First try to increment existing workspace entry
+        const incResult = await User.updateOne(
+          { _id: task.assignedTo, 'wallet.workspaces.workspace': workspaceId },
+          { $inc: { 'wallet.workspaces.$.balance': rewardAmount } }
+        );
+
+        // If no existing workspace entry, push a new one
+        if (incResult.modifiedCount === 0 && workspaceId) {
+          await User.updateOne(
+            { _id: task.assignedTo },
+            { $push: { 'wallet.workspaces': { workspace: workspaceId, balance: rewardAmount } } }
+          );
+        }
+
+        // Still update global balance and history
+        await User.findByIdAndUpdate(task.assignedTo, updateOps);
 
         req.body.rewardProcessed = true;
         req.body.completedAt = now;
