@@ -1,6 +1,7 @@
 const Conversation = require('../models/conversationModel');
 const Message = require('../models/messageModel');
 const User = require('../models/userModel');
+const { emitMessage, emitUnreadCount } = require('../utils/socket');
 
 /**
  * @desc    Get all conversations for the logged-in user
@@ -221,6 +222,16 @@ const sendMessage = async (req, res) => {
 
     const populatedMessage = await Message.findById(message._id)
       .populate('sender', 'name avatar');
+
+    // Emit real-time message to conversation room
+    emitMessage(conversationId, populatedMessage);
+
+    // Emit unread count update to other participant
+    const otherParticipantUnread = await Conversation.findById(conversationId);
+    const otherUnreadEntry = otherParticipantUnread.unreadCounts?.find(
+      u => String(u.user) === String(otherParticipant)
+    );
+    emitUnreadCount(otherParticipant, otherUnreadEntry?.count || 1);
 
     res.status(201).json({
       success: true,

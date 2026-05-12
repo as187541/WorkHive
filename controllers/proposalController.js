@@ -5,6 +5,7 @@ const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
 const HireInvitation = require('../models/hireInvitationModel');
 const sendEmail = require('../utils/sendEmail');
+const { emitNewProposal, emitProposalStatus, emitNotification } = require('../utils/socket');
 
 /**
  * @desc    Submit a proposal for a job posting
@@ -58,7 +59,16 @@ const submitProposal = async (req, res) => {
     job.proposalsCount += 1;
     await job.save();
 
-    // Notify job poster
+    // Emit real-time notification to job poster
+    emitNewProposal(job.postedBy, proposal, jobId);
+    emitNotification(job.postedBy, {
+      type: 'proposal',
+      title: 'New Proposal Received',
+      message: `${req.user.name} submitted a proposal for "${job.title}"`,
+      data: { proposalId: proposal._id, jobId }
+    });
+
+    // Notify job poster via email
     const poster = await User.findById(job.postedBy);
     if (poster) {
       await sendEmail({
@@ -201,7 +211,32 @@ const acceptProposal = async (req, res) => {
       }
     }
 
-    // Notify freelancer
+    // Notify freelancer via socket
+    emitProposalStatus(proposal.freelancer, proposal, proposal.jobPosting._id);
+    emitNotification(proposal.freelancer, {
+      type: 'proposal_accepted',
+      title: 'Proposal Accepted! 🎉',
+      message: `Your proposal for "${job.title}" has been accepted!`,
+      data: { proposalId: proposal._id, jobId: job._id }
+    });
+
+    // Notify other rejected freelancers
+    const rejectedProposals = await Proposal.find({
+      jobPosting: proposal.jobPosting._id,
+      status: 'Rejected',
+      _id: { $ne: id }
+    });
+    rejectedProposals.forEach(rp => {
+      emitProposalStatus(rp.freelancer, rp, proposal.jobPosting._id);
+      emitNotification(rp.freelancer, {
+        type: 'proposal_rejected',
+        title: 'Proposal Not Selected',
+        message: `Your proposal for "${job.title}" was not selected.`,
+        data: { proposalId: rp._id, jobId: job._id }
+      });
+    });
+
+    // Notify freelancer via email
     const freelancer = await User.findById(proposal.freelancer);
     if (freelancer) {
       await sendEmail({

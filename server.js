@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const http = require('http');
 
 // --- CONFIGURATION FIRST ---
 // Load environment variables from .env file BEFORE anything else
@@ -19,6 +20,8 @@ const servicePackageRouter = require('./routes/servicePackageRoutes');
 const messageRouter = require('./routes/messageRoutes');
 const jobPostingRouter = require('./routes/jobPostingRoutes');
 const proposalRouter = require('./routes/proposalRoutes');
+const taskRouter = require('./routes/taskRoutes');
+const { initSocket } = require('./utils/socket');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -42,10 +45,10 @@ app.use('/api/v1/services', servicePackageRouter);
 app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/jobs', jobPostingRouter);
 app.use('/api/v1/proposals', proposalRouter);
+app.use('/api/v1/tasks', taskRouter);
 
 // --- STARTUP LOGIC ---
 const startServer = async () => {
-  // ... your startServer function remains exactly the same
   console.log("Attempting to start the server..."); 
   try {
     if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
@@ -56,8 +59,13 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ Successfully connected to MongoDB!");
 
+    // Create HTTP server and attach Socket.IO
+    const httpServer = http.createServer(app);
+    initSocket(httpServer);
+    console.log("✅ Socket.IO initialized!");
+
     console.log("Starting Express server listener...");
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`🚀 Server is LIVE and running on http://localhost:${PORT}`);
     });
 

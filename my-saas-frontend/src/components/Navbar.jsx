@@ -1,20 +1,22 @@
 // src/components/Navbar.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShield, FiBell, FiUsers, FiPackage, FiClipboard } from 'react-icons/fi';
+import { FiBell, FiLogOut, FiUser } from 'react-icons/fi';
 import ThemeSwitcher from './ThemeSwitcher';
 import HireNotificationBadge from './HireNotificationBadge';
 import MessageBadge from './MessageBadge';
 import api from '../services/api';
 
-const Navbar = ({ user, onCreateWorkspaceClick }) => {
+const Navbar = ({ user }) => {
   const [pendingCount, setPendingCount] = useState(0);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
 
   // Fetch pending redemption count for approvers
   useEffect(() => {
-    const hasApproverScope = user?.approverScope?.isSuperAdmin || 
-                             user?.approverScope?.adminWorkspaces?.length > 0 || 
-                             user?.approverScope?.leadProjects?.length > 0;
+    const hasApproverScope = user?.approverScope?.isSuperAdmin ||
+      user?.approverScope?.adminWorkspaces?.length > 0 ||
+      user?.approverScope?.leadProjects?.length > 0;
     if (!hasApproverScope) return;
 
     const fetchPending = async () => {
@@ -22,16 +24,25 @@ const Navbar = ({ user, onCreateWorkspaceClick }) => {
         const res = await api.get('/redemptions/pending-count');
         setPendingCount(res.data.count);
       } catch {
-        // Silently fail — not critical
+        // Silently fail
       }
     };
 
     fetchPending();
-    
-    // Poll every 30 seconds for new requests
     const interval = setInterval(fetchPending, 30000);
     return () => clearInterval(interval);
   }, [user?.approverScope]);
+
+  // Close menus on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -40,69 +51,114 @@ const Navbar = ({ user, onCreateWorkspaceClick }) => {
     window.location.href = '/login';
   };
 
+  const totalNotifications = (user?.unreadMessages || 0) + (user?.unreadHires || 0) + pendingCount;
+
   return (
     <nav className="navbar">
-      {/* Left: Branding/Home Link */}
+      {/* Left: Brand */}
       <div className="navbar-left">
-        <Link to="/" className="nav-home-link">Dashboard</Link>
-        <Link to="/talent" className="nav-home-link">
-          <FiUsers style={{ marginRight: '6px' }} /> Talent
+        <Link to="/" className="navbar-brand">
+          <div className="navbar-brand-icon">W</div>
+          <span>WorkHive</span>
         </Link>
-        <Link to="/services" className="nav-home-link">
-          <FiPackage style={{ marginRight: '6px' }} /> Services
-        </Link>
-        <Link to="/jobs" className="nav-home-link">
-          <FiClipboard style={{ marginRight: '6px' }} /> Jobs
-        </Link>
-        {user?.role === 'SuperAdmin' && (
-          <Link to="/admin" className="nav-admin-link">
-            <FiShield style={{ marginRight: '6px' }} /> Admin
-          </Link>
-        )}
-        {(user?.approverScope?.isSuperAdmin || user?.approverScope?.adminWorkspaces?.length > 0 || user?.approverScope?.leadProjects?.length > 0) && (
-          <Link to="/review-redemptions" className="nav-admin-link" style={{ position: 'relative' }}>
-            <FiBell style={{ marginRight: '6px' }} /> 
-            Requests
-            {pendingCount > 0 && (
-              <span className="notification-badge">{pendingCount}</span>
-            )}
-          </Link>
-        )}
       </div>
 
       {/* Right: Actions & Profile */}
       <div className="navbar-user-actions">
+        {/* Token Balance */}
+        <div className="token-balance-pill">
+          <div className="token-icon">
+            <div
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #f59e0b, #f97316)'
+              }}
+            />
+          </div>
+          <span>{user?.wallet?.balance || 0} HT</span>
+        </div>
+
         <MessageBadge />
         <HireNotificationBadge />
-        
-        {/* Create Workspace Trigger */}
-        <button 
-          onClick={onCreateWorkspaceClick} 
-          className="btn btn-primary btn-sm"
-        >
-          + New Workspace
+
+        {/* Notifications */}
+        <button className="notification-btn">
+          <FiBell size={18} />
+          {totalNotifications > 0 && (
+            <span className="notification-badge">{totalNotifications > 9 ? '9+' : totalNotifications}</span>
+          )}
         </button>
-        
-        {/* Theme Toggler */}
+
         <ThemeSwitcher />
-        
-        {/* Logout Icon Button */}
-        <button onClick={handleLogout} className="btn-logout" title="Logout">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="18" height="18" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
+
+        {/* User Avatar Dropdown */}
+        <div ref={userMenuRef} style={{ position: 'relative' }}>
+          <button
+            className="user-avatar-btn"
+            onClick={() => setShowUserMenu(!showUserMenu)}
           >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
-        </button>
+            {user?.avatar ? (
+              <img src={user.avatar} alt={user.name} />
+            ) : (
+              user?.name?.charAt(0).toUpperCase() || 'U'
+            )}
+          </button>
+
+          {showUserMenu && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                background: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--border-radius-lg)',
+                boxShadow: 'var(--shadow-lg)',
+                minWidth: 180,
+                zIndex: 1000,
+                padding: '8px 0'
+              }}
+            >
+              <Link
+                to="/profile"
+                onClick={() => setShowUserMenu(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 16px',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.875rem',
+                  textDecoration: 'none'
+                }}
+              >
+                <FiUser size={16} />
+                Profile
+              </Link>
+              <div style={{ borderTop: '1px solid var(--border-color)', margin: '8px 0' }} />
+              <button
+                onClick={handleLogout}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 16px',
+                  width: '100%',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--danger-500)',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <FiLogOut size={16} />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

@@ -71,33 +71,66 @@ const TalentMarketplace = () => {
   return (
     <div className="talent-marketplace-container page-enter">
       <header className="marketplace-header">
-        <h1>Talent Marketplace</h1>
-        <p>Discover skilled professionals and invite them to your projects.</p>
+        <div>
+          <h1>Talent Marketplace</h1>
+          <p>Discover skilled professionals for your projects</p>
+        </div>
       </header>
 
-      <div className="marketplace-layout">
-        <aside className="filters-sidebar">
-          <TalentFilters filters={filters} onChange={handleFilterChange} />
-        </aside>
+      <div className="marketplace-toolbar">
+        <div className="search-bar-wrapper" style={{ maxWidth: '500px', flex: 1 }}>
+          <input
+            type="text"
+            placeholder="Search by skills, role, or name..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange({ search: e.target.value })}
+            className="search-bar"
+          />
+        </div>
 
-        <div className="talent-grid-section">
-          {loading && (
-            <div className="loading-state">
-              <div className="spinner"></div>
-              <p>Loading talent profiles...</p>
-            </div>
-          )}
+        <div className="filter-dropdowns">
+          <select
+            value={filters.availability}
+            onChange={(e) => handleFilterChange({ availability: e.target.value })}
+            className="filter-select"
+          >
+            <option value="">Availability</option>
+            <option value="open-to-work">Open to Work</option>
+            <option value="busy">Busy</option>
+            <option value="not-available">Not Available</option>
+          </select>
 
-          {error && (
-            <div className="error-state">
-              <div className="empty-state-icon">⚠️</div>
-              <h3>Something went wrong</h3>
-              <p>{error}</p>
-              <button onClick={() => fetchTalent(pagination.page)} className="btn-retry">Retry</button>
-            </div>
-          )}
+          <select
+            value={filters.sort}
+            onChange={(e) => handleFilterChange({ sort: e.target.value })}
+            className="filter-select"
+          >
+            <option value="rating">Sort By</option>
+            <option value="rating">Top Rated</option>
+            <option value="hourlyRate">Hourly Rate</option>
+            <option value="newest">Newest</option>
+          </select>
+        </div>
+      </div>
 
-          {!loading && !error && talent.length === 0 && (
+      <div className="talent-grid-section">
+        {loading && (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading talent profiles...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="error-state">
+            <div className="empty-state-icon">⚠️</div>
+            <h3>Something went wrong</h3>
+            <p>{error}</p>
+            <button onClick={() => fetchTalent(pagination.page)} className="btn-retry">Retry</button>
+          </div>
+        )}
+
+        {!loading && !error && talent.length === 0 && (
             <div className="empty-state">
               <div className="empty-state-icon">🔍</div>
               <h3>No talent found</h3>
@@ -134,7 +167,6 @@ const TalentMarketplace = () => {
           )}
         </div>
       </div>
-    </div>
   );
 };
 

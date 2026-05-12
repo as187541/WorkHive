@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './pages/LoginPage';
 import MainLayout from './pages/MainLayout';
 import WorkspaceDetail from './pages/WorkspaceDetail';
+import DashboardPage from './pages/DashboardPage';
 import WorkspaceDashboard from './pages/WorkspaceDashboard';
 import ProfilePage from './pages/ProfilePage'; 
 import RewardStore from './pages/RewardStore';
@@ -28,6 +29,9 @@ import JobPostingsPage from './pages/JobPostingsPage';
 import JobPostingDetail from './pages/JobPostingDetail';
 import MyJobPostings from './pages/MyJobPostings';
 import MyProposals from './pages/MyProposals';
+import MyTasksPage from './pages/MyTasksPage';
+
+import { SocketProvider } from './contexts/SocketContext';
 
 const AuthCheck = ({ children }) => {
   const isAuth = !!localStorage.getItem('token');
@@ -36,48 +40,51 @@ const AuthCheck = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-  
-        <Route path="/login" element={<LoginPage />} />
+    <SocketProvider>
+      <Router>
+        <Routes>
+    
+          <Route path="/login" element={<LoginPage />} />
 
-        <Route path="/" element={<AuthCheck><MainLayout /></AuthCheck>}>
+          <Route path="/" element={<AuthCheck><MainLayout /></AuthCheck>}>
 
-          <Route index element={<WorkspaceDashboard />} />
- 
-          <Route path="workspaces/:workspaceId" element={<WorkspaceDetail />} />
-   
-          <Route path="profile" element={<ProfilePage />} />
-          
-        <Route path="rewards" element={<RewardStore />} />
-        <Route path="my-redemptions" element={<MyRedemptionsPage />} />
-        <Route path="review-redemptions" element={<AdminRedemptionsPage />} />
-        <Route path="talent" element={<TalentMarketplace />} />
-        <Route path="talent/:userId" element={<TalentProfilePage />} />
-        <Route path="hire-invitations" element={<HireInvitationsPage />} />
-        <Route path="services" element={<ServicePackagesMarketplace />} />
-        <Route path="services/:serviceId" element={<ServicePackageDetail />} />
-        <Route path="my-services" element={<MyServices />} />
-        <Route path="messages" element={<MessagesPage />} />
-        <Route path="jobs" element={<JobPostingsPage />} />
-        <Route path="jobs/:jobId" element={<JobPostingDetail />} />
-        <Route path="my-jobs" element={<MyJobPostings />} />
-        <Route path="my-proposals" element={<MyProposals />} />
-          
-        </Route>
+<Route index element={<DashboardPage />} />
+          <Route path="workspaces" element={<WorkspaceDashboard />} />
+            <Route path="workspaces/:workspaceId" element={<WorkspaceDetail />} />
+     
+            <Route path="profile" element={<ProfilePage />} />
+            
+          <Route path="rewards" element={<RewardStore />} />
+          <Route path="my-redemptions" element={<MyRedemptionsPage />} />
+          <Route path="review-redemptions" element={<AdminRedemptionsPage />} />
+          <Route path="talent" element={<TalentMarketplace />} />
+          <Route path="talent/:userId" element={<TalentProfilePage />} />
+          <Route path="hire-invitations" element={<HireInvitationsPage />} />
+          <Route path="services" element={<ServicePackagesMarketplace />} />
+          <Route path="services/:serviceId" element={<ServicePackageDetail />} />
+          <Route path="my-services" element={<MyServices />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="jobs" element={<JobPostingsPage />} />
+          <Route path="jobs/:jobId" element={<JobPostingDetail />} />
+          <Route path="my-jobs" element={<MyJobPostings />} />
+          <Route path="my-proposals" element={<MyProposals />} />
+          <Route path="my-tasks" element={<MyTasksPage />} />
+            
+          </Route>
 
-        <Route path="/admin" element={<AuthCheck><AdminRoute><MainLayout /></AdminRoute></AuthCheck>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsersPage />} />
-          <Route path="workspaces" element={<AdminWorkspacesPage />} />
-          <Route path="logs" element={<AdminLogsPage />} />
-          <Route path="tokens" element={<AdminTokensPage />} />
-          <Route path="redemptions" element={<AdminRedemptionsPage />} />
-        </Route>
+          <Route path="/admin" element={<AuthCheck><AdminRoute><MainLayout /></AdminRoute></AuthCheck>}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="workspaces" element={<AdminWorkspacesPage />} />
+            <Route path="logs" element={<AdminLogsPage />} />
+            <Route path="tokens" element={<AdminTokensPage />} />
+            <Route path="redemptions" element={<AdminRedemptionsPage />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </SocketProvider>
   );
 }
 

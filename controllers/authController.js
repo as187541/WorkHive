@@ -214,6 +214,11 @@ const redeemTokens = async (req, res) => {
     // Find user (req.user._id comes from protect middleware)
     const user = await User.findById(req.user._id);
 
+    // Ensure wallet exists
+    if (!user.wallet) {
+      user.wallet = { balance: 0, history: [] };
+    }
+
     // Check balance
     if (user.wallet.balance < cost) {
       return res.status(400).json({ msg: "Insufficient HiveTokens for this reward." });

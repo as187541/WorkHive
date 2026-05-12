@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useSocket } from '../contexts/SocketContext';
 
 const MessageBadge = () => {
   const navigate = useNavigate();
+  const { socket } = useSocket();
   const [count, setCount] = useState(0);
 
+  // Initial fetch + socket updates
   useEffect(() => {
     const fetchCount = async () => {
       try {
@@ -17,9 +20,25 @@ const MessageBadge = () => {
     };
 
     fetchCount();
-    const interval = setInterval(fetchCount, 15000); // Poll every 15s
-    return () => clearInterval(interval);
-  }, []);
+
+    if (!socket) return;
+
+    // Listen for unread count updates from socket
+    socket.on('unread_count', (data) => {
+      // Refresh total unread count when any conversation updates
+      fetchCount();
+    });
+
+    // Listen for new messages to update badge
+    socket.on('new_message', () => {
+      fetchCount();
+    });
+
+    return () => {
+      socket.off('unread_count');
+      socket.off('new_message');
+    };
+  }, [socket]);
 
   return (
     <button

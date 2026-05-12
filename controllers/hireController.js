@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
 const sendEmail = require('../utils/sendEmail');
+const { emitHireInvitation, emitNotification } = require('../utils/socket');
 
 /**
  * @desc    Send a hire invitation to a user for a specific project
@@ -66,6 +67,15 @@ const sendHireInvitation = async (req, res) => {
       sender: req.user._id,
       role,
       message
+    });
+
+    // Emit real-time notification to invited user
+    emitHireInvitation(userId, hireInvitation);
+    emitNotification(userId, {
+      type: 'hire_invitation',
+      title: 'New Hire Invitation',
+      message: `${req.user.name} invited you to join ${workspace.name}`,
+      data: { invitationId: hireInvitation._id, workspaceId, projectId }
     });
 
     // Send email notification to invited user

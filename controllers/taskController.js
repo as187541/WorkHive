@@ -4,6 +4,7 @@ const Workspace = require('../models/workspaceModel');
 const User = require('../models/userModel');
 const Project = require('../models/projectModel');
 const cloudinary = require('cloudinary').v2;
+const { emitTaskUpdate, emitNotification } = require('../utils/socket');
 
 
 
@@ -27,6 +28,20 @@ exports.createTask = async (req, res) => {
       tags 
     });
     const populatedTask = await task.populate('assignedTo', 'name email avatar');
+
+    // Emit real-time task update to project room
+    emitTaskUpdate(projectId, { type: 'task_created', task: populatedTask });
+
+    // Notify assigned user if any
+    if (assignedTo && assignedTo !== '') {
+      emitNotification(assignedTo, {
+        type: 'task_assigned',
+        title: 'New Task Assigned',
+        message: `You have been assigned to task: ${title}`,
+        data: { taskId: task._id, projectId }
+      });
+    }
+
     res.status(201).json(populatedTask  );
   } catch (error) {
     console.error("TASK CREATION ERROR:", error);
@@ -96,6 +111,22 @@ exports.updateTask = async (req, res) => {
       req.body, 
       { new: true, runValidators: true }
     ).populate('assignedTo', 'name email avatar');
+
+    // Emit real-time task update to project room
+    const projectId = updatedTask.project?._id || updatedTask.project;
+    if (projectId) {
+      emitTaskUpdate(projectId.toString(), { type: 'task_updated', task: updatedTask });
+    }
+
+    // Notify assigned user about status changes
+    if (updatedTask.assignedTo?._id && status) {
+      emitNotification(updatedTask.assignedTo._id.toString(), {
+        type: 'task_updated',
+        title: 'Task Updated',
+        message: `Task "${updatedTask.title}" status changed to ${status}`,
+        data: { taskId: updatedTask._id, status }
+      });
+    }
 
     res.status(200).json(updatedTask);
   } catch (error) {
@@ -200,6 +231,44 @@ exports.deleteAttachment = async (req, res) => {
     res.status(200).json({ msg: 'Attachment deleted', attachments: task.attachments });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Get all tasks for the current user (assigned to or created by)
+ * @route   GET /api/v1/tasks/my
+ * @access  Private
+ */
+exports.getMyTasks = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const tasks = await Task.find({
+      $or: [
+        { assignedTo: userId },
+        { createdBy: userId }
+      ]
+    })
+      .populate('assignedTo', 'name email avatar')
+      .populate({
+        path: 'project',
+        select: 'name workspace',
+        populate: {
+          path: 'workspace',
+          select: 'name'
+        }
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: tasks.length,
+      data: tasks
+    });
+  } catch (error) {
+    console.error('getMyTasks error:', error);
     res.status(500).json({ msg: 'Server Error' });
   }
 };

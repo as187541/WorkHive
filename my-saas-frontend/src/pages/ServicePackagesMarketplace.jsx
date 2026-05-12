@@ -89,112 +89,73 @@ const ServicePackagesMarketplace = () => {
   return (
     <div className="services-marketplace-page page-enter">
       <header className="marketplace-header">
-        <h1>Service Marketplace</h1>
-        <p>Browse and order services from talented freelancers.</p>
+        <div>
+          <h1>Services Marketplace</h1>
+          <p>Browse predefined service packages from talented freelancers</p>
+        </div>
       </header>
 
-      <div className="marketplace-layout">
-        <aside className="filters-sidebar">
-          <div className="filter-section">
-            <h4>Search</h4>
-            <input
-              type="text"
-              placeholder="Search services..."
-              value={filters.search}
-              onChange={e => handleFilterChange({ search: e.target.value })}
-            />
-          </div>
+      <div className="marketplace-toolbar">
+        <div className="search-bar-wrapper" style={{ maxWidth: '500px', flex: 1 }}>
+          <input
+            type="text"
+            placeholder="Search for services..."
+            value={filters.search}
+            onChange={e => handleFilterChange({ search: e.target.value })}
+            className="search-bar"
+          />
+        </div>
+      </div>
 
-          <div className="filter-section">
-            <h4>Category</h4>
-            <select
-              value={filters.category}
-              onChange={e => handleFilterChange({ category: e.target.value })}
-            >
-              <option value="">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
+      {/* Category Tabs */}
+      <div className="category-tabs">
+        <button
+          className={`category-tab ${!filters.category ? 'active' : ''}`}
+          onClick={() => handleFilterChange({ category: '' })}
+        >
+          All
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            className={`category-tab ${filters.category === cat ? 'active' : ''}`}
+            onClick={() => handleFilterChange({ category: cat })}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
 
-          <div className="filter-section">
-            <h4>Skills</h4>
-            <select
-              value={filters.skills}
-              onChange={e => handleFilterChange({ skills: e.target.value })}
-            >
-              <option value="">All Skills</option>
-              {SKILL_OPTIONS.map(skill => (
-                <option key={skill} value={skill}>{skill}</option>
-              ))}
-            </select>
-          </div>
+      <div className="marketplace-toolbar-secondary">
+        <span className="results-count">{pagination.total || services.length} services available</span>
+        <div className="filter-dropdowns">
+          <select
+            value={filters.sort}
+            onChange={e => handleFilterChange({ sort: e.target.value })}
+            className="filter-select"
+          >
+            <option value="rating">Price: Low to High</option>
+            <option value="newest">Delivery Time</option>
+            <option value="popular">Top Rated</option>
+          </select>
+        </div>
+      </div>
 
-          <div className="filter-section">
-            <h4>Price Range (HT)</h4>
-            <div className="price-range-inputs">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.minPrice}
-                onChange={e => handleFilterChange({ minPrice: e.target.value })}
-                min={0}
-              />
-              <span>-</span>
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.maxPrice}
-                onChange={e => handleFilterChange({ maxPrice: e.target.value })}
-                min={0}
-              />
-            </div>
+      <div className="marketplace-content">
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading services...</p>
           </div>
-
-          <div className="filter-section">
-            <h4>Minimum Rating</h4>
-            <input
-              type="range"
-              min="0"
-              max="5"
-              step="0.5"
-              value={filters.minRating || 0}
-              onChange={e => handleFilterChange({ minRating: e.target.value })}
-            />
-            <span>{filters.minRating || 0}+ stars</span>
+        ) : error ? (
+          <div className="alert alert-error">{error}</div>
+        ) : services.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📦</div>
+            <h3>No services found</h3>
+            <p>Try adjusting your filters or search terms.</p>
           </div>
-
-          <div className="filter-section">
-            <h4>Sort By</h4>
-            <select
-              value={filters.sort}
-              onChange={e => handleFilterChange({ sort: e.target.value })}
-            >
-              <option value="rating">Highest Rated</option>
-              <option value="popular">Most Popular</option>
-              <option value="newest">Newest</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-            </select>
-          </div>
-        </aside>
-
-        <div className="marketplace-content">
-          {loading ? (
-            <div className="loading-state">
-              <div className="spinner"></div>
-              <p>Loading services...</p>
-            </div>
-          ) : error ? (
-            <div className="alert alert-error">{error}</div>
-          ) : services.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📦</div>
-              <h3>No services found</h3>
-              <p>Try adjusting your filters or search terms.</p>
-            </div>
-          ) : (
+        ) : (
             <>
               <div className="results-info">
                 <span>{pagination.total} services found</span>
@@ -229,7 +190,6 @@ const ServicePackagesMarketplace = () => {
             </>
           )}
         </div>
-      </div>
 
       {isOrderModalOpen && selectedService && (
         <OrderServiceModal

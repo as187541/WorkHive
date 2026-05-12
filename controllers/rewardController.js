@@ -7,6 +7,15 @@ exports.redeemReward = async (req, res) => {
     const user = await User.findById(req.user._id);
     const reward = await Reward.findById(rewardId);
 
+    if (!reward) {
+      return res.status(404).json({ msg: "Reward not found" });
+    }
+
+    // Ensure wallet exists
+    if (!user.wallet) {
+      user.wallet = { balance: 0, history: [] };
+    }
+
     if (user.wallet.balance < reward.cost) {
       return res.status(400).json({ msg: "Insufficient HiveTokens" });
     }
@@ -22,6 +31,7 @@ exports.redeemReward = async (req, res) => {
     await user.save();
     res.status(200).json({ msg: "Redemption successful!", newBalance: user.wallet.balance });
   } catch (error) {
+    console.error('redeemReward error:', error);
     res.status(500).json({ msg: "Server Error" });
   }
 };

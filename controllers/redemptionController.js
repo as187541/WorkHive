@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
 const { logAuditAction } = require('../middleware/auditMiddleware');
+const { emitRedemptionNotification, emitNotification } = require('../utils/socket');
 
 // Helper: Build scope query for approvers
 const buildScopeQuery = async (userId, userRole) => {
@@ -102,6 +103,11 @@ const createRequest = async (req, res) => {
 
     const user = await User.findById(req.user._id);
 
+    // Ensure wallet exists
+    if (!user.wallet) {
+      user.wallet = { balance: 0, history: [] };
+    }
+
     // Check if user has enough balance
     if (user.wallet.balance < cost) {
       return res.status(400).json({ msg: 'Insufficient HiveTokens for this reward.' });
@@ -128,6 +134,21 @@ const createRequest = async (req, res) => {
       rewardTitle,
       cost
     });
+
+    // Notify workspace admins about new redemption request
+    const adminWorkspaces = await Workspace.findById(workspaceId).populate('members.user', '_id');
+    if (adminWorkspaces) {
+      adminWorkspaces.members
+        .filter(m => m.role === 'Admin')
+        .forEach(m => {
+          emitRedemptionNotification(m.user._id.toString(), {
+            type: 'new_redemption',
+            title: 'New Redemption Request',
+            message: `${req.user.name} requested ${rewardTitle} (${cost} tokens)`,
+            data: { requestId: request._id, workspaceId, cost }
+          });
+        });
+    }
 
     res.status(201).json({
       success: true,
@@ -242,6 +263,12 @@ const approveRequest = async (req, res) => {
 
     // Check user still has enough balance
     const user = await User.findById(request.user._id);
+
+    // Ensure wallet exists
+    if (!user.wallet) {
+      user.wallet = { balance: 0, history: [] };
+    }
+
     if (user.wallet.balance < request.cost) {
       request.status = 'Denied';
       request.processedAt = new Date();
@@ -264,6 +291,14 @@ const approveRequest = async (req, res) => {
     request.processedAt = new Date();
     request.processedBy = req.user._id;
     await request.save();
+
+    // Notify user that their request was approved
+    emitNotification(request.user._id.toString(), {
+      type: 'redemption_approved',
+      title: 'Redemption Approved',
+      message: `Your request for "${request.rewardTitle}" was approved! ${request.cost} tokens deducted.`,
+      data: { requestId: request._id, rewardTitle: request.rewardTitle, cost: request.cost }
+    });
 
     // Log audit
     await logAuditAction(req, 'TOKEN_ALTER', 'User', user._id, {
@@ -312,6 +347,14 @@ const denyRequest = async (req, res) => {
     request.processedAt = new Date();
     request.processedBy = req.user._id;
     await request.save();
+
+    // Notify user that their request was denied
+    emitNotification(request.user.toString(), {
+      type: 'redemption_denied',
+      title: 'Redemption Denied',
+      message: `Your request for "${request.rewardTitle}" was denied.`,
+      data: { requestId: request._id, rewardTitle: request.rewardTitle }
+    });
 
     res.status(200).json({
       success: true,

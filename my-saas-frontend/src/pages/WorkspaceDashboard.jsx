@@ -1,15 +1,16 @@
 // my-saas-frontend/src/pages/WorkspaceDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { FiPlus, FiSearch } from 'react-icons/fi';
 import WorkspaceCard from '../components/WorkspaceCard';
 import api from '../services/api';
 
 const WorkspaceDashboard = () => {
-  // Use a fallback to prevent "undefined" errors
   const context = useOutletContext();
-  const workspaces = context?.workspaces || []; 
-  
+  const workspaces = context?.workspaces || [];
   const [invitations, setInvitations] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     api.get('/workspaces/invitations/me')
@@ -21,14 +22,24 @@ const WorkspaceDashboard = () => {
     try {
       await api.post(`/workspaces/invitations/${id}/accept`);
       setInvitations(invitations.filter(i => i._id !== id));
-      window.location.reload(); 
+      window.location.reload();
     } catch (err) {
       alert("Failed to join workspace.");
     }
   };
 
+  const filteredWorkspaces = workspaces.filter(ws => {
+    const matchesSearch = ws.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (ws.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTab = activeTab === 'all' ? true :
+      activeTab === 'active' ? ws.status === 'active' :
+      activeTab === 'archived' ? ws.status === 'archived' : true;
+    return matchesSearch && matchesTab;
+  });
+
   return (
-    <div className="dashboard-container">
+    <div className="workspaces-page">
+      {/* Invitations Banner */}
       {invitations.length > 0 && (
         <div className="invitations-banner">
           <h3>📩 Pending Invitations</h3>
@@ -43,14 +54,48 @@ const WorkspaceDashboard = () => {
         </div>
       )}
 
+      {/* Page Header */}
       <header className="page-header">
-        <h1>My Workspaces</h1>
+        <div>
+          <h1>Workspaces</h1>
+          <p className="page-description">Manage your collaborative projects</p>
+        </div>
+        <button className="btn btn-primary">
+          <FiPlus style={{ marginRight: '6px' }} /> Create Workspace
+        </button>
       </header>
 
+      {/* Search & Tabs */}
+      <div className="workspaces-toolbar">
+        <div className="search-bar-wrapper">
+          <FiSearch className="search-icon" size={18} />
+          <input
+            type="text"
+            placeholder="Search workspaces..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-bar"
+          />
+        </div>
+
+        <div className="tabs">
+          {['all', 'active', 'archived'].map(tab => (
+            <button
+              key={tab}
+              className={`tab ${activeTab === tab ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)} Workspaces
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Workspace Grid */}
       <div className="content-grid">
-        {workspaces.length > 0 ? (
-          workspaces.map(ws => (
-            <WorkspaceCard key={ws._id} workspace={ws} onInviteClick={() => {}} />
+        {filteredWorkspaces.length > 0 ? (
+          filteredWorkspaces.map(ws => (
+            <WorkspaceCard key={ws._id} workspace={ws} />
           ))
         ) : (
           <div className="empty-state">

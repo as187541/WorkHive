@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiStar } from 'react-icons/fi';
 import RatingStars from './RatingStars';
 
 const TalentCard = ({ talent }) => {
@@ -14,20 +15,29 @@ const TalentCard = ({ talent }) => {
     }
   };
 
+  const availabilityClass = talent.availabilityStatus?.toLowerCase().replace(' ', '-') || 'open-to-work';
+
   return (
-    <div className="talent-card" onClick={() => navigate(`/talent/${talent._id}`)}>
+    <div className="talent-card">
       <div className="talent-card-header">
-        {talent.avatar ? (
-          <img src={talent.avatar} alt={talent.name} className="talent-avatar" />
-        ) : (
-          <div className="talent-avatar-placeholder">{talent.name?.charAt(0)?.toUpperCase()}</div>
-        )}
-        <div className="talent-card-meta">
-          <h3 className="talent-name">{talent.name}</h3>
-          <span className={`availability-badge ${talent.availabilityStatus?.toLowerCase().replace(' ', '-')}`}>
-            {getAvailabilityLabel(talent.availabilityStatus)}
-          </span>
+        <div className="talent-avatar-wrapper">
+          {talent.avatar ? (
+            <img src={talent.avatar} alt={talent.name} className="talent-avatar" />
+          ) : (
+            <div className="talent-avatar-placeholder">
+              {talent.name?.charAt(0)?.toUpperCase()}
+            </div>
+          )}
         </div>
+
+        <div className="talent-info">
+          <h3 className="talent-name">{talent.name}</h3>
+          <p className="talent-role">{talent.role || 'Freelancer'}</p>
+        </div>
+
+        <span className={`availability-badge ${availabilityClass}`}>
+          {getAvailabilityLabel(talent.availabilityStatus)}
+        </span>
       </div>
 
       <div className="talent-card-body">
@@ -36,14 +46,14 @@ const TalentCard = ({ talent }) => {
             {talent.bio.substring(0, 120)}{talent.bio.length > 120 && '...'}
           </p>
         )}
-        
+
         {talent.skills && talent.skills.length > 0 && (
           <div className="talent-skills">
-            {talent.skills.slice(0, 4).map((skill, idx) => (
+            {talent.skills.slice(0, 3).map((skill, idx) => (
               <span key={idx} className="skill-tag">{skill}</span>
             ))}
-            {talent.skills.length > 4 && (
-              <span className="skill-tag more">+{talent.skills.length - 4}</span>
+            {talent.skills.length > 3 && (
+              <span className="skill-tag more">+{talent.skills.length - 3}</span>
             )}
           </div>
         )}
@@ -51,13 +61,21 @@ const TalentCard = ({ talent }) => {
 
       <div className="talent-card-footer">
         <div className="talent-rating">
-          <RatingStars score={talent.ratingAverage || 0} size="small" />
-          <span>{talent.ratingAverage?.toFixed(1) || '0.0'}</span>
+          <FiStar size={14} className="star-icon" />
+          <span className="rating-score">{talent.ratingAverage?.toFixed(1) || '0.0'}</span>
+          <span className="rating-count">({talent.totalReviews || 0})</span>
         </div>
-        <div className="talent-projects">
-          <span>{talent.totalCompletedProjects || 0} projects</span>
+        <div className="talent-rate">
+          ${talent.hourlyRate || 85}/hr
         </div>
       </div>
+
+      <button
+        className="btn btn-primary hire-btn"
+        onClick={() => navigate(`/talent/${talent._id}`)}
+      >
+        Hire
+      </button>
     </div>
   );
 };

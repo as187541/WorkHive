@@ -80,110 +80,82 @@ const JobPostingsPage = () => {
 
   return (
     <div className="job-postings-page page-enter">
-      <header className="page-header">
+      <header className="marketplace-header">
         <div>
-          <h1>Job Board</h1>
-          <p>Find opportunities or post a job to hire talented freelancers.</p>
+          <h1>Jobs Marketplace</h1>
+          <p>Find your next opportunity</p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => setIsCreateModalOpen(true)}
-        >
-          + Post a Job
-        </button>
       </header>
 
-      <div className="marketplace-layout">
-        <aside className="filters-sidebar">
-          <div className="filter-section">
-            <h4>Search</h4>
-            <input
-              type="text"
-              placeholder="Search jobs..."
-              value={filters.search}
-              onChange={e => handleFilterChange({ search: e.target.value })}
-            />
-          </div>
+      <div className="marketplace-toolbar">
+        <div className="search-bar-wrapper" style={{ maxWidth: '600px', flex: 1 }}>
+          <input
+            type="text"
+            placeholder="Search for jobs by title, skills, or category..."
+            value={filters.search}
+            onChange={e => handleFilterChange({ search: e.target.value })}
+            className="search-bar"
+          />
+        </div>
+      </div>
 
-          <div className="filter-section">
-            <h4>Category</h4>
-            <select
-              value={filters.category}
-              onChange={e => handleFilterChange({ category: e.target.value })}
-            >
-              <option value="">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
+      <div className="marketplace-toolbar-secondary">
+        <div className="filter-dropdowns">
+          <select
+            value={filters.category}
+            onChange={e => handleFilterChange({ category: e.target.value })}
+            className="filter-select"
+          >
+            <option value="">Category</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
 
-          <div className="filter-section">
-            <h4>Skills</h4>
-            <select
-              value={filters.skills}
-              onChange={e => handleFilterChange({ skills: e.target.value })}
-            >
-              <option value="">All Skills</option>
-              {SKILL_OPTIONS.map(skill => (
-                <option key={skill} value={skill}>{skill}</option>
-              ))}
-            </select>
-          </div>
+          <select className="filter-select">
+            <option>Experience Level</option>
+            <option>Entry</option>
+            <option>Intermediate</option>
+            <option>Expert</option>
+          </select>
 
-          <div className="filter-section">
-            <h4>Budget Range (HT)</h4>
-            <div className="price-range-inputs">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.minBudget}
-                onChange={e => handleFilterChange({ minBudget: e.target.value })}
-                min={0}
-              />
-              <span>-</span>
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.maxBudget}
-                onChange={e => handleFilterChange({ maxBudget: e.target.value })}
-                min={0}
-              />
-            </div>
-          </div>
+          <select className="filter-select">
+            <option>Budget</option>
+            <option>Under 1,000 HT</option>
+            <option>1,000 - 5,000 HT</option>
+            <option>5,000+ HT</option>
+          </select>
 
-          <div className="filter-section">
-            <h4>Sort By</h4>
-            <select
-              value={filters.sort}
-              onChange={e => handleFilterChange({ sort: e.target.value })}
-            >
-              <option value="newest">Newest First</option>
-              <option value="budget_high">Budget: High to Low</option>
-              <option value="budget_low">Budget: Low to High</option>
-              <option value="deadline">Deadline: Soonest</option>
-            </select>
-          </div>
-        </aside>
+          <select
+            value={filters.sort}
+            onChange={e => handleFilterChange({ sort: e.target.value })}
+            className="filter-select"
+          >
+            <option value="newest">Sort By</option>
+            <option value="newest">Newest</option>
+            <option value="budget_high">Budget: High to Low</option>
+          </select>
+        </div>
+      </div>
 
-        <div className="marketplace-content">
-          {loading ? (
-            <div className="loading-state">
-              <div className="spinner"></div>
-              <p>Loading jobs...</p>
-            </div>
-          ) : error ? (
-            <div className="alert alert-error">{error}</div>
-          ) : jobs.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📋</div>
-              <h3>No job postings found</h3>
-              <p>Try adjusting your filters or be the first to post a job!</p>
-              <button className="btn btn-primary" onClick={() => setIsCreateModalOpen(true)}>
-                Post a Job
-              </button>
-            </div>
-          ) : (
+      <div className="marketplace-content">
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading jobs...</p>
+          </div>
+        ) : error ? (
+          <div className="alert alert-error">{error}</div>
+        ) : jobs.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📋</div>
+            <h3>No job postings found</h3>
+            <p>Try adjusting your filters or be the first to post a job!</p>
+            <button className="btn btn-primary" onClick={() => setIsCreateModalOpen(true)}>
+              Post a Job
+            </button>
+          </div>
+        ) : (
             <>
               <div className="results-info">
                 <span>{pagination.total} jobs found</span>
@@ -214,7 +186,6 @@ const JobPostingsPage = () => {
             </>
           )}
         </div>
-      </div>
 
       {isCreateModalOpen && (
         <CreateJobPostingModal

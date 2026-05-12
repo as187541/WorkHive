@@ -107,7 +107,7 @@ const handleTaskUpdate = (updatedTask) => {
         onUserClick={openProfile}
       />
       <div className="main-content-wrapper">
-        <Navbar user={user} onCreateWorkspaceClick={() => setIsCreateModalOpen(true)} />
+        <Navbar user={user} />
         <main className="page-content">
           <Outlet context={{ 
             user, 

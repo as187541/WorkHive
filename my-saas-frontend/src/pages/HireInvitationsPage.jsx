@@ -95,69 +95,26 @@ const HireInvitationsPage = () => {
   return (
     <div className="hire-invitations-page page-enter">
       <header className="page-header">
-        <h1>Hire Invitations</h1>
+        <div>
+          <h1>Hire Invitations</h1>
+          <p className="page-description">Manage your hire invitations</p>
+        </div>
       </header>
 
       <div className="tabs">
         <button
-          className={`tab ${activeTab === 'received' ? 'active' : ''}`}
-          onClick={() => setActiveTab('received')}
-        >
-          Received ({received.length})
-        </button>
-        <button
           className={`tab ${activeTab === 'sent' ? 'active' : ''}`}
           onClick={() => setActiveTab('sent')}
         >
-          Sent ({sent.length})
+          Sent
+        </button>
+        <button
+          className={`tab ${activeTab === 'received' ? 'active' : ''}`}
+          onClick={() => setActiveTab('received')}
+        >
+          Received
         </button>
       </div>
-
-      {activeTab === 'received' && (
-        <div className="invitations-list">
-          {received.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📭</div>
-              <h3>No pending invitations</h3>
-              <p>When someone invites you to join their project, it will appear here.</p>
-            </div>
-          ) : (
-            received.map(inv => (
-              <div key={inv._id} className="invitation-card">
-                <div className="invitation-info">
-                  <div className="invitation-header">
-                    {inv.sender?.avatar && <img src={inv.sender.avatar} alt="" className="inviter-avatar" />}
-                    <div>
-                      <strong>{inv.sender?.name}</strong> invited you to join
-                      <strong> {inv.workspace?.name}</strong>
-                    </div>
-                  </div>
-                  <p><strong>Project:</strong> {inv.project?.name}</p>
-                  <p><strong>Role:</strong> {inv.role}</p>
-                  {inv.message && <p className="invitation-message">"{inv.message}"</p>}
-                  <p className="invitation-expiry">⏰ Expires: {new Date(inv.expiresAt).toLocaleDateString()}</p>
-                </div>
-                <div className="invitation-actions">
-                  <button
-                    className="btn-accept"
-                    onClick={() => handleAccept(inv._id)}
-                    disabled={actionLoading === inv._id}
-                  >
-                    {actionLoading === inv._id ? 'Processing...' : '✓ Accept'}
-                  </button>
-                  <button
-                    className="btn-reject"
-                    onClick={() => handleReject(inv._id)}
-                    disabled={actionLoading === inv._id}
-                  >
-                    ✕ Reject
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
 
       {activeTab === 'sent' && (
         <div className="invitations-list">
@@ -165,32 +122,97 @@ const HireInvitationsPage = () => {
             <div className="empty-state">
               <div className="empty-state-icon">📤</div>
               <h3>No invitations sent</h3>
-              <p>Browse the talent marketplace and send hire invitations to skilled professionals.</p>
+              <p>Browse the talent marketplace and send hire invitations.</p>
             </div>
           ) : (
             sent.map(inv => (
-              <div key={inv._id} className="invitation-card">
-                <div className="invitation-info">
-                  <div className="invitation-header">
-                    {inv.invitedUser?.avatar && <img src={inv.invitedUser.avatar} alt="" className="inviter-avatar" />}
-                    <div>
-                      Invitation to <strong>{inv.invitedUser?.name}</strong>
-                    </div>
+              <div key={inv._id} className="hire-invitation-card">
+                <div className="hire-invitation-info">
+                  <div className="hire-invitation-avatar">
+                    {inv.invitedUser?.avatar ? (
+                      <img src={inv.invitedUser.avatar} alt={inv.invitedUser.name} />
+                    ) : (
+                      <div className="hire-avatar-placeholder">
+                        {inv.invitedUser?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  <p><strong>Workspace:</strong> {inv.workspace?.name}</p>
-                  <p><strong>Project:</strong> {inv.project?.name}</p>
-                  <p><strong>Role:</strong> {inv.role}</p>
-                  <span className={`status-badge ${inv.status.toLowerCase()}`}>{inv.status}</span>
+                  <div className="hire-invitation-details">
+                    <h3>{inv.invitedUser?.name}</h3>
+                    <p className="hire-role">{inv.role || 'Freelancer'}</p>
+                    <p className="hire-project">Project: {inv.workspace?.name}</p>
+                    <span className={`hire-status-badge ${inv.status.toLowerCase()}`}>
+                      {inv.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="invitation-actions">
+                <div className="hire-invitation-actions">
+                  <span className="hire-rate">${inv.hourlyRate || 85}/hr</span>
                   {inv.status === 'Pending' && (
                     <button
-                      className="btn-cancel"
+                      className="btn btn-secondary btn-sm"
                       onClick={() => handleCancel(inv._id)}
                       disabled={actionLoading === inv._id}
                     >
-                      {actionLoading === inv._id ? 'Cancelling...' : '✕ Cancel'}
+                      {actionLoading === inv._id ? 'Cancelling...' : 'Cancel'}
                     </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 'received' && (
+        <div className="invitations-list">
+          {received.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">📭</div>
+              <h3>No pending invitations</h3>
+              <p>When someone invites you, it will appear here.</p>
+            </div>
+          ) : (
+            received.map(inv => (
+              <div key={inv._id} className="hire-invitation-card">
+                <div className="hire-invitation-info">
+                  <div className="hire-invitation-avatar">
+                    {inv.sender?.avatar ? (
+                      <img src={inv.sender.avatar} alt={inv.sender.name} />
+                    ) : (
+                      <div className="hire-avatar-placeholder">
+                        {inv.sender?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="hire-invitation-details">
+                    <h3>{inv.sender?.name}</h3>
+                    <p className="hire-role">{inv.role || 'Freelancer'}</p>
+                    <p className="hire-project">Project: {inv.workspace?.name}</p>
+                    <span className={`hire-status-badge ${inv.status.toLowerCase()}`}>
+                      {inv.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="hire-invitation-actions">
+                  <span className="hire-rate">${inv.hourlyRate || 85}/hr</span>
+                  {inv.status === 'Pending' && (
+                    <>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => handleAccept(inv._id)}
+                        disabled={actionLoading === inv._id}
+                      >
+                        {actionLoading === inv._id ? 'Processing...' : 'Accept'}
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleReject(inv._id)}
+                        disabled={actionLoading === inv._id}
+                      >
+                        Reject
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

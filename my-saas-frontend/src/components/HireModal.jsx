@@ -113,6 +113,28 @@ const HireModal = ({ talentId, talentName, onClose }) => {
             )}
               </div>
 
+              {selectedWorkspace && (
+                <div className="form-group">
+                  <label>Project *</label>
+                  {projects.length === 0 ? (
+                    <p className="form-hint" style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                      No projects found in this workspace. Create a project first.
+                    </p>
+                  ) : (
+                    <select
+                      value={selectedProject}
+                      onChange={(e) => setSelectedProject(e.target.value)}
+                      required
+                    >
+                      <option value="">Select a project</option>
+                      {projects.map(proj => (
+                        <option key={proj._id} value={proj._id}>{proj.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
               <div className="form-group">
                 <label>Role</label>
                 <select value={role} onChange={(e) => setRole(e.target.value)}>

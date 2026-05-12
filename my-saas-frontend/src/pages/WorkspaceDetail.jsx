@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useSocket } from '../contexts/SocketContext';
 import CreateProjectModal from '../components/CreateProjectModal';
 import KanbanBoard from '../components/KanbanBoard';
 import CreateTaskModal from '../components/CreateTaskModal';
@@ -11,6 +12,8 @@ const WorkspaceDetail = () => {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
   const { user, collaborators, openProfile } = useOutletContext();
+
+  const { socket, joinProject } = useSocket();
 
   // Data States
   const [workspace, setWorkspace] = useState(null);
@@ -72,6 +75,31 @@ const WorkspaceDetail = () => {
       .finally(() => setLoading(false));
     }
   }, [workspaceId, navigate]);
+
+  // Socket: Listen for real-time task updates
+  useEffect(() => {
+    if (!socket || !selectedProject) return;
+
+    // Join project room for task updates
+    joinProject(selectedProject._id);
+
+    socket.on('task_updated', (data) => {
+      const { type, task } = data;
+      if (type === 'task_created') {
+        setTasks(prev => {
+          if (prev.some(t => t._id === task._id)) return prev;
+          return [...prev, task];
+        });
+      } else if (type === 'task_updated') {
+        setTasks(prev => prev.map(t => t._id === task._id ? task : t));
+        setActiveTask(prev => prev?._id === task._id ? task : prev);
+      }
+    });
+
+    return () => {
+      socket.off('task_updated');
+    };
+  }, [socket, selectedProject, joinProject]);
 
   const handleDeleteWorkspace = async () => {
   const confirmMsg = isAdmin

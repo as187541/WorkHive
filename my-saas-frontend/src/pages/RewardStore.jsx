@@ -1,176 +1,206 @@
 // src/pages/RewardStore.jsx
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { FiHexagon } from 'react-icons/fi';
 import api from '../services/api';
-import { FiAward, FiClock, FiCheckCircle } from 'react-icons/fi';
 
 const RewardStore = () => {
-  const { user, workspaces } = useOutletContext();
+  const { user } = useOutletContext();
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [workspaces, setWorkspaces] = useState([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState('');
-  const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [loadingProjects, setLoadingProjects] = useState(false);
 
-  const availableRewards = [
-    { id: '1', title: 'Early Log-off', cost: 200, icon: '🌅', desc: 'Leave 1 hour early on Friday' },
-    { id: '2', title: 'Coffee Treat', cost: 500, icon: '☕', desc: '$10 Starbucks Gift Card' },
-    { id: '3', title: 'Meeting Shield', cost: 1000, icon: '🛡️', desc: 'One day with zero meetings' },
-    { id: '4', title: 'Paid Day Off', cost: 5000, icon: '🏖️', desc: 'One full day paid leave' },
+  useEffect(() => {
+    api.get('/workspaces')
+      .then(res => {
+        const ws = res.data.data || res.data || [];
+        setWorkspaces(ws);
+        if (ws.length > 0) setSelectedWorkspace(ws[0]._id);
+      })
+      .catch(() => setWorkspaces([]));
+  }, []);
+
+  const products = [
+    {
+      id: '1',
+      title: 'WorkHive Premium T-Shirt',
+      description: 'High-quality cotton t-shirt with WorkHive logo',
+      cost: 200,
+      stock: 45,
+      category: 'merchandise',
+      image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=300&fit=crop'
+    },
+    {
+      id: '2',
+      title: 'Amazon Gift Card - $50',
+      description: 'Redeemable on Amazon.com for any purchase',
+      cost: 500,
+      stock: 100,
+      category: 'gift-cards',
+      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop'
+    },
+    {
+      id: '3',
+      title: 'Wireless Noise-Cancelling Headphones',
+      description: 'Premium headphones for focused work sessions',
+      cost: 800,
+      stock: 12,
+      category: 'merchandise',
+      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop'
+    },
+    {
+      id: '4',
+      title: 'Coffee Shop Experience',
+      description: 'Premium coffee tasting experience for two',
+      cost: 350,
+      stock: 20,
+      category: 'experiences',
+      image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop'
+    },
+    {
+      id: '5',
+      title: 'Netflix Subscription - 3 Months',
+      description: 'Stream your favorite shows and movies',
+      cost: 450,
+      stock: 50,
+      category: 'gift-cards',
+      image: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400&h=300&fit=crop'
+    },
+    {
+      id: '6',
+      title: 'WorkHive Water Bottle',
+      description: 'Insulated stainless steel water bottle',
+      cost: 150,
+      stock: 80,
+      category: 'merchandise',
+      image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=300&fit=crop'
+    }
   ];
 
-  // Fetch projects when workspace changes
-  useEffect(() => {
-    if (!selectedWorkspace) {
-      setProjects([]);
-      setSelectedProject('');
-      return;
-    }
+  const categories = [
+    { id: 'all', label: 'All Rewards' },
+    { id: 'merchandise', label: 'Merchandise' },
+    { id: 'gift-cards', label: 'Gift Cards' },
+    { id: 'experiences', label: 'Experiences' }
+  ];
 
-    const fetchProjects = async () => {
-      setLoadingProjects(true);
-      try {
-        const res = await api.get(`/workspaces/${selectedWorkspace}/projects`);
-        setProjects(res.data || []);
-      } catch {
-        setProjects([]);
-      } finally {
-        setLoadingProjects(false);
-      }
-    };
+  const filteredProducts = activeCategory === 'all'
+    ? products
+    : products.filter(p => p.category === activeCategory);
 
-    fetchProjects();
-  }, [selectedWorkspace]);
-
-  const handleRedeem = async (reward) => {
+  const handleRedeem = async (product) => {
     if (!selectedWorkspace) {
       alert("Please select a workspace first.");
       return;
     }
-
-    if (user.wallet.balance < reward.cost) {
+    if (user?.wallet?.balance < product.cost) {
       alert("Not enough tokens!");
       return;
     }
 
-    if (window.confirm(`Request "${reward.title}" for ${reward.cost} HT?\n\nAn admin will review your request.`)) {
+    if (window.confirm(`Redeem "${product.title}" for ${product.cost} HT?`)) {
       try {
-        const res = await api.post('/redemptions', { 
-          rewardTitle: reward.title, 
-          cost: reward.cost,
-          workspaceId: selectedWorkspace,
-          projectId: selectedProject || undefined
+        const res = await api.post('/redemptions', {
+          rewardTitle: product.title,
+          cost: product.cost,
+          workspaceId: selectedWorkspace
         });
-        
         alert(res.data.msg);
       } catch (err) {
-        alert(err.response?.data?.msg || "Request failed.");
+        alert(err.response?.data?.msg || "Redemption failed.");
       }
     }
   };
 
   return (
-    <div className="reward-store-container">
-      <header className="store-header">
-        <div className="header-text">
-          <h1>Hive Reward Store</h1>
-          <p>Exchange your hard-earned tokens for exclusive perks.</p>
+    <div className="reward-store-page">
+      <div className="reward-store-header">
+        <div>
+          <h1>Reward Store</h1>
+          <p className="page-description">Redeem your Hive Tokens for rewards</p>
         </div>
-        <div className="user-balance-pill">
-          <FiAward className="gold-icon" />
-          <div className="balance-info">
-            <span className="amount">{user?.wallet?.balance || 0}</span>
-            <span className="label">HT Available</span>
-          </div>
-        </div>
-      </header>
 
-      {/* Workspace & Project Selectors */}
-      <div className="reward-context-selectors">
-        <div className="selector-group">
-          <label>Workspace *</label>
-          <select 
-            value={selectedWorkspace} 
-            onChange={(e) => setSelectedWorkspace(e.target.value)}
-            className="selector-input"
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Workspace Selector */}
+          <select
+            className="workspace-select"
+            value={selectedWorkspace}
+            onChange={e => setSelectedWorkspace(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-primary)',
+              color: 'var(--text-primary)',
+              fontSize: '0.875rem',
+              cursor: 'pointer'
+            }}
           >
-            <option value="">Select a workspace...</option>
-            {workspaces?.map(ws => (
+            <option value="">Select Workspace</option>
+            {workspaces.map(ws => (
               <option key={ws._id} value={ws._id}>{ws.name}</option>
             ))}
           </select>
-        </div>
 
-        <div className="selector-group">
-          <label>Project (Optional)</label>
-          <select 
-            value={selectedProject} 
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="selector-input"
-            disabled={!selectedWorkspace || loadingProjects}
-          >
-            <option value="">Workspace-level request</option>
-            {projects.map(proj => (
-              <option key={proj._id} value={proj._id}>{proj.name}</option>
-            ))}
-          </select>
+          <div className="reward-balance-card">
+            <div className="token-icon">
+              <FiHexagon size={20} />
+            </div>
+            <div className="reward-balance-info">
+              <div className="reward-balance-label">Your Balance</div>
+              <div className="reward-balance-value">
+                {user?.wallet?.balance || 0} HT
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Rewards Grid */}
-      <div className="reward-grid">
-        {availableRewards.map(reward => (
-          <div key={reward.id} className={`reward-card ${user?.wallet?.balance < reward.cost ? 'locked' : ''}`}>
-            <div className="reward-icon-large">{reward.icon}</div>
-            <h3>{reward.title}</h3>
-            <p>{reward.desc}</p>
-            <div className="reward-footer">
-              <span className="price-tag">{reward.cost} HT</span>
-              <button 
-                className="redeem-btn"
-                disabled={user?.wallet?.balance < reward.cost || !selectedWorkspace}
-                onClick={() => handleRedeem(reward)}
+      {/* Category Tabs */}
+      <div className="category-tabs">
+        {categories.map(cat => (
+          <button
+            key={cat.id}
+            className={`category-tab ${activeCategory === cat.id ? 'active' : ''}`}
+            onClick={() => setActiveCategory(cat.id)}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Products Grid */}
+      <div className="content-grid">
+        {filteredProducts.map(product => (
+          <div key={product.id} className="service-package-card">
+            <div className="service-card-image">
+              <img src={product.image} alt={product.title} loading="lazy" />
+            </div>
+
+            <div className="service-card-content">
+              <h3 className="service-card-title">{product.title}</h3>
+              <p className="service-card-description">{product.description}</p>
+
+              <div className="service-card-footer">
+                <div className="service-card-price">
+                  <FiHexagon size={16} style={{ color: 'var(--primary-500)' }} />
+                  <span className="price-value">{product.cost}</span>
+                  <span className="price-currency">HT</span>
+                </div>
+                <span className="stock-count">{product.stock} in stock</span>
+              </div>
+
+              <button
+                className="btn btn-primary redeem-btn"
+                onClick={() => handleRedeem(product)}
+                disabled={user?.wallet?.balance < product.cost}
               >
-                {user?.wallet?.balance < reward.cost ? 'Locked' : 'Redeem'}
+                {user?.wallet?.balance < product.cost ? 'Insufficient Balance' : 'Redeem'}
               </button>
             </div>
           </div>
         ))}
       </div>
-
-      {/* Transaction History */}
-      <section className="transaction-history-section">
-        <div className="section-header">
-          <FiClock /> <h2>Transaction History</h2>
-        </div>
-        <div className="history-table-wrapper">
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Activity</th>
-                <th className="text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {user?.wallet?.history?.length > 0 ? (
-                user.wallet.history.slice().reverse().map((item, index) => (
-                  <tr key={index}>
-                    <td>{new Date(item.date).toLocaleDateString()}</td>
-                    <td>{item.reason}</td>
-                    <td className={`text-right amount-col ${item.amount > 0 ? 'positive' : 'negative'}`}>
-                      {item.amount > 0 ? `+${item.amount}` : item.amount} HT
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="3" className="empty-history">No transactions yet. Complete tasks to earn tokens!</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </div>
   );
 };

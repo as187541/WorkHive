@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
+import { useSocket } from '../contexts/SocketContext';
 
 const MessagesPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialUserId = searchParams.get('user');
+  const { socket, joinConversation, leaveConversation } = useSocket();
 
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -15,31 +17,113 @@ const MessagesPage = () => {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
+  const [typingUsers, setTypingUsers] = useState(new Set());
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const startingConversationRef = useRef({});
 
-  // Fetch conversations
+  // Fetch conversations on mount
   useEffect(() => {
     fetchConversations();
-    const interval = setInterval(fetchConversations, 10000);
-    return () => clearInterval(interval);
   }, []);
+
+  // Socket event listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for new messages
+    socket.on('new_message', (data) => {
+      const { message, conversationId } = data;
+
+      // If this conversation is currently open, add message to list
+      setMessages(prev => {
+        if (selectedConversation?._id === conversationId) {
+          // Avoid duplicates
+          if (prev.some(m => m._id === message._id)) return prev;
+          return [...prev, message];
+        }
+        return prev;
+      });
+
+      // Update conversation list with last message and unread count
+      setConversations(prev => {
+        const currentUserId = JSON.parse(localStorage.getItem('user') || '{}')._id;
+        return prev.map(conv => {
+          if (conv._id === conversationId) {
+            const isMine = String(message.sender?._id) === String(currentUserId);
+            return {
+              ...conv,
+              lastMessage: {
+                content: message.content,
+                sender: message.sender,
+                createdAt: message.createdAt
+              },
+              unreadCount: isMine ? conv.unreadCount : (conv.unreadCount || 0) + 1,
+              updatedAt: message.createdAt
+            };
+          }
+          return conv;
+        });
+      });
+    });
+
+    // Listen for unread count updates
+    socket.on('unread_count', (data) => {
+      const { conversationId, count } = data;
+      setConversations(prev =>
+        prev.map(conv =>
+          conv._id === conversationId ? { ...conv, unreadCount: count } : conv
+        )
+      );
+    });
+
+    // Listen for typing indicators
+    socket.on('user_typing', (data) => {
+      const { conversationId, userId } = data;
+      if (selectedConversation?._id === conversationId) {
+        setTypingUsers(prev => new Set(prev).add(userId));
+      }
+    });
+
+    socket.on('user_stop_typing', (data) => {
+      const { conversationId, userId } = data;
+      if (selectedConversation?._id === conversationId) {
+        setTypingUsers(prev => {
+          const next = new Set(prev);
+          next.delete(userId);
+          return next;
+        });
+      }
+    });
+
+    return () => {
+      socket.off('new_message');
+      socket.off('unread_count');
+      socket.off('user_typing');
+      socket.off('user_stop_typing');
+    };
+  }, [socket, selectedConversation?._id]);
 
   // Handle initial userId from URL (start new conversation)
   useEffect(() => {
     if (initialUserId) {
       startConversation(initialUserId);
+      // Clear the URL param immediately to prevent re-triggering
+      navigate('/messages', { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUserId]);
 
-  // Fetch messages when conversation changes
+  // Fetch messages when conversation changes + join/leave socket room
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation._id);
-      const interval = setInterval(() => fetchMessages(selectedConversation._id, false), 5000);
-      return () => clearInterval(interval);
+      joinConversation(selectedConversation._id);
+      return () => {
+        leaveConversation(selectedConversation._id);
+      };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation?._id]);
@@ -61,16 +145,20 @@ const MessagesPage = () => {
   };
 
   const startConversation = async (userId) => {
+    // Prevent duplicate conversation creation
+    if (startingConversationRef.current[userId]) return;
+    startingConversationRef.current[userId] = true;
+
     try {
       const res = await api.post('/messages/conversations', { userId });
       const conversation = res.data.data;
       setSelectedConversation(conversation);
       // Refresh conversation list
       fetchConversations();
-      // Clear URL param
-      navigate('/messages', { replace: true });
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to start conversation');
+    } finally {
+      delete startingConversationRef.current[userId];
     }
   };
 
@@ -119,6 +207,25 @@ const MessagesPage = () => {
       alert(err.response?.data?.msg || 'Failed to send message');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setNewMessage(e.target.value);
+
+    // Emit typing indicator
+    if (selectedConversation && socket) {
+      socket.emit('typing', { conversationId: selectedConversation._id });
+
+      // Clear previous timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Stop typing after 2 seconds of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.emit('stop_typing', { conversationId: selectedConversation._id });
+      }, 2000);
     }
   };
 
@@ -324,6 +431,15 @@ const MessagesPage = () => {
                     <div ref={messagesEndRef} />
                   </div>
                 )}
+                {/* Typing Indicator */}
+                {typingUsers.size > 0 && (
+                  <div className="typing-indicator">
+                    <span className="typing-dots">
+                      <span></span><span></span><span></span>
+                    </span>
+                    <span className="typing-text"> typing...</span>
+                  </div>
+                )}
               </div>
 
               {/* Message Input */}
@@ -331,7 +447,7 @@ const MessagesPage = () => {
                 <input
                   type="text"
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={handleInputChange}
                   placeholder="Type a message..."
                   maxLength={2000}
                   disabled={sending}

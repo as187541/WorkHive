@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiBookmark, FiHexagon } from 'react-icons/fi';
 
 const JobPostingCard = ({ job, showActions = false, onEdit, onClose, onDelete }) => {
   const navigate = useNavigate();
+  const [bookmarked, setBookmarked] = useState(false);
 
   const handleCardClick = () => {
     navigate(`/jobs/${job._id}`);
@@ -11,69 +13,46 @@ const JobPostingCard = ({ job, showActions = false, onEdit, onClose, onDelete })
   const formatBudget = () => {
     if (!job.budget) return 'Budget not specified';
     const { min, max, currency } = job.budget;
-    if (min && max) return `${min} - ${max} ${currency || 'HT'}`;
-    if (max) return `Up to ${max} ${currency || 'HT'}`;
-    if (min) return `From ${min} ${currency || 'HT'}`;
+    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} ${currency || 'HT'}`;
+    if (max) return `Up to ${max.toLocaleString()} ${currency || 'HT'}`;
+    if (min) return `From ${min.toLocaleString()} ${currency || 'HT'}`;
     return 'Budget not specified';
   };
 
-  const formatDeadline = () => {
-    if (!job.deadline) return null;
-    const date = new Date(job.deadline);
-    const now = new Date();
-    const diff = date - now;
-    if (diff < 0) return 'Deadline passed';
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    return `${days} days left`;
+  const formatDuration = () => {
+    if (!job.duration) return null;
+    return job.duration;
   };
 
   const postedBy = job.postedBy || {};
+  const postedTime = new Date(job.createdAt).toLocaleDateString();
 
   return (
     <div className="job-posting-card" onClick={handleCardClick}>
       <div className="job-card-header">
-        <div className="job-card-meta">
-          <span className={`job-status-badge status-${job.status?.toLowerCase()}`}>
-            {job.status}
-          </span>
-          {job.visibility === 'Workspace' && (
-            <span className="job-visibility-badge">🔒 Workspace</span>
-          )}
-        </div>
-        <span className="job-posted-time">
-          {new Date(job.createdAt).toLocaleDateString()}
-        </span>
+        <button
+          className={`bookmark-btn ${bookmarked ? 'active' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setBookmarked(!bookmarked);
+          }}
+        >
+          <FiBookmark size={18} />
+        </button>
       </div>
 
       <h3 className="job-card-title">{job.title}</h3>
       <p className="job-card-description">
-        {job.description?.substring(0, 120)}{job.description?.length > 120 ? '...' : ''}
+        {job.description?.substring(0, 200)}{job.description?.length > 200 ? '...' : ''}
       </p>
-
-      <div className="job-card-details">
-        <div className="job-detail-item">
-          <span className="detail-label">💰 Budget</span>
-          <span className="detail-value">{formatBudget()}</span>
-        </div>
-        {job.deadline && (
-          <div className="job-detail-item">
-            <span className="detail-label">⏱️ Deadline</span>
-            <span className="detail-value">{formatDeadline()}</span>
-          </div>
-        )}
-        <div className="job-detail-item">
-          <span className="detail-label">📋 Proposals</span>
-          <span className="detail-value">{job.proposalsCount || 0}</span>
-        </div>
-      </div>
 
       {job.skills && job.skills.length > 0 && (
         <div className="job-card-skills">
           {job.skills.slice(0, 4).map(skill => (
-            <span key={skill} className="skill-tag-sm">{skill}</span>
+            <span key={skill} className="skill-tag">{skill}</span>
           ))}
           {job.skills.length > 4 && (
-            <span className="skill-tag-sm">+{job.skills.length - 4}</span>
+            <span className="skill-tag more">+{job.skills.length - 4}</span>
           )}
         </div>
       )}
@@ -87,20 +66,31 @@ const JobPostingCard = ({ job, showActions = false, onEdit, onClose, onDelete })
               {postedBy.name?.charAt(0)?.toUpperCase() || '?'}
             </div>
           )}
-          <span className="poster-name">{postedBy.name || 'Unknown'}</span>
+          <div className="job-poster-info">
+            <span className="poster-name">{postedBy.name || 'Unknown'}</span>
+            <span className="poster-company">{postedBy.company || 'Company'}</span>
+          </div>
         </div>
 
-        {showActions && (
-          <div className="job-card-actions" onClick={e => e.stopPropagation()}>
-            {job.status === 'Open' && (
-              <>
-                <button className="btn btn-sm btn-secondary" onClick={() => onEdit?.(job)}>Edit</button>
-                <button className="btn btn-sm btn-warning" onClick={() => onClose?.(job._id)}>Close</button>
-              </>
-            )}
-            <button className="btn btn-sm btn-danger" onClick={() => onDelete?.(job._id)}>Delete</button>
+        <div className="job-meta">
+          <div className="job-meta-item">
+            <FiHexagon size={14} style={{ color: 'var(--primary-500)' }} />
+            <span>{formatBudget()}</span>
           </div>
-        )}
+          {formatDuration() && (
+            <div className="job-meta-item">
+              <span>⏱️ {formatDuration()}</span>
+            </div>
+          )}
+          <div className="job-meta-item">
+            <span>📋 {job.proposalsCount || 0} proposals</span>
+          </div>
+        </div>
+
+        <div className="job-card-badges">
+          <span className="level-badge">Expert</span>
+          <span className="posted-time">{postedTime}</span>
+        </div>
       </div>
     </div>
   );

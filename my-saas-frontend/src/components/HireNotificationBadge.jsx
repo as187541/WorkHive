@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useSocket } from '../contexts/SocketContext';
 
 const HireNotificationBadge = () => {
   const navigate = useNavigate();
+  const { socket } = useSocket();
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -15,10 +17,20 @@ const HireNotificationBadge = () => {
         setCount(0);
       }
     };
+
     fetchCount();
-    const interval = setInterval(fetchCount, 30000); // Poll every 30s
-    return () => clearInterval(interval);
-  }, []);
+
+    if (!socket) return;
+
+    // Listen for new hire invitations via socket
+    socket.on('hire_invitation', () => {
+      setCount(prev => prev + 1);
+    });
+
+    return () => {
+      socket.off('hire_invitation');
+    };
+  }, [socket]);
 
   if (count === 0) return null;
 
