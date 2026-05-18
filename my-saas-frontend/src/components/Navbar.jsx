@@ -1,13 +1,13 @@
 // src/components/Navbar.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FiLogOut, FiUser } from 'react-icons/fi';
+import { FiLogOut, FiUser, FiMenu } from 'react-icons/fi';
 import ThemeSwitcher from './ThemeSwitcher';
 import NotificationDropdown from './NotificationDropdown';
 import MessageBadge from './MessageBadge';
 import ConnectionBadge from './ConnectionBadge';
 
-const Navbar = ({ user }) => {
+const Navbar = ({ user, onMenuToggle }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
 
@@ -31,8 +31,13 @@ const Navbar = ({ user }) => {
 
   return (
     <nav className="navbar">
-      {/* Left: Brand */}
+      {/* Left: Hamburger + Brand */}
       <div className="navbar-left">
+        {onMenuToggle && (
+          <button className="hamburger-btn" onClick={onMenuToggle} aria-label="Open menu">
+            <FiMenu size={20} />
+          </button>
+        )}
         <Link to="/" className="navbar-brand">
           <div className="navbar-brand-icon">W</div>
           <span>WorkHive</span>

@@ -565,6 +565,422 @@
   animation: fadeSlideUp 0.3s ease;
 }
 
+/* ===== Match Score Badge ===== */
+.match-score-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--border-radius-md);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.match-score-badge.match-high {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.match-score-badge.match-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.match-score-badge.match-low {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== Availability Indicator Dot ===== */
+.availability-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+}
+
+.availability-indicator.dot-available {
+  background: #10b981;
+}
+
+.availability-indicator.dot-busy {
+  background: #f59e0b;
+}
+
+.availability-indicator.dot-unavailable {
+  background: #ef4444;
+}
+
+.talent-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ===== Last Active Time ===== */
+.last-active-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.last-active-time svg {
+  opacity: 0.7;
+}
+
+/* ===== Talent Header Badges ===== */
+.talent-header-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ===== Recommendation Reason ===== */
+.recommendation-reason {
+  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+  color: #1e40af;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-3);
+  border: 1px solid #bfdbfe;
+}
+
+/* ===== Recommendations Section ===== */
+.recommendations-section {
+  margin-bottom: var(--spacing-6);
+  background: linear-gradient(135deg, #f8fafc, #f0f9ff);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-5);
+  border: 1px solid #e0f2fe;
+}
+
+.recommendations-header {
+  margin-bottom: var(--spacing-4);
+}
+
+.recommendations-header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-1) 0;
+}
+
+.recommendations-header h2 svg {
+  color: var(--primary-500);
+}
+
+.recommendations-header p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.recommendations-scroll-wrapper {
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--spacing-5));
+  padding: 0 var(--spacing-5);
+}
+
+.recommendations-scroll {
+  display: flex;
+  gap: var(--spacing-4);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-3);
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.recommendations-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.recommendations-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.recommendations-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.recommendation-card {
+  flex: 0 0 320px;
+  min-width: 320px;
+  scroll-snap-align: start;
+}
+
+/* ===== Saved Searches ===== */
+.saved-searches-wrapper {
+  position: relative;
+}
+
+.saved-searches-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.saved-searches-toggle:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-500);
+}
+
+.saved-searches-toggle svg.rotate-up {
+  transform: rotate(180deg);
+}
+
+.saved-searches-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.saved-searches-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.saved-searches-header h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-save-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--primary-500);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-save-search:hover {
+  background: var(--primary-600);
+}
+
+.save-search-form {
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.save-search-input {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-2);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.save-search-input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.save-search-preview {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-md);
+  border: 1px dashed var(--border-color);
+}
+
+.save-search-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.btn-save-confirm {
+  padding: 6px 16px;
+  background: var(--primary-500);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-save-cancel {
+  padding: 6px 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.saved-searches-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.saved-searches-loading,
+.saved-searches-empty {
+  padding: var(--spacing-6) var(--spacing-4);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.saved-searches-empty .hint {
+  font-size: 0.75rem;
+  margin-top: var(--spacing-2);
+  opacity: 0.7;
+}
+
+.saved-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s ease;
+}
+
+.saved-search-item:last-child {
+  border-bottom: none;
+}
+
+.saved-search-item:hover {
+  background: var(--bg-hover);
+}
+
+.saved-search-info {
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.saved-search-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.saved-search-filters {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-delete-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: var(--spacing-2);
+  transition: all 0.15s ease;
+}
+
+.btn-delete-search:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ===== Skill Search & Selected Tags ===== */
+.skill-search-input {
+  margin-bottom: var(--spacing-2);
+}
+
+.selected-skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--spacing-2);
+}
+
+.selected-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--primary-500);
+  color: white;
+  border-radius: var(--border-radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.remove-skill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.remove-skill-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .talent-marketplace-container {
@@ -587,5 +1003,65 @@
 
   .marketplace-header h1 {
     font-size: 1.5rem;
+  }
+
+  .marketplace-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-dropdowns {
+    flex-wrap: wrap;
+  }
+
+  .filter-select {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .recommendations-scroll {
+    padding-bottom: var(--spacing-4);
+  }
+
+  .recommendation-card {
+    flex: 0 0 280px;
+    min-width: 280px;
+  }
+
+  .saved-searches-dropdown {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
+    max-height: 70vh;
+  }
+
+  .saved-searches-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .match-score-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+  }
+
+  .talent-header-badges {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-dropdowns {
+    flex-direction: column;
+  }
+
+  .recommendation-card {
+    flex: 0 0 260px;
+    min-width: 260px;
   }
 }

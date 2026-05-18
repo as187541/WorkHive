@@ -6,6 +6,7 @@ const Project = require('../models/projectModel');
 const cloudinary = require('cloudinary').v2;
 const { emitTaskUpdate, emitNotification } = require('../utils/socket');
 const { logActivity } = require('./activityController');
+const { processTrigger } = require('../utils/automationEngine');
 
 
 
@@ -168,6 +169,32 @@ exports.updateTask = async (req, res) => {
         project: updatedTask.project?._id || updatedTask.project,
         metadata: { status, taskId: updatedTask._id }
       }).catch(err => console.error('Activity log error:', err.message));
+
+      // Automation triggers
+      if (status === 'Done') {
+        const taskProject = await Project.findById(updatedTask.project?._id || updatedTask.project).lean();
+        processTrigger('task_completed', {
+          workspaceId: taskProject?.workspace?.toString(),
+          projectId: (updatedTask.project?._id || updatedTask.project)?.toString(),
+          taskId: updatedTask._id.toString(),
+          userId: req.user._id.toString(),
+          assignedTo: updatedTask.assignedTo?._id?.toString(),
+          priority: updatedTask.priority,
+          completedEarly: !!(task.dueDate && new Date() < new Date(task.dueDate))
+        });
+      }
+
+      if (status === 'In Progress' && task.dueDate && new Date() > new Date(task.dueDate)) {
+        const taskProject = await Project.findById(updatedTask.project?._id || updatedTask.project).lean();
+        processTrigger('task_overdue', {
+          workspaceId: taskProject?.workspace?.toString(),
+          projectId: (updatedTask.project?._id || updatedTask.project)?.toString(),
+          taskId: updatedTask._id.toString(),
+          userId: req.user._id.toString(),
+          assignedTo: updatedTask.assignedTo?._id?.toString(),
+          dueDate: task.dueDate
+        });
+      }
     }
 
     res.status(200).json(updatedTask);

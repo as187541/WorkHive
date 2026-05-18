@@ -196,6 +196,14 @@ const emitRedemptionNotification = (approverIds, redemption) => {
   });
 };
 
+/**
+ * Emit order notification to a user
+ */
+const emitOrderNotification = (userId, notification) => {
+  if (!io) return;
+  io.to(`user:${userId}`).emit('order:update', notification);
+};
+
 module.exports = {
   initSocket,
   getIO,
@@ -206,5 +214,6 @@ module.exports = {
   emitNewProposal,
   emitProposalStatus,
   emitHireInvitation,
-  emitRedemptionNotification
+  emitRedemptionNotification,
+  emitOrderNotification
 };

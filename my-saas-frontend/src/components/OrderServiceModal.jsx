@@ -60,12 +60,27 @@ const OrderServiceModal = ({ service, onClose, onSuccess }) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.post(`/services/${service._id}/order`, {
+
+      // Create an order via the orders API
+      const orderRes = await api.post('/orders', {
+        servicePackageId: service._id,
         workspaceId: selectedWorkspace,
         projectId: selectedProject,
         message
       });
-      alert(res.data.msg || 'Order placed successfully!');
+
+      if (orderRes.data.success) {
+        // Fund the order immediately with HiveTokens
+        try {
+          await api.post(`/orders/${orderRes.data.data._id}/fund`);
+          alert('Order placed and funded successfully!');
+        } catch (fundErr) {
+          const fundMsg = fundErr.response?.data?.msg || 'Order created but funding failed.';
+          alert(`Order created! ${fundMsg} You can fund it later from the Orders page.`);
+        }
+      } else {
+        alert(orderRes.data.msg || 'Order placed successfully!');
+      }
       onSuccess();
       onClose();
     } catch (err) {

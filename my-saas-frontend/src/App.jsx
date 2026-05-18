@@ -31,6 +31,9 @@ import MyProposals from './pages/MyProposals';
 import MyTasksPage from './pages/MyTasksPage';
 import ActivityLogPage from './pages/ActivityLogPage';
 import ConnectionsPage from './pages/ConnectionsPage';
+import OrdersPage from './pages/OrdersPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import AutomationPage from './pages/AutomationPage';
 
 import { SocketProvider } from './contexts/SocketContext';
 
@@ -70,6 +73,9 @@ function App() {
           <Route path="my-proposals" element={<MyProposals />} />
           <Route path="my-tasks" element={<MyTasksPage />} />
           <Route path="activity-log" element={<ActivityLogPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="automations" element={<AutomationPage />} />
             
           </Route>
 

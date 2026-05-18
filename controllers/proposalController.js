@@ -7,6 +7,7 @@ const HireInvitation = require('../models/hireInvitationModel');
 const Activity = require('../models/activityModel');
 const sendEmail = require('../utils/sendEmail');
 const { emitNewProposal, emitProposalStatus, emitNotification, emitHireInvitation } = require('../utils/socket');
+const { processTrigger } = require('../utils/automationEngine');
 
 /**
  * @desc    Submit a proposal for a job posting
@@ -94,6 +95,16 @@ const submitProposal = async (req, res) => {
         `
       }).catch(err => console.error('Proposal email error:', err));
     }
+
+    // Automation trigger: proposal submitted
+    processTrigger('proposal_submitted', {
+      workspaceId: job.workspace?.toString(),
+      projectId: job.project?.toString(),
+      jobId: job._id.toString(),
+      proposalId: proposal._id.toString(),
+      userId: req.user._id.toString(),
+      proposedPrice: Number(proposedPrice)
+    });
 
     res.status(201).json({
       success: true,
@@ -288,6 +299,16 @@ const acceptProposal = async (req, res) => {
         `
       }).catch(err => console.error('Proposal acceptance email error:', err));
     }
+
+    // Automation trigger: proposal accepted
+    processTrigger('proposal_accepted', {
+      workspaceId: job.workspace?.toString() || workspaceId,
+      projectId: job.project?.toString() || projectId,
+      jobId: job._id.toString(),
+      proposalId: proposal._id.toString(),
+      userId: req.user._id.toString(),
+      freelancerId: proposal.freelancer.toString()
+    });
 
     res.status(200).json({
       success: true,
