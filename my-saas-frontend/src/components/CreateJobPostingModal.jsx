@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import { SKILL_OPTIONS } from '../constants/skills';
 
@@ -103,6 +104,7 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
       }
 
       const res = await api.post('/jobs', payload);
+      toast.success('Job posted successfully!');
       onSuccess(res.data.data);
       onClose();
     } catch (err) {

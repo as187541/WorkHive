@@ -25,7 +25,15 @@ const activitySchema = new mongoose.Schema({
       'message_sent',
       'proposal_submitted',
       'proposal_accepted',
-      'proposal_rejected'
+      'proposal_rejected',
+      'connection_request',
+      'connection_accepted',
+      'milestone_submitted',
+      'milestone_approved',
+      'milestone_rejected',
+      'counter_offer',
+      'counter_offer_accepted',
+      'counter_offer_rejected'
     ]
   },
   target: {

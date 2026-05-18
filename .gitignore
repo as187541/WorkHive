@@ -1,6 +1,24 @@
+# Environment Variables - NEVER COMMIT
 .env
+.env.local
+.env.*.local
 .env.*
 
-# Markdown documentation files
+# Node modules and dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Markdown documentation files (except README)
 *.md
 !README.md

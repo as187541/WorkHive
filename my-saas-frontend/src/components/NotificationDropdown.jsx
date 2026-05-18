@@ -11,7 +11,10 @@ const NOTIFICATION_ACTIONS = [
   'workspace_joined', 'workspace_created',
   'project_created', 'project_joined',
   'redemption_approved', 'redemption_denied',
-  'proposal_submitted', 'proposal_accepted', 'proposal_rejected'
+  'proposal_submitted', 'proposal_accepted', 'proposal_rejected',
+  'connection_request', 'connection_accepted',
+  'milestone_submitted', 'milestone_approved', 'milestone_rejected',
+  'counter_offer', 'counter_offer_accepted', 'counter_offer_rejected'
 ];
 
 const NOTIFICATION_ROUTES = {
@@ -27,9 +30,17 @@ const NOTIFICATION_ROUTES = {
   project_joined: '/workspaces',
   redemption_approved: '/rewards',
   redemption_denied: '/rewards',
-  proposal_submitted: '/my-proposals',
-  proposal_accepted: '/my-proposals',
-  proposal_rejected: '/my-proposals'
+  proposal_submitted: '/my-jobs',
+  proposal_accepted: '/hire-invitations',
+  proposal_rejected: '/my-proposals',
+  milestone_submitted: '/my-jobs',
+  milestone_approved: '/my-proposals',
+  milestone_rejected: '/my-proposals',
+  counter_offer: '/my-proposals',
+  counter_offer_accepted: '/my-proposals',
+  counter_offer_rejected: '/my-proposals',
+  connection_request: '/connections',
+  connection_accepted: '/connections'
 };
 
 const NotificationDropdown = ({ user }) => {

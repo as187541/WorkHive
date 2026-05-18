@@ -33,18 +33,16 @@ const getActivities = async (req, res) => {
     const { workspace, action, page = 1, limit = 20 } = req.query;
     const userId = req.user._id;
 
-    // Find all workspaces the user belongs to
-    const userWorkspaces = await Workspace.find({ 'members.user': userId }).select('_id');
-    const workspaceIds = userWorkspaces.map(ws => ws._id);
+    const actions = action ? (Array.isArray(action) ? action : [action]) : [];
 
-    // Build query: activities from any user in the current user's workspaces
-    const query = { workspace: { $in: workspaceIds } };
+    // Build query for activities belonging to the current user.
+    const query = { user: userId };
+
     if (workspace && workspace !== 'all') {
       query.workspace = workspace;
     }
-    if (action) {
-      // Support multiple action types via repeated query params (e.g. ?action=task_created&action=task_assigned)
-      const actions = Array.isArray(action) ? action : [action];
+
+    if (actions.length > 0) {
       query.action = actions.length === 1 ? actions[0] : { $in: actions };
     }
 
