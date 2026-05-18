@@ -13,7 +13,8 @@ const {
   deleteWorkspace,
   getPlatformStats,
   getAuditLogs,
-  getTokenStats
+  getTokenStats,
+  getAnalytics
 } = require('../controllers/adminController');
 
 // Apply authentication and SuperAdmin authorization to ALL routes below
@@ -37,5 +38,8 @@ router.get('/logs', getAuditLogs);
 
 // ─── Token Statistics ───
 router.get('/token-stats', getTokenStats);
+
+// ─── Analytics ───
+router.get('/analytics', getAnalytics);
 
 module.exports = router;

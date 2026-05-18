@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import TalentCard from '../components/TalentCard';
-import TalentFilters from '../components/TalentFilters';
+import SavedSearches from '../components/SavedSearches';
+import { FiTrendingUp } from 'react-icons/fi';
 import './TalentMarketplace.css';
+
 const TalentMarketplace = () => {
   const [talent, setTalent] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recLoading, setRecLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     skills: '',
     minRating: '',
     availability: '',
     search: '',
-    sort: 'rating'
+    sort: 'rating',
+    lastActive: ''
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -20,7 +25,7 @@ const TalentMarketplace = () => {
     total: 0
   });
 
-  const fetchTalent = async (page = 1) => {
+  const fetchTalent = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       setError(null);
@@ -31,6 +36,7 @@ const TalentMarketplace = () => {
       if (filters.availability) params.append('availability', filters.availability);
       if (filters.search) params.append('search', filters.search);
       if (filters.sort) params.append('sort', filters.sort);
+      if (filters.lastActive) params.append('lastActive', filters.lastActive);
       params.append('page', page);
       params.append('limit', 12);
 
@@ -46,18 +52,35 @@ const TalentMarketplace = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  const fetchRecommendations = useCallback(async () => {
+    try {
+      setRecLoading(true);
+      const res = await api.get('/talent/recommendations?limit=8');
+      setRecommendations(res.data.data || []);
+    } catch {
+      setRecommendations([]);
+    } finally {
+      setRecLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchTalent(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [fetchTalent]);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
 
   const handleFilterChange = (newFilters) => {
-    setFilters(prev => {
-      const updated = { ...prev, ...newFilters };
-      return updated;
-    });
+    setFilters(prev => ({ ...prev, ...newFilters }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleApplySavedSearch = (savedFilters) => {
+    setFilters(savedFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -68,6 +91,9 @@ const TalentMarketplace = () => {
     }
   };
 
+  // Determine if we should show match scores (when skills filter is active)
+  const hasSkillsFilter = filters.skills && filters.skills.length > 0;
+
   return (
     <div className="talent-marketplace-container page-enter">
       <header className="marketplace-header">
@@ -76,6 +102,30 @@ const TalentMarketplace = () => {
           <p>Discover skilled professionals for your projects</p>
         </div>
       </header>
+
+      {/* Recommended for You Section */}
+      {recommendations.length > 0 && (
+        <section className="recommendations-section">
+          <div className="recommendations-header">
+            <h2><FiTrendingUp size={20} /> Recommended for You</h2>
+            <p>Based on your skills and connections</p>
+          </div>
+          <div className="recommendations-scroll-wrapper">
+            <div className="recommendations-scroll">
+              {recommendations.map(person => (
+                <div key={person._id} className="recommendation-card">
+                  <TalentCard
+                    talent={person}
+                    matchScore={person.matchScore}
+                    lastActive={person.lastActive}
+                    recommendationReason={person.recommendationReason}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="marketplace-toolbar">
         <div className="search-bar-wrapper" style={{ maxWidth: '500px', flex: 1 }}>
@@ -95,9 +145,20 @@ const TalentMarketplace = () => {
             className="filter-select"
           >
             <option value="">Availability</option>
-            <option value="open-to-work">Open to Work</option>
-            <option value="busy">Busy</option>
-            <option value="not-available">Not Available</option>
+            <option value="Open to work">Open to Work</option>
+            <option value="Busy">Busy</option>
+            <option value="Not available">Not Available</option>
+          </select>
+
+          <select
+            value={filters.lastActive}
+            onChange={(e) => handleFilterChange({ lastActive: e.target.value })}
+            className="filter-select"
+          >
+            <option value="">Last Active</option>
+            <option value="24h">Last 24 hours</option>
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
           </select>
 
           <select
@@ -106,11 +167,18 @@ const TalentMarketplace = () => {
             className="filter-select"
           >
             <option value="rating">Sort By</option>
+            <option value="relevance">Most Relevant</option>
             <option value="rating">Top Rated</option>
             <option value="hourlyRate">Hourly Rate</option>
             <option value="newest">Newest</option>
+            <option value="projects">Most Projects</option>
           </select>
         </div>
+
+        <SavedSearches
+          currentFilters={filters}
+          onApplySearch={handleApplySavedSearch}
+        />
       </div>
 
       <div className="talent-grid-section">
@@ -140,7 +208,12 @@ const TalentMarketplace = () => {
 
           <div className="talent-grid">
             {talent.map(person => (
-              <TalentCard key={person._id} talent={person} />
+              <TalentCard
+                key={person._id}
+                talent={person}
+                matchScore={hasSkillsFilter ? person.matchScore : null}
+                lastActive={person.lastActive}
+              />
             ))}
           </div>
 

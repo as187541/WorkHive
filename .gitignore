@@ -22,3 +22,10 @@ Thumbs.db
 # Markdown documentation files (except README)
 *.md
 !README.md
+
+# Generated HTML files from markdown
+*.html
+
+# Conversion scripts
+convert-to-html.js
+convert-survey-html.js

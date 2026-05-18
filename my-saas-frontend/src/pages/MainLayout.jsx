@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+import MobileNav from '../components/MobileNav';
+import MobileOnboarding from '../components/MobileOnboarding';
 import InviteModal from '../components/InviteModal';
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal';
 import UserProfileModal from '../components/UserProfileModal';
@@ -17,6 +19,8 @@ const MainLayout = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
      const openInviteModal = () => setIsInviteModalOpen(true);
      const openCreateModal = () => setIsCreateModalOpen(true);
   const navigate = useNavigate();
@@ -31,6 +35,10 @@ const MainLayout = () => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
         setWorkspaces(workspacesRes.data.data || workspacesRes.data);
+        // Show onboarding for new users (first login)
+        if (!localStorage.getItem('workhive_onboarded')) {
+          setShowOnboarding(true);
+        }
       })
       .catch(() => {
         localStorage.removeItem('token');
@@ -106,9 +114,11 @@ const handleTaskUpdate = (updatedTask) => {
         collaborators={collaborators}
         onInviteClick={() => setIsInviteModalOpen(true)}
         onUserClick={openProfile}
+        mobileOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <div className="main-content-wrapper">
-        <Navbar user={user} />
+        <Navbar user={user} onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
         <main className="page-content">
           <Outlet context={{ 
             user, 
@@ -140,6 +150,8 @@ const handleTaskUpdate = (updatedTask) => {
         onClose={() => setIsCreateModalOpen(false)} 
         onCreateSubmit={handleCreateWorkspace} // Pass actual function
       />
+      <MobileNav user={user} />
+      {showOnboarding && <MobileOnboarding onClose={() => setShowOnboarding(false)} />}
     </div>
   );
 };

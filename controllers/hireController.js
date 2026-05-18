@@ -6,6 +6,7 @@ const JobPosting = require('../models/jobPostingModel');
 const sendEmail = require('../utils/sendEmail');
 const { emitHireInvitation, emitNotification } = require('../utils/socket');
 const { logActivity } = require('./activityController');
+const { processTrigger } = require('../utils/automationEngine');
 
 /**
  * @desc    Send a hire invitation to a user for a specific project
@@ -274,6 +275,14 @@ const acceptHireInvitation = async (req, res) => {
         data: { hireId: hireInvitation._id, workspaceId: workspace._id }
       });
     }
+
+    // Automation trigger: hire accepted
+    processTrigger('hire_accepted', {
+      workspaceId: hireInvitation.workspace.toString(),
+      projectId: hireInvitation.project.toString(),
+      userId: req.user._id.toString(),
+      invitationId: hireInvitation._id.toString()
+    });
 
     res.status(200).json({
       success: true,

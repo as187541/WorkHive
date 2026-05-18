@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiUsers, FiLayout, FiCheckSquare, FiAward, FiShield, FiActivity } from 'react-icons/fi';
+import { FiUsers, FiLayout, FiCheckSquare, FiAward, FiShield, FiActivity, FiTrendingUp, FiShoppingBag } from 'react-icons/fi';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from '../services/api';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get('/admin/stats');
-        setStats(res.data.data);
+        const [statsRes, analyticsRes] = await Promise.allSettled([
+          api.get('/admin/stats'),
+          api.get('/admin/analytics')
+        ]);
+        if (statsRes.status === 'fulfilled') setStats(statsRes.value.data.data);
+        if (analyticsRes.status === 'fulfilled') setAnalytics(analyticsRes.value.data.data);
       } catch (err) {
         setError(err.response?.data?.msg || 'Failed to load stats');
       } finally {
@@ -20,7 +26,7 @@ const AdminDashboard = () => {
       }
     };
 
-    fetchStats();
+    fetchData();
   }, []);
 
   if (loading) return <div className="admin-page-container"><div className="loading-spinner"></div></div>;
@@ -60,6 +66,77 @@ const AdminDashboard = () => {
           )
         ))}
       </div>
+
+      {analytics && (
+        <div className="admin-section">
+          <h2><FiTrendingUp style={{ marginRight: '8px' }} /> Platform Analytics</h2>
+          <div className="admin-analytics-grid">
+            <div className="admin-analytics-card">
+              <h4>Users by Role</h4>
+              {analytics.usersByRole && Object.keys(analytics.usersByRole).length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(analytics.usersByRole).map(([name, value]) => ({ name, value }))}
+                      cx="50%" cy="50%" outerRadius={70}
+                      dataKey="value" label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    >
+                      {Object.entries(analytics.usersByRole).map((_, idx) => (
+                        <Cell key={idx} fill={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'][idx % 4]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : <p className="text-muted">No data</p>}
+            </div>
+
+            <div className="admin-analytics-card">
+              <h4>Tasks by Status</h4>
+              {analytics.tasksByStatus && Object.keys(analytics.tasksByStatus).length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={Object.entries(analytics.tasksByStatus).map(([name, count]) => ({ name, count }))}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <p className="text-muted">No data</p>}
+            </div>
+
+            <div className="admin-analytics-card">
+              <h4>Orders by Status</h4>
+              {analytics.ordersByStatus && Object.keys(analytics.ordersByStatus).length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={Object.entries(analytics.ordersByStatus).map(([name, data]) => ({ name, count: data.count, value: data.value }))}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <p className="text-muted">No data</p>}
+            </div>
+
+            <div className="admin-analytics-card">
+              <h4>Top Activities (30 days)</h4>
+              {analytics.topActivities?.length > 0 ? (
+                <ul className="admin-activity-list">
+                  {analytics.topActivities.slice(0, 8).map((a, idx) => (
+                    <li key={idx} className="admin-activity-item">
+                      <span className="activity-name">{a._id.replace(/_/g, ' ')}</span>
+                      <span className="activity-count">{a.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-muted">No activity data</p>}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="admin-section">
         <h2><FiActivity style={{ marginRight: '8px' }} /> Recent Audit Logs</h2>

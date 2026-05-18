@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useSocket } from '../contexts/SocketContext';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch, FiX, FiArrowLeft } from 'react-icons/fi';
 
 const MessagesPage = () => {
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ const MessagesPage = () => {
   const [connectionSearch, setConnectionSearch] = useState('');
   const [connectionResults, setConnectionResults] = useState([]);
   const [connectionSearchLoading, setConnectionSearchLoading] = useState(false);
+  const [mobileView, setMobileView] = useState('list'); // 'list' or 'chat'
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -267,6 +268,7 @@ const MessagesPage = () => {
 
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
+    setMobileView('chat');
     // Mark as read locally
     setConversations(prev =>
       prev.map(conv =>
@@ -309,7 +311,7 @@ const MessagesPage = () => {
     <div className="messages-page page-enter">
       <div className="messages-layout">
         {/* Conversations Sidebar */}
-        <div className="conversations-sidebar">
+        <div className={`conversations-sidebar ${mobileView === 'chat' ? 'mobile-hidden' : ''}`}>
           <div className="conversations-header">
             <h2>Messages</h2>
             <button
@@ -443,7 +445,7 @@ const MessagesPage = () => {
         </div>
 
         {/* Chat Area */}
-        <div className="chat-area">
+        <div className={`chat-area ${mobileView === 'list' ? 'mobile-hidden' : ''}`}>
           {!selectedConversation ? (
             <div className="chat-empty-state">
               <div className="empty-icon">💬</div>
@@ -454,6 +456,9 @@ const MessagesPage = () => {
             <>
               {/* Chat Header */}
               <div className="chat-header">
+                <button className="mobile-chat-back" onClick={() => setMobileView('list')}>
+                  <FiArrowLeft size={20} />
+                </button>
                 {(() => {
                   const otherUser = selectedConversation.participants?.find(
                     p => String(p._id) !== String(currentUserId)

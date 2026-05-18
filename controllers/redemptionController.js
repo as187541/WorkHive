@@ -4,6 +4,7 @@ const Workspace = require('../models/workspaceModel');
 const Project = require('../models/projectModel');
 const { logAuditAction } = require('../middleware/auditMiddleware');
 const { emitRedemptionNotification, emitNotification } = require('../utils/socket');
+const { processTrigger } = require('../utils/automationEngine');
 
 // Helper: Build scope query for approvers
 const buildScopeQuery = async (userId, userRole) => {
@@ -162,6 +163,15 @@ const createRequest = async (req, res) => {
     } catch (notifyErr) {
       console.error('Redemption notification error:', notifyErr.message);
     }
+
+    // Automation trigger: redemption requested
+    processTrigger('redemption_requested', {
+      workspaceId,
+      projectId: projectId || null,
+      requestId: request._id.toString(),
+      cost,
+      userId: req.user._id.toString()
+    });
 
     res.status(201).json({
       success: true,

@@ -33,7 +33,14 @@ const activitySchema = new mongoose.Schema({
       'milestone_rejected',
       'counter_offer',
       'counter_offer_accepted',
-      'counter_offer_rejected'
+      'counter_offer_rejected',
+      'order_created',
+      'order_funded',
+      'order_delivered',
+      'order_accepted',
+      'order_cancelled',
+      'order_disputed',
+      'order_revision'
     ]
   },
   target: {

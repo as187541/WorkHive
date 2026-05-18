@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/userModel');
 const Workspace = require('../models/workspaceModel');
 const Task = require('../models/taskModel');
@@ -391,6 +392,85 @@ const getTokenStats = async (req, res) => {
   }
 };
 
+const Order = require('../models/orderModel');
+const JobPosting = require('../models/jobPostingModel');
+const Proposal = require('../models/proposalModel');
+const Activity = require('../models/activityModel');
+const Project = require('../models/projectModel');
+
+/**
+ * @desc    Get platform analytics (SuperAdmin only)
+ * @route   GET /api/v1/admin/analytics
+ */
+const getAnalytics = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      userCount, usersByRole, workspaceCount, projectCount,
+      taskStats, orderStats, totalTokens, activityLast30,
+      userGrowth, orderRevenue
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]),
+      Workspace.countDocuments(),
+      Project.countDocuments(),
+      Task.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+      Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 }, totalValue: { $sum: '$price' } } }]),
+      User.aggregate([{ $group: { _id: null, total: { $sum: '$wallet.balance' } } }]),
+      Activity.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        { $group: { _id: '$action', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 }
+      ]),
+      User.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } }
+      ]),
+      Order.aggregate([
+        { $match: { status: 'Accepted', createdAt: { $gte: thirtyDaysAgo } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, total: { $sum: '$price' } } },
+        { $sort: { _id: 1 } }
+      ])
+    ]);
+
+    const roleMap = {};
+    usersByRole.forEach(r => { roleMap[r._id] = r.count; });
+
+    const tasksByStatus = {};
+    taskStats.forEach(s => { tasksByStatus[s._id] = s.count; });
+
+    const ordersByStatus = {};
+    let totalOrderValue = 0;
+    orderStats.forEach(s => {
+      ordersByStatus[s._id] = { count: s.count, value: s.totalValue };
+      totalOrderValue += s.totalValue;
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: userCount,
+        usersByRole: roleMap,
+        workspaces: workspaceCount,
+        projects: projectCount,
+        tasksByStatus,
+        ordersByStatus,
+        totalOrderValue,
+        totalTokens: totalTokens[0]?.total || 0,
+        topActivities: activityLast30,
+        userGrowth,
+        orderRevenue
+      }
+    });
+  } catch (error) {
+    console.error('getAnalytics error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getAllWorkspaces,
@@ -400,5 +480,6 @@ module.exports = {
   deleteWorkspace,
   getPlatformStats,
   getAuditLogs,
-  getTokenStats
+  getTokenStats,
+  getAnalytics
 };

@@ -4,11 +4,11 @@ import { NavLink, useParams } from 'react-router-dom';
 import {
   FiLayout, FiFolder, FiUsers, FiPackage, FiBriefcase,
   FiMessageSquare, FiClipboard, FiShoppingBag,
-  FiShield, FiCheckSquare, FiActivity, FiUserPlus, FiEdit3, FiSend
+  FiShield, FiCheckSquare, FiActivity, FiUserPlus, FiEdit3, FiSend, FiBarChart2, FiZap
 } from 'react-icons/fi';
 import api from '../services/api';
 
-const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }) => {
+const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick, mobileOpen = false, onClose }) => {
   const { workspaceId } = useParams();
   const [pendingRedemptions, setPendingRedemptions] = useState(0);
 
@@ -59,11 +59,17 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
     { to: '/messages', icon: FiMessageSquare, label: 'Messages' },
     { to: '/connections', icon: FiUserPlus, label: 'Connections' },
     { to: '/hire-invitations', icon: FiBriefcase, label: 'Hire Invitations' },
+    { to: '/orders', icon: FiShoppingBag, label: 'Orders' },
+    { to: '/analytics', icon: FiBarChart2, label: 'Analytics' },
+    { to: '/automations', icon: FiZap, label: 'Automations' },
     { to: '/rewards', icon: FiShoppingBag, label: 'Reward Store' },
   ];
 
   return (
-    <aside className="sidebar">
+    <>
+      {/* Mobile overlay backdrop */}
+      {mobileOpen && <div className="sidebar-overlay visible" onClick={onClose} />}
+      <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Brand */}
       <div className="sidebar-brand">
         <div className="sidebar-brand-icon">W</div>
@@ -80,6 +86,7 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) => isActive ? 'active' : ''}
+                  onClick={() => mobileOpen && onClose?.()}
                 >
                   <item.icon style={{ marginRight: '10px', fontSize: '1.1rem' }} />
                   {item.label}
@@ -191,6 +198,7 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick }
         </NavLink>
       </div>
     </aside>
+    </>
   );
 };
 
