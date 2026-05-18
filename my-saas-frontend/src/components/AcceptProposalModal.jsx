@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const AcceptProposalModal = ({ proposal, job, onClose, onSuccess }) => {
@@ -61,7 +62,7 @@ const AcceptProposalModal = ({ proposal, job, onClose, onSuccess }) => {
         projectId: selectedProject,
         message: message || undefined
       });
-      alert(res.data.msg || 'Proposal accepted successfully!');
+      toast.success(res.data.msg || 'Proposal accepted successfully!');
       onSuccess(res.data.data);
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to accept proposal');

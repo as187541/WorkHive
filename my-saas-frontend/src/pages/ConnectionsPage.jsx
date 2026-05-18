@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import { FiUserPlus, FiCheck, FiX, FiSearch, FiMessageSquare, FiUsers, FiClock, FiSend } from 'react-icons/fi';
 
@@ -46,8 +47,9 @@ const ConnectionsPage = () => {
         const friend = accepted.requester;
         setConnections(prev => [{ connectionId: accepted._id, friend, connectedAt: new Date() }, ...prev]);
       }
+      toast.success('Connection accepted!');
     } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to accept request');
+      toast.error(err.response?.data?.msg || 'Failed to accept request');
     } finally {
       setActionLoading(prev => ({ ...prev, [connectionId]: false }));
     }
@@ -58,8 +60,9 @@ const ConnectionsPage = () => {
     try {
       await api.put(`/connections/${connectionId}/decline`);
       setPendingRequests(prev => prev.filter(r => r._id !== connectionId));
+      toast.success('Connection request declined.');
     } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to decline request');
+      toast.error(err.response?.data?.msg || 'Failed to decline request');
     } finally {
       setActionLoading(prev => ({ ...prev, [connectionId]: false }));
     }
@@ -71,8 +74,9 @@ const ConnectionsPage = () => {
     try {
       await api.delete(`/connections/${connectionId}`);
       setConnections(prev => prev.filter(c => c.connectionId !== connectionId));
+      toast.success('Connection removed.');
     } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to remove connection');
+      toast.error(err.response?.data?.msg || 'Failed to remove connection');
     } finally {
       setActionLoading(prev => ({ ...prev, [connectionId]: false }));
     }

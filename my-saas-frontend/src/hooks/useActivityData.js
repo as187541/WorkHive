@@ -16,7 +16,15 @@ export const ACTION_CONFIG = {
   message_sent: { label: 'Sent message', icon: 'FiMessageSquare', color: '#3b82f6', bg: '#eff6ff' },
   proposal_submitted: { label: 'Submitted proposal', icon: 'FiFileText', color: '#8b5cf6', bg: '#f5f3ff' },
   proposal_accepted: { label: 'Accepted proposal', icon: 'FiCheckSquare', color: '#10b981', bg: '#ecfdf5' },
-  proposal_rejected: { label: 'Proposal not selected', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' }
+  connection_request: { label: 'Connection request', icon: 'FiUserPlus', color: '#3b82f6', bg: '#eff6ff' },
+  connection_accepted: { label: 'Connection accepted', icon: 'FiCheckSquare', color: '#10b981', bg: '#ecfdf5' },
+  proposal_rejected: { label: 'Proposal not selected', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' },
+  milestone_submitted: { label: 'Milestone submitted', icon: 'FiClock', color: '#3b82f6', bg: '#eff6ff' },
+  milestone_approved: { label: 'Milestone approved', icon: 'FiCheckSquare', color: '#10b981', bg: '#ecfdf5' },
+  milestone_rejected: { label: 'Milestone rejected', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' },
+  counter_offer: { label: 'Counter-offer received', icon: 'FiRepeat', color: '#8b5cf6', bg: '#f5f3ff' },
+  counter_offer_accepted: { label: 'Counter-offer accepted', icon: 'FiCheckSquare', color: '#10b981', bg: '#ecfdf5' },
+  counter_offer_rejected: { label: 'Counter-offer declined', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' }
 };
 
 export const ACTION_TYPE_OPTIONS = [
@@ -30,6 +38,8 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'hire_rejected', label: 'Hire Rejected' },
   { value: 'project_created', label: 'Project Created' },
   { value: 'workspace_joined', label: 'Workspace Joined' },
+  { value: 'connection_request', label: 'Connection Request' },
+  { value: 'connection_accepted', label: 'Connection Accepted' },
   { value: 'workspace_created', label: 'Workspace Created' }
 ];
 

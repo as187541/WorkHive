@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import './HireInvitationsPage.css';
 const HireInvitationsPage = () => {
@@ -34,9 +35,9 @@ const HireInvitationsPage = () => {
       setActionLoading(hireId);
       await api.patch(`/hires/${hireId}/accept`);
       setReceived(prev => prev.filter(inv => inv._id !== hireId));
-      alert('Invitation accepted! You have joined the workspace.');
+      toast.success('Invitation accepted! You have joined the workspace.');
     } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to accept invitation');
+      toast.error(err.response?.data?.msg || 'Failed to accept invitation');
     } finally {
       setActionLoading(null);
     }
@@ -48,8 +49,9 @@ const HireInvitationsPage = () => {
       setActionLoading(hireId);
       await api.patch(`/hires/${hireId}/reject`);
       setReceived(prev => prev.filter(inv => inv._id !== hireId));
+      toast.success('Invitation rejected.');
     } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to reject invitation');
+      toast.error(err.response?.data?.msg || 'Failed to reject invitation');
     } finally {
       setActionLoading(null);
     }
@@ -61,8 +63,9 @@ const HireInvitationsPage = () => {
       setActionLoading(hireId);
       await api.delete(`/hires/${hireId}`);
       setSent(prev => prev.filter(inv => inv._id !== hireId));
+      toast.success('Invitation canceled.');
     } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to cancel invitation');
+      toast.error(err.response?.data?.msg || 'Failed to cancel invitation');
     } finally {
       setActionLoading(null);
     }

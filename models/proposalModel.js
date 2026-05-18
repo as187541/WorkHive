@@ -39,9 +39,38 @@ const proposalSchema = new mongoose.Schema({
   milestones: [{
     title: { type: String, required: true },
     description: { type: String },
-    amount: { type: Number, required: true },
-    dueDate: { type: Date }
-  }]
+    amount: { type: Number, required: true, min: 0 },
+    dueDate: { type: Date },
+    status: {
+      type: String,
+      enum: ['Pending', 'Submitted', 'Approved', 'Rejected'],
+      default: 'Pending'
+    },
+    submittedAt: { type: Date },
+    approvedAt: { type: Date },
+    rejectionReason: { type: String }
+  }],
+  counterOffers: [{
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    proposedPrice: { type: Number, required: true, min: 0 },
+    deliveryDays: { type: Number, required: true, min: 1 },
+    message: { type: String, maxlength: 1000 },
+    status: {
+      type: String,
+      enum: ['Pending', 'Accepted', 'Rejected'],
+      default: 'Pending'
+    },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  negotiationStatus: {
+    type: String,
+    enum: ['Open', 'Negotiating', 'Agreed', 'Closed'],
+    default: 'Open'
+  }
 }, { timestamps: true });
 
 // Prevent duplicate proposals from same freelancer on same job

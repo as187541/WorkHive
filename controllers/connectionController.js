@@ -1,6 +1,8 @@
 // controllers/connectionController.js
 const Connection = require('../models/connectionModel');
 const User = require('../models/userModel');
+const Activity = require('../models/activityModel');
+const { emitNotification } = require('../utils/socket');
 
 /**
  * @desc    Send a connection request
@@ -53,6 +55,19 @@ const sendConnectionRequest = async (req, res) => {
 
     await connection.populate('requester recipient', 'name avatar bio skills');
 
+    emitNotification(recipientId, {
+      type: 'connection_request',
+      title: 'New Connection Request',
+      message: `${req.user.name} sent you a connection request.`,
+      data: { connectionId: connection._id, requesterId: req.user._id }
+    });
+
+    Activity.create({
+      user: req.user._id,
+      action: 'connection_request',
+      target: `Sent a connection request to ${recipient.name}`
+    }).catch(err => console.error('Connection activity error:', err));
+
     res.status(201).json({
       success: true,
       data: connection
@@ -88,6 +103,19 @@ const acceptConnectionRequest = async (req, res) => {
     await connection.save();
 
     await connection.populate('requester recipient', 'name avatar bio skills');
+
+    emitNotification(connection.requester, {
+      type: 'connection_accepted',
+      title: 'Connection Accepted',
+      message: `${connection.recipient.name || 'Someone'} accepted your connection request.`,
+      data: { connectionId: connection._id }
+    });
+
+    Activity.create({
+      user: connection.recipient,
+      action: 'connection_accepted',
+      target: `Accepted a connection request from ${connection.requester.name || 'a user'}`
+    }).catch(err => console.error('Connection activity error:', err));
 
     res.status(200).json({
       success: true,

@@ -265,6 +265,13 @@ const acceptHireInvitation = async (req, res) => {
           <p><strong>${req.user.name}</strong> has accepted your invitation to join <strong>${workspace.name}</strong> for the project <strong>${project?.name || 'N/A'}</strong>.</p>
           <p>They have been added as a <strong>${hireInvitation.role}</strong>.</p>
         `
+      }).catch(err => console.error('Hire accept email error:', err));
+
+      emitNotification(sender._id.toString(), {
+        type: 'hire_accepted',
+        title: 'Hire Invitation Accepted',
+        message: `${req.user.name} accepted your invitation to join ${workspace.name}.`,
+        data: { hireId: hireInvitation._id, workspaceId: workspace._id }
       });
     }
 

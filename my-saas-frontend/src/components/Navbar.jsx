@@ -5,6 +5,7 @@ import { FiLogOut, FiUser } from 'react-icons/fi';
 import ThemeSwitcher from './ThemeSwitcher';
 import NotificationDropdown from './NotificationDropdown';
 import MessageBadge from './MessageBadge';
+import ConnectionBadge from './ConnectionBadge';
 
 const Navbar = ({ user }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -55,6 +56,7 @@ const Navbar = ({ user }) => {
           <span>{user?.wallet?.balance || 0} HT</span>
         </div>
 
+        <ConnectionBadge />
         <MessageBadge />
         <NotificationDropdown user={user} />
 

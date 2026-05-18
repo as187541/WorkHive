@@ -43,6 +43,16 @@ app.get('/', (req, res) => {
   res.send("<h1>SaaS Project Backend</h1><p>API is running...</p>");
 });
 
+// Health check endpoint for uptime monitoring (UptimeRobot, etc.)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/workspaces', workspaceRouter);
 app.use('/api/v1/admin', adminRouter);

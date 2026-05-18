@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import MilestoneTracker from '../components/MilestoneTracker';
 
 const MyProposals = () => {
   const navigate = useNavigate();
@@ -127,7 +128,8 @@ const MyProposals = () => {
               {filteredProposals.map(proposal => {
                 const job = proposal.jobPosting || {};
                 return (
-                  <tr key={proposal._id} className="proposal-row">
+                  <React.Fragment key={proposal._id}>
+                    <tr className="proposal-row">
                     <td>
                       <div
                         className="proposal-job-title"
@@ -185,6 +187,22 @@ const MyProposals = () => {
                       </div>
                     </td>
                   </tr>
+                  {proposal.status === 'Accepted' && proposal.milestones?.length > 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: '0 1rem 1rem 1rem' }}>
+                        <MilestoneTracker
+                          proposal={proposal}
+                          isFreelancer={true}
+                          onMilestoneUpdate={(updatedMilestones) => {
+                            setProposals(prev => prev.map(p =>
+                              p._id === proposal._id ? { ...p, milestones: updatedMilestones } : p
+                            ));
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

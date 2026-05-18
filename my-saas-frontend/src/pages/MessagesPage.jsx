@@ -45,6 +45,8 @@ const MessagesPage = () => {
       // If this conversation is currently open, add message to list
       setMessages(prev => {
         if (selectedConversation?._id === conversationId) {
+          const senderId = message.sender?._id || message.sender;
+          if (String(senderId) === String(currentUserId)) return prev;
           // Avoid duplicates
           if (prev.some(m => m._id === message._id)) return prev;
           return [...prev, message];

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import RatingStars from '../components/RatingStars';
 import SubmitProposalModal from '../components/SubmitProposalModal';
 import AcceptProposalModal from '../components/AcceptProposalModal';
+import MilestoneTracker from '../components/MilestoneTracker';
 
 const JobPostingDetail = () => {
   const { jobId } = useParams();
@@ -65,7 +67,7 @@ const JobPostingDetail = () => {
       await api.patch(`/proposals/${proposalId}/reject`);
       fetchJobDetails();
     } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to reject proposal');
+      toast.error(err.response?.data?.msg || 'Failed to reject proposal');
     } finally {
       setActionLoading(null);
     }
@@ -206,6 +208,18 @@ const JobPostingDetail = () => {
                         <span className={`proposal-status status-${proposal.status.toLowerCase()}`}>
                           {proposal.status}
                         </span>
+                      )}
+
+                      {/* Milestone Tracker for accepted proposals */}
+                      {proposal.status === 'Accepted' && proposal.milestones?.length > 0 && (
+                        <MilestoneTracker
+                          proposal={proposal}
+                          isFreelancer={false}
+                          onMilestoneUpdate={(updatedMilestones) => {
+                            setProposals(prev => prev.map(p =>
+                              p._id === proposal._id ? { ...p, milestones: updatedMilestones } : p
+                            ));
+                          }}n                        />
                       )}
                     </div>
                   );
