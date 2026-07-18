@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     match: [/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/, 'Please provide a valid email'],
   },
-  password: { type: String,  minlength: 6, select: false },
+  password: { type: String,  minlength: 8, select: false },
   // --- THIS IS THE NEW FIELD ---
   role: {
     type: String,
@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema({
   avatar: { type: String, default: '' },
   otp: { type: String },
   otpExpires: { type: Date },
+  passwordChangedAt: { type: Date },
   wallet: {
     balance: { type: Number, default: 0 },
     workspaces: [{

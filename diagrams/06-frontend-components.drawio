@@ -1,0 +1,93 @@
+<mxGraphModel dx="1426" dy="709" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    
+    <!-- Frontend Component Architecture - Page 6 -->
+    
+    <!-- Title -->
+    <mxCell id="2" value="WorkHive Frontend Component Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="20" width="400" height="40" as="geometry"/>
+    </mxCell>
+    
+    <!-- App Structure -->
+    <mxCell id="3" value="📱 App Structure (App.jsx)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#0066CC;fillColor=#E6F2FF;gradientColor=#0066CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="80" width="500" height="280" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="4" value="Root Component Hierarchy:&#xa;&#xa;&lt;SocketProvider&gt;  // Global Socket.IO context&#xa;  └─ &lt;Router&gt;  // React Router v7&#xa;      ├─ /login → LoginPage&#xa;      ├─ / (Protected) → MainLayout&#xa;      │   ├─ / (Dashboard) → DashboardPage&#xa;      │   ├─ /workspaces → WorkspaceDashboard&#xa;      │   ├─ /workspaces/:id → WorkspaceDetail&#xa;      │   ├─ /profile → ProfilePage&#xa;      │   ├─ /rewards → RewardStore&#xa;      │   ├─ /talent → TalentMarketplace&#xa;      │   ├─ /talent/:id → TalentProfilePage&#xa;      │   ├─ /hire-invitations → HireInvitationsPage&#xa;      │   ├─ /services → ServicePackagesMarketplace&#xa;      │   ├─ /services/:id → ServicePackageDetail&#xa;      │   ├─ /my-services → MyServices&#xa;      │   ├─ /messages → MessagesPage&#xa;      │   ├─ /connections → ConnectionsPage&#xa;      │   ├─ /jobs → JobPostingsPage&#xa;      │   ├─ /jobs/:id → JobPostingDetail&#xa;      │   ├─ /my-tasks → MyTasksPage&#xa;      │   ├─ /activity-log → ActivityLogPage&#xa;      │   ├─ /orders → OrdersPage&#xa;      │   ├─ /analytics → AnalyticsPage&#xa;      │   └─ /automations → AutomationPage&#xa;      └─ /admin/* (AdminRoute) → Admin pages" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="70" y="130" width="460" height="220" as="geometry"/>
+    </mxCell>
+    
+    <!-- Main Layout -->
+    <mxCell id="5" value="🏗️ MainLayout Component" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#009900;fillColor=#E6FFE6;gradientColor=#009900;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="80" width="500" height="280" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="6" value="MainLayout Structure:&#xa;&#xa;┌─────────────────────────────────────┐&#xa;│           Navbar                    │  ← Navbar.jsx&#xa;│  - Logo, Search, Notifications     │&#xa;│  - User menu, Theme switcher       │&#xa;└─────────────────────────────────────┘&#xa;┌──────────┬──────────────────────────┐&#xa;│          │                          │&#xa;│ Sidebar  │      Page Content        │  ← Outlet (React Router)&#xa;│          │                          │&#xa;│ - Nav    │  - DashboardPage         │&#xa;│ - Links  │  - WorkspaceDetail       │&#xa;│          │  - MessagesPage          │&#xa;│          │  - etc...                │&#xa;│          │                          │&#xa;└──────────┴──────────────────────────┘&#xa;&#xa;Components:&#xa;- Navbar.jsx: Top navigation bar&#xa;- Sidebar.jsx: Left navigation menu&#xa;- MobileNav.jsx: Mobile responsive nav&#xa;- ThemeSwitcher.jsx: Dark/Light mode&#xa;- NotificationDropdown.jsx: Alert badges&#xa;- MessageBadge.jsx: Unread message count&#xa;- HireNotificationBadge.jsx: Invite count" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="620" y="130" width="460" height="220" as="geometry"/>
+    </mxCell>
+    
+    <!-- Context Providers -->
+    <mxCell id="7" value="🔮 Context Providers" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#FF6600;fillColor=#FFF2E6;gradientColor=#FF6600;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="1150" y="80" width="400" height="280" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="8" value="SocketContext (SocketContext.jsx):&#xa;- Provides Socket.IO instance globally&#xa;- Manages connection state&#xa;- Helper functions:&#xa;  • joinConversation(conversationId)&#xa;  • leaveConversation(conversationId)&#xa;  • joinWorkspace(workspaceId)&#xa;  • joinProject(projectId)&#xa;  • sendTyping(conversationId)&#xa;  • stopTyping(conversationId)&#xa;- Listens to:&#xa;  • new_message&#xa;  • user_typing&#xa;  • user_stop_typing&#xa;  • notification&#xa;  • task_updated&#xa;&#xa;Usage:&#xa;const { socket, connected, joinConversation } = useSocket()&#xa;&#xa;Other Contexts (if any):&#xa;- AuthContext (via localStorage)&#xa;- ThemeContext (via CSS variables)&#xa;&#xa;State Management:&#xa;- React useState for local state&#xa;- Context for shared state&#xa;- No Redux/Zustand (lightweight app)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="1170" y="130" width="360" height="220" as="geometry"/>
+    </mxCell>
+    
+    <!-- Page Components - Row 1 -->
+    <mxCell id="9" value="📄 Page Components (Row 1)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9933CC;fillColor=#F2E6FF;gradientColor=#9933CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="400" width="750" height="320" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="10" value="DashboardPage.jsx&#xa;- User overview dashboard&#xa;- Recent activity feed&#xa;- Quick stats&#xa;- Pending tasks&#xa;- Uses: ActivityLog, TaskCard&#xa;&#xa;WorkspaceDashboard.jsx&#xa;- List all workspaces&#xa;- Create new workspace&#xa;- Workspace cards with members&#xa;- Uses: CreateWorkspaceModal, WorkspaceCard&#xa;&#xa;WorkspaceDetail.jsx&#xa;- Single workspace view&#xa;- Projects list&#xa;- Members management&#xa;- Activity feed&#xa;- Uses: CreateProjectModal, KanbanBoard&#xa;&#xa;ProfilePage.jsx&#xa;- User profile editing&#xa;- Avatar upload&#xa;- Skills management&#xa;- Portfolio items&#xa;- Uses: UserProfileModal, PortfolioGallery" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="70" y="450" width="330" height="260" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="11" value="TalentMarketplace.jsx&#xa;- Browse freelancers&#xa;- Search &amp; filters&#xa;- Talent cards grid&#xa;- Saved searches&#xa;- Uses: TalentFilters, TalentCard, SavedSearches&#xa;&#xa;TalentProfilePage.jsx&#xa;- Full talent profile&#xa;- Portfolio showcase&#xa;- Hire button&#xa;- Reviews &amp; ratings&#xa;- Uses: HireModal, RatingStars, PortfolioGallery&#xa;&#xa;HireInvitationsPage.jsx&#xa;- Sent invitations&#xa;- Received invitations&#xa;- Accept/Reject actions&#xa;- Uses: HireNotificationBadge&#xa;&#xa;MessagesPage.jsx&#xa;- Conversation list&#xa;- Chat interface&#xa;- Real-time messages&#xa;- Typing indicators&#xa;- Uses: MessageBadge, SocketContext" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="430" y="450" width="330" height="260" as="geometry"/>
+    </mxCell>
+    
+    <!-- Page Components - Row 2 -->
+    <mxCell id="12" value="📄 Page Components (Row 2)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#0099CC;fillColor=#E6F7FF;gradientColor=#0099CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="850" y="400" width="700" height="320" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="13" value="JobPostingsPage.jsx&#xa;- Browse job postings&#xa;- Create job posting&#xa;- Filter by category/skills&#xa;- Uses: CreateJobPostingModal, JobPostingCard&#xa;&#xa;JobPostingDetail.jsx&#xa;- Job details view&#xa;- Proposals list&#xa;- Accept/Reject proposals&#xa;- Uses: SubmitProposalModal&#xa;&#xa;MyTasksPage.jsx&#xa;- User's assigned tasks&#xa;- Kanban board view&#xa;- Task status updates&#xa;- Uses: KanbanBoard, TaskDetailDrawer, CreateTaskModal&#xa;&#xa;OrdersPage.jsx&#xa;- Active orders&#xa;- Milestone tracking&#xa;- Escrow management&#xa;- Dispute handling&#xa;- Uses: OrderDetailModal, MilestoneTracker, DisputeModal" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="870" y="450" width="320" height="260" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="14" value="ServicePackagesMarketplace.jsx&#xa;- Browse service packages&#xa;- Category filters&#xa;- Package cards&#xa;- Uses: ServicePackageCard&#xa;&#xa;ServicePackageDetail.jsx&#xa;- Package details&#xa;- Order button&#xa;- Reviews&#xa;- Uses: OrderServiceModal&#xa;&#xa;MyServices.jsx&#xa;- Manage own packages&#xa;- Create/Edit/Delete&#xa;- Performance stats&#xa;- Uses: CreateServicePackageModal&#xa;&#xa;AnalyticsPage.jsx&#xa;- Dashboard charts&#xa;- Performance metrics&#xa;- Revenue stats&#xa;- Uses: Recharts components&#xa;&#xa;AutomationPage.jsx&#xa;- Automation rules list&#xa;- Create/edit rules&#xa;- Trigger testing&#xa;- Uses: CreateAutomationModal, AutomationRuleCard&#xa;&#xa;RewardStore.jsx&#xa;- Browse rewards&#xa;- Redeem tokens&#xa;- Redemption history&#xa;- Uses: MyRedemptionsPage" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="1220" y="450" width="310" height="260" as="geometry"/>
+    </mxCell>
+    
+    <!-- Reusable Components -->
+    <mxCell id="15" value="🧩 Reusable Components" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#CC9900;fillColor=#FFFBE6;gradientColor=#CC9900;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="760" width="750" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="16" value="Modals:&#xa;- CreateWorkspaceModal.jsx&#xa;- CreateProjectModal.jsx&#xa;- CreateTaskModal.jsx&#xa;- CreateJobPostingModal.jsx&#xa;- CreateServicePackageModal.jsx&#xa;- CreateAutomationModal.jsx&#xa;- SubmitProposalModal.jsx&#xa;- HireModal.jsx&#xa;- InviteModal.jsx&#xa;- AcceptProposalModal.jsx&#xa;- OrderServiceModal.jsx&#xa;- DisputeModal.jsx&#xa;- UserProfileModal.jsx&#xa;&#xa;Cards:&#xa;- WorkspaceCard.jsx&#xa;- TalentCard.jsx&#xa;- JobPostingCard.jsx&#xa;- ServicePackageCard.jsx&#xa;- AutomationRuleCard.jsx&#xa;&#xa;Specialized Components:&#xa;- KanbanBoard.jsx (task management)&#xa;- MilestoneTracker.jsx (order milestones)&#xa;- PortfolioGallery.jsx (portfolio display)&#xa;- RatingStars.jsx (5-star ratings)&#xa;- ConnectionBadge.jsx (connection status)&#xa;- HireNotificationBadge.jsx (invite count)&#xa;- MessageBadge.jsx (unread messages)&#xa;- NotificationDropdown.jsx (alerts)&#xa;- SavedSearches.jsx (saved filters)&#xa;- TalentFilters.jsx (search filters)&#xa;- TaskDetailDrawer.jsx (task details)&#xa;- OrderDetailModal.jsx (order view)&#xa;- ThemeSwitcher.jsx (dark/light mode)&#xa;- MobileNav.jsx (mobile menu)&#xa;- MobileOnboarding.jsx (onboarding)&#xa;- AdminRoute.jsx (role guard)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="70" y="810" width="710" height="320" as="geometry"/>
+    </mxCell>
+    
+    <!-- Admin Pages -->
+    <mxCell id="17" value="👑 Admin Pages" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#CC0000;fillColor=#FFE6E6;gradientColor=#CC0000;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="850" y="760" width="700" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="18" value="AdminRoute.jsx (Guard):&#xa;- Checks user.role === 'SuperAdmin'&#xa;- Redirects non-admin users&#xa;- Protects all /admin/* routes&#xa;&#xa;AdminDashboard.jsx:&#xa;- System overview&#xa;- User/workspace stats&#xa;- Recent activity&#xa;- Quick actions&#xa;&#xa;AdminUsersPage.jsx:&#xa;- List all users&#xa;- Search &amp; filter&#xa;- Delete users&#xa;- Update roles&#xa;&#xa;AdminWorkspacesPage.jsx:&#xa;- List all workspaces&#xa;- Create workspace&#xa;- Delete workspace&#xa;- View members&#xa;&#xa;AdminLogsPage.jsx:&#xa;- Audit log viewer&#xa;- Filter by action/user&#xa;- IP tracking&#xa;- Timestamp details&#xa;&#xa;AdminTokensPage.jsx:&#xa;- Alter user tokens&#xa;- Add/remove balance&#xa;- Transaction history&#xa;&#xa;AdminRedemptionsPage.jsx:&#xa;- Pending redemptions&#xa;- Approve/Deny actions&#xa;- Process history" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="870" y="810" width="660" height="320" as="geometry"/>
+    </mxCell>
+    
+    <!-- Hooks & Utilities -->
+    <mxCell id="19" value="⚙️ Hooks &amp; Utilities" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#F5F5F5;gradientColor=#666666;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="1180" width="1500" height="180" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="20" value="Custom Hooks:&#xa;- useActivityData.js: Fetches activity data for dashboard&#xa;&#xa;Constants:&#xa;- skills.js: Predefined skills list for filters&#xa;&#xa;Services (API layer):&#xa;- Axios instances for API calls&#xa;- Interceptors for JWT token&#xa;- Error handling&#xa;- Request/response transformers&#xa;&#xa;Styling:&#xa;- App.css: Global styles&#xa;- Component-specific CSS modules&#xa;- CSS variables for theming&#xa;- Responsive design (mobile-first)&#xa;&#xa;Build Tools:&#xa;- Vite: Fast build tool &amp; dev server&#xa;- React Refresh: Hot module replacement&#xa;- ESLint: Code linting&#xa;&#xa;Dependencies:&#xa;- react-router-dom: Routing&#xa;- axios: HTTP client&#xa;- socket.io-client: WebSocket client&#xa;- jwt-decode: JWT parsing&#xa;- react-hot-toast: Toast notifications&#xa;- recharts: Charts &amp; graphs&#xa;- react-icons: Icon library" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="70" y="1230" width="1460" height="120" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

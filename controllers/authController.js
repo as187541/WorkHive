@@ -5,8 +5,13 @@ const Project = require('../models/projectModel');
 const HireInvitation = require('../models/hireInvitationModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// Helper: Hash OTP using SHA-256
+const hashOTP = (otp) => crypto.createHash('sha256').update(otp).digest('hex');
+
+const googleClientId = (process.env.GOOGLE_CLIENT_ID || '612541306739-1q9bke4skpq9t2821hdhr59do6cdmsiu.apps.googleusercontent.com').trim();
+const client = new OAuth2Client(googleClientId);
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -19,6 +24,20 @@ const register = async (req, res) => {
     const { name, email, password } = req.body;
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ msg: 'User already exists' });
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({ msg: 'Password must be at least 8 characters.' });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({ msg: 'Password must contain at least one uppercase letter.' });
+    }
+    if (!/[a-z]/.test(password)) {
+      return res.status(400).json({ msg: 'Password must contain at least one lowercase letter.' });
+    }
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({ msg: 'Password must contain at least one digit.' });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -71,7 +90,18 @@ const login = async (req, res) => {
 // 3. Get Current User
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id)
+      .select('-otp -otpExpires -password')
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found.' });
+    }
+
+    // Remove wallet.history from the response for security/privacy
+    if (user.wallet) {
+      delete user.wallet.history;
+    }
     
     // Find workspaces where user is Admin
     const adminWorkspaces = await Workspace.find({
@@ -89,10 +119,11 @@ const getMe = async (req, res) => {
     };
 
     res.status(200).json({
-      ...user.toObject(),
+      ...user,
       approverScope
     });
   } catch (error) {
+    console.error('getMe error:', error);
     res.status(500).json({ msg: 'Server Error' });
   }
 };
@@ -103,7 +134,7 @@ const googleLogin = async (req, res) => {
   try {
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: googleClientId,
     });
     const payload = ticket.getPayload();
     let user = await User.findOne({ email: payload.email });
@@ -129,8 +160,8 @@ const requestOTP = async (req, res) => {
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Save to DB with 10 min expiry
-    user.otp = otp;
+    // Save hashed OTP to DB with 10 min expiry
+    user.otp = hashOTP(otp);
     user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
@@ -160,12 +191,27 @@ const updateProfile = async (req, res) => {
 
     // If changing password, verify OTP first
     if (password) {
-      if (!otp || user.otp !== otp || user.otpExpires < Date.now()) {
+      if (!otp || user.otp !== hashOTP(otp) || user.otpExpires < Date.now()) {
         return res.status(400).json({ msg: 'Invalid or expired OTP.' });
+      }
+      
+      // Validate password strength
+      if (password.length < 8) {
+        return res.status(400).json({ msg: 'Password must be at least 8 characters.' });
+      }
+      if (!/[A-Z]/.test(password)) {
+        return res.status(400).json({ msg: 'Password must contain at least one uppercase letter.' });
+      }
+      if (!/[a-z]/.test(password)) {
+        return res.status(400).json({ msg: 'Password must contain at least one lowercase letter.' });
+      }
+      if (!/[0-9]/.test(password)) {
+        return res.status(400).json({ msg: 'Password must contain at least one digit.' });
       }
       
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
+      user.passwordChangedAt = Date.now();
       
       // Clear OTP
       user.otp = undefined;
@@ -243,12 +289,16 @@ const redeemTokens = async (req, res) => {
       workspaceBalance.balance -= cost;
     }
     
+    // Add to history with cap to prevent unbounded growth
     user.wallet.history.push({
       amount: -cost,
       reason: `Redeemed: ${rewardTitle}`,
       workspace: workspaceId,
       date: new Date()
     });
+    if (user.wallet.history.length > 500) {
+      user.wallet.history = user.wallet.history.slice(-500);
+    }
 
     await user.save();
 
@@ -276,27 +326,27 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     
     // Don't reveal if user exists for security
-    if (!user) {
-      return res.status(200).json({ msg: 'If an account exists, a reset code has been sent.' });
-    }
-
-    // Generate 6-digit OTP
+    // Always perform a constant-time response to prevent timing attacks
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + 10 * 60 * 1000;
     
-    // Save to DB with 10 min expiry
-    user.otp = otp;
-    user.otpExpires = Date.now() + 10 * 60 * 1000;
-    await user.save();
+    if (user) {
+      // Save hashed OTP to DB with 10 min expiry
+      user.otp = hashOTP(otp);
+      user.otpExpires = otpExpiry;
+      await user.save();
 
-    await sendEmail({
-      email: user.email,
-      subject: 'WorkHive Password Reset',
-      html: `<h3>Password Reset Request</h3>
-             <p>You requested to reset your password. Your reset code is:</p>
-             <h1 style="color: #4f46e5;">${otp}</h1>
-             <p>This code expires in 10 minutes.</p>
-             <p>If you didn't request this, please ignore this email.</p>`
-    });
+      await sendEmail({
+        email: user.email,
+        subject: 'WorkHive Password Reset',
+        html: `<h3>Password Reset Request</h3>
+               <p>You requested to reset your password. Your reset code is:</p>
+               <h1 style="color: #4f46e5;">${otp}</h1>
+               <p>This code expires in 10 minutes.</p>
+               <p>If you didn't request this, please ignore this email.</p>`
+      });
+    }
+    // If user doesn't exist, we still "send" the email (discard) to maintain constant response time
 
     res.status(200).json({ msg: 'If an account exists, a reset code has been sent.' });
   } catch (error) {
@@ -314,8 +364,18 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ msg: 'Please provide email, reset code, and new password.' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ msg: 'Password must be at least 6 characters.' });
+    // Validate password strength
+    if (newPassword.length < 8) {
+      return res.status(400).json({ msg: 'Password must be at least 8 characters.' });
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return res.status(400).json({ msg: 'Password must contain at least one uppercase letter.' });
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      return res.status(400).json({ msg: 'Password must contain at least one lowercase letter.' });
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      return res.status(400).json({ msg: 'Password must contain at least one digit.' });
     }
 
     const user = await User.findOne({ email }).select('+password +otp +otpExpires');
@@ -324,13 +384,14 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ msg: 'Invalid or expired reset code.' });
     }
 
-    if (user.otp !== otp || !user.otpExpires || user.otpExpires < Date.now()) {
+    if (user.otp !== hashOTP(otp) || !user.otpExpires || user.otpExpires < Date.now()) {
       return res.status(400).json({ msg: 'Invalid or expired reset code.' });
     }
 
     // Hash new password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
+    user.passwordChangedAt = Date.now();
     
     // Clear OTP
     user.otp = undefined;

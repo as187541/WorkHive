@@ -1,12 +1,14 @@
 // src/pages/WorkspaceDetail.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useSocket } from '../contexts/SocketContext';
 import CreateProjectModal from '../components/CreateProjectModal';
 import KanbanBoard from '../components/KanbanBoard';
 import CreateTaskModal from '../components/CreateTaskModal';
 import TaskDetailDrawer from '../components/TaskDetailDrawer';
+import TokenTransferModal from '../components/TokenTransferModal';
 
 const WorkspaceDetail = () => {
   const { workspaceId } = useParams();
@@ -36,6 +38,7 @@ const WorkspaceDetail = () => {
   // Modal States
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   // Permission logic
   const currentUserIdStr = String(user?._id || user?.id || "");
@@ -345,6 +348,9 @@ if (selectedProject) {
           <p className="page-description">{workspace.description || 'Workspace overview'}</p>
         </div>
         <div className="header-actions">
+          <button className="btn btn-secondary" onClick={() => setIsTransferModalOpen(true)}>
+            💸 Transfer Tokens
+          </button>
           <button className="btn btn-secondary btn-danger-text" onClick={handleDeleteWorkspace}>
             {isAdmin ? '🗑️ Delete Workspace' : '🚪 Leave Workspace'}
           </button>
@@ -658,6 +664,15 @@ if (selectedProject) {
         workspaceId={workspaceId}
         onTaskUpdate={handleTaskUpdate} // Pass the sync function here
       />
+      {isTransferModalOpen && (
+        <TokenTransferModal
+          workspace={workspace}
+          onClose={() => setIsTransferModalOpen(false)}
+          onSuccess={() => {
+            toast.success('Transfer completed!');
+          }}
+        />
+      )}
     </div>
   );
 };

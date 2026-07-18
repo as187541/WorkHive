@@ -48,7 +48,9 @@ const getWorkspaceOverview = async (req, res) => {
       workspace.members.length,
       User.aggregate([
         { $match: { 'wallet.workspaces.workspace': wsOid } },
-        { $group: { _id: null, totalTokens: { $sum: '$wallet.balance' } } }
+        { $unwind: '$wallet.workspaces' },
+        { $match: { 'wallet.workspaces.workspace': wsOid } },
+        { $group: { _id: null, totalTokens: { $sum: '$wallet.workspaces.balance' } } }
       ])
     ]);
 

@@ -4,7 +4,7 @@ import { NavLink, useParams } from 'react-router-dom';
 import {
   FiLayout, FiFolder, FiUsers, FiPackage, FiBriefcase,
   FiMessageSquare, FiClipboard, FiShoppingBag,
-  FiShield, FiCheckSquare, FiActivity, FiUserPlus, FiEdit3, FiSend, FiBarChart2, FiZap
+  FiShield, FiCheckSquare, FiActivity, FiUserPlus, FiBarChart2, FiZap, FiPlusSquare
 } from 'react-icons/fi';
 import api from '../services/api';
 
@@ -53,9 +53,8 @@ const Sidebar = ({ user, workspaces, collaborators, onInviteClick, onUserClick, 
     { to: '/activity-log', icon: FiActivity, label: 'Activity Log' },
     { to: '/talent', icon: FiUsers, label: 'Talent Marketplace' },
     { to: '/services', icon: FiPackage, label: 'Services' },
+    { to: '/my-services', icon: FiPlusSquare, label: 'My Services' },
     { to: '/jobs', icon: FiClipboard, label: 'Jobs' },
-    { to: '/my-jobs', icon: FiEdit3, label: 'My Job Postings' },
-    { to: '/my-proposals', icon: FiSend, label: 'My Proposals' },
     { to: '/messages', icon: FiMessageSquare, label: 'Messages' },
     { to: '/connections', icon: FiUserPlus, label: 'Connections' },
     { to: '/hire-invitations', icon: FiBriefcase, label: 'Hire Invitations' },

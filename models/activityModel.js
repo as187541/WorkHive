@@ -40,7 +40,9 @@ const activitySchema = new mongoose.Schema({
       'order_accepted',
       'order_cancelled',
       'order_disputed',
-      'order_revision'
+      'order_revision',
+      'redemption_approved',
+      'redemption_denied'
     ]
   },
   target: {

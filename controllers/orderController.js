@@ -721,11 +721,25 @@ const resolveDispute = async (req, res) => {
     // Verify resolver is workspace admin or SuperAdmin
     if (req.user.role !== 'SuperAdmin') {
       const workspace = await Workspace.findById(order.workspace);
+      if (!workspace) {
+        return res.status(404).json({ msg: 'Workspace not found.' });
+      }
       const memberRecord = workspace.members.find(m => m.user.equals(req.user._id));
       if (!memberRecord || memberRecord.role !== 'Admin') {
         return res.status(403).json({ msg: 'Only workspace admins or SuperAdmins can resolve disputes.' });
       }
     }
+
+    // Additional RBAC: Log dispute resolution for audit trail
+    const { logAuditAction } = require('../middleware/auditMiddleware');
+    await logAuditAction(req, 'DISPUTE_RESOLVED', 'Order', order._id, {
+      outcome,
+      resolution: resolution || '',
+      previousStatus: order.status,
+      buyer: order.buyer,
+      seller: order.seller,
+      workspace: order.workspace
+    });
 
     // Handle financial resolution
     if (order.currency === 'HT') {

@@ -23,6 +23,11 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ msg: 'User not found' });
       }
 
+      // Check if password was changed after token was issued
+      if (req.user.passwordChangedAt && decoded.iat * 1000 < req.user.passwordChangedAt.getTime()) {
+        return res.status(401).json({ msg: 'Password recently changed. Please log in again.' });
+      }
+
       // If everything is good, proceed to the next function (the controller)
       next();
     } catch (error) {

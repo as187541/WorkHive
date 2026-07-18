@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import ServicePackageCard from '../components/ServicePackageCard';
 import OrderServiceModal from '../components/OrderServiceModal';
@@ -93,6 +94,9 @@ const ServicePackagesMarketplace = () => {
           <h1>Services Marketplace</h1>
           <p>Browse predefined service packages from talented freelancers</p>
         </div>
+        <Link to="/my-services" className="btn btn-primary">
+          + My Services
+        </Link>
       </header>
 
       <div className="marketplace-toolbar">

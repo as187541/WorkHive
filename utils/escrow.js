@@ -21,10 +21,46 @@ const calculateSellerPayout = (amount, platformFee) => {
 /**
  * Generate a sequential invoice number.
  * Format: INV-YYYYMMDD-XXXX
+ * Uses a persistent counter stored in a simple JSON file to survive restarts.
  */
-let invoiceCounter = 0;
+const fs = require('fs');
+const path = require('path');
+
+const COUNTER_FILE = path.join(process.cwd(), 'data', 'invoice-counter.json');
+
+const loadCounter = () => {
+  try {
+    if (fs.existsSync(COUNTER_FILE)) {
+      const data = JSON.parse(fs.readFileSync(COUNTER_FILE, 'utf8'));
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      if (data.date === today) {
+        return data.counter;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load invoice counter:', err.message);
+  }
+  return 0;
+};
+
+const saveCounter = (counter) => {
+  try {
+    const dir = path.dirname(COUNTER_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    fs.writeFileSync(COUNTER_FILE, JSON.stringify({ date: today, counter }), 'utf8');
+  } catch (err) {
+    console.error('Failed to save invoice counter:', err.message);
+  }
+};
+
+let invoiceCounter = loadCounter();
+
 const generateInvoiceNumber = () => {
   invoiceCounter += 1;
+  saveCounter(invoiceCounter);
   const now = new Date();
   const dateStr = now.getFullYear().toString() +
     String(now.getMonth() + 1).padStart(2, '0') +

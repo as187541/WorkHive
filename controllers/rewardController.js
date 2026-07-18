@@ -27,6 +27,9 @@ exports.redeemReward = async (req, res) => {
       reason: `Redeemed: ${reward.title}`,
       date: new Date()
     });
+    if (user.wallet.history.length > 500) {
+      user.wallet.history = user.wallet.history.slice(-500);
+    }
 
     await user.save();
     res.status(200).json({ msg: "Redemption successful!", newBalance: user.wallet.balance });

@@ -1,0 +1,91 @@
+<mxGraphModel dx="1426" dy="709" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    
+    <!-- Authentication Flow - Page 4 -->
+    
+    <!-- Title -->
+    <mxCell id="2" value="WorkHive Authentication &amp; Authorization Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="20" width="400" height="40" as="geometry"/>
+    </mxCell>
+    
+    <!-- Registration Flow -->
+    <mxCell id="3" value="📝 Registration Flow" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#0066CC;fillColor=#E6F2FF;gradientColor=#0066CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="80" width="500" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="4" value="1. User fills registration form&#xa;   (name, email, password)&#xa;&#xa;2. Frontend → POST /api/v1/auth/register&#xa;   Body: { name, email, password }&#xa;&#xa;3. Backend (authController.register):&#xa;   - Validate email format&#xa;   - Check if email exists&#xa;   - Hash password (bcryptjs)&#xa;   - Create User document&#xa;   - Generate 6-digit OTP&#xa;   - Set otpExpires = 10 minutes&#xa;&#xa;4. Send OTP email via Nodemailer&#xa;   - Uses Gmail SMTP&#xa;   - HTML template with OTP code&#xa;&#xa;5. Return success response&#xa;   - User created, pending verification" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="70" y="130" width="460" height="310" as="geometry"/>
+    </mxCell>
+    
+    <!-- OTP Verification Flow -->
+    <mxCell id="5" value="✉️ OTP Verification Flow" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#009900;fillColor=#E6FFE6;gradientColor=#009900;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="80" width="500" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="6" value="1. User receives email with OTP&#xa;&#xa;2. User enters OTP in frontend&#xa;&#xa;3. Frontend → POST /api/v1/auth/otp/verify&#xa;   Body: { email, otp }&#xa;&#xa;4. Backend (authController.verifyOTP):&#xa;   - Find user by email&#xa;   - Check OTP matches&#xa;   - Check OTP not expired (&lt; 10 min)&#xa;   - Clear otp and otpExpires fields&#xa;   - Mark account as verified&#xa;&#xa;5. Generate JWT token&#xa;   - Payload: { userId, role, iat, exp }&#xa;   - Expires in 7 days&#xa;   - Signed with JWT_SECRET&#xa;&#xa;6. Return token to frontend&#xa;   - Frontend stores in localStorage&#xa;   - Used for all authenticated requests" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="620" y="130" width="460" height="310" as="geometry"/>
+    </mxCell>
+    
+    <!-- Login Flow -->
+    <mxCell id="7" value="🔐 Login Flow" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#FF6600;fillColor=#FFF2E6;gradientColor=#FF6600;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="1150" y="80" width="400" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="8" value="1. User enters email &amp; password&#xa;&#xa;2. Frontend → POST /api/v1/auth/login&#xa;   Body: { email, password }&#xa;&#xa;3. Backend (authController.login):&#xa;   - Find user by email&#xa;   - Check if user exists&#xa;   - Check if OTP verified (no otp field)&#xa;   - Compare password (bcrypt.compare)&#xa;   - Check role for admin login&#xa;&#xa;4. Generate JWT token&#xa;   - Payload: { userId, role, iat, exp }&#xa;   - Expires in 7 days&#xa;&#xa;5. Return response&#xa;   {&#xa;     token: &quot;eyJhbGc...&quot;,&#xa;     user: { _id, name, email, role, avatar }&#xa;   }&#xa;&#xa;6. Frontend stores token &amp; user data&#xa;   - localStorage.setItem('token')&#xa;   - localStorage.setItem('user')" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="1170" y="130" width="360" height="310" as="geometry"/>
+    </mxCell>
+    
+    <!-- JWT Authentication Middleware -->
+    <mxCell id="9" value="🛡️ JWT Authentication Middleware" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9933CC;fillColor=#F2E6FF;gradientColor=#9933CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="500" width="500" height="340" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="10" value="Every Protected Request Flow:&#xa;&#xa;1. Frontend sends request with header:&#xa;   Authorization: Bearer eyJhbGciOiJIUzI1NiIs...&#xa;&#xa;2. Backend middleware/authMiddleware.js (protect):&#xa;   - Extract token from header&#xa;   - Verify token signature (jwt.verify)&#xa;   - Check token not expired&#xa;   - Decode payload to get userId&#xa;&#xa;3. Find user in database:&#xa;   - User.findById(decoded.userId)&#xa;   - Exclude password field&#xa;   - Attach to req.user&#xa;&#xa;4. If user not found:&#xa;   - Return 401 &quot;User not found&quot;&#xa;&#xa;5. If token invalid/expired:&#xa;   - Return 401 &quot;Not authorized, token failed&quot;&#xa;&#xa;6. If no token provided:&#xa;   - Return 401 &quot;Not authorized, no token&quot;&#xa;&#xa;7. If all checks pass:&#xa;   - Call next() to proceed to controller" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="70" y="550" width="460" height="280" as="geometry"/>
+    </mxCell>
+    
+    <!-- Role-Based Authorization -->
+    <mxCell id="11" value="👑 Role-Based Authorization" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#CC0000;fillColor=#FFE6E6;gradientColor=#CC0000;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="500" width="500" height="340" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="12" value="Role Hierarchy:&#xa;- SuperAdmin: Full system access&#xa;- User: Regular user access&#xa;- Contractor/Guest: Limited project access&#xa;&#xa;Admin Routes (/admin/*):&#xa;- authorizeRoles('SuperAdmin')&#xa;- Blocks all non-admin users&#xa;- Returns 403 Forbidden&#xa;&#xa;Workspace Admin Access:&#xa;- Checked by member role in Workspace&#xa;- Admin: Full workspace control&#xa;- Collaborator: Standard access&#xa;- Contractor/Guest: Restricted access&#xa;&#xa;Contractor Restrictions (contractorMiddleware):&#xa;- Blocked: Admin routes, billing, other workspaces&#xa;- Allowed:&#xa;  • Their assigned projects&#xa;  • Task management&#xa;  • Comments&#xa;  • Hire invitations (accept/reject)&#xa;  • Talent browsing&#xa;  • Profile updates&#xa;&#xa;Frontend Route Protection:&#xa;- AdminRoute component checks user.role&#xa;- Redirects if not SuperAdmin" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="620" y="550" width="460" height="280" as="geometry"/>
+    </mxCell>
+    
+    <!-- Socket.IO Authentication -->
+    <mxCell id="13" value="🔌 Socket.IO Authentication" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#0099CC;fillColor=#E6F7FF;gradientColor=#0099CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="1150" y="500" width="400" height="340" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="14" value="Connection Flow:&#xa;&#xa;1. Frontend creates Socket.IO connection:&#xa;   io('http://localhost:5000', {&#xa;     auth: { token: localStorage.getItem('token') }&#xa;   })&#xa;&#xa;2. Socket.IO middleware validates:&#xa;   - Extracts token from handshake.auth&#xa;   - Verifies JWT (same as HTTP)&#xa;   - Finds user, attaches to socket.userId&#xa;&#xa;3. If auth fails:&#xa;   - next(new Error('Authentication error'))&#xa;   - Connection rejected&#xa;&#xa;4. If auth succeeds:&#xa;   - User joins personal room: user:{userId}&#xa;   - Can join conversation rooms&#xa;   - Can join workspace rooms&#xa;   - Can join project rooms&#xa;&#xa;5. Real-time events:&#xa;   - typing/stop_typing&#xa;   - new_message&#xa;   - task_updated&#xa;   - notification&#xa;&#xa;6. Rooms used:&#xa;   - user:{userId} - Personal notifications&#xa;   - conversation:{id} - Chat messages&#xa;   - workspace:{id} - Workspace updates&#xa;   - project:{id} - Project updates" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="1170" y="550" width="360" height="280" as="geometry"/>
+    </mxCell>
+    
+    <!-- Security Features -->
+    <mxCell id="15" value="🔒 Security Features" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#F5F5F5;gradientColor=#666666;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="880" width="1500" height="240" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="16" value="Password Security:&#xa;- bcryptjs hashing (salt rounds: 10)&#xa;- Passwords never stored in plain text&#xa;- Minimum 6 characters&#xa;- Excluded from JSON responses (select: false)&#xa;&#xa;JWT Token Security:&#xa;- Signed with JWT_SECRET (from .env)&#xa;- 7-day expiration&#xa;- Verified on every request&#xa;- Invalidated if user deleted&#xa;&#xa;OTP Security:&#xa;- 6-digit random code&#xa;- 10-minute expiration&#xa;- Single use (cleared after verification)&#xa;- Sent via secure email&#xa;&#xa;CORS Protection:&#xa;- Configured allowed origins&#xa;- Dynamic Netlify preview support&#xa;- Credentials enabled for cookies&#xa;- Blocks unauthorized cross-origin requests&#xa;&#xa;Input Validation:&#xa;- Email format regex validation&#xa;- String length limits (maxlength)&#xa;- Enum validation for roles/statuses&#xa;- Number range validation (min/max)&#xa;&#xa;Audit Logging:&#xa;- All admin actions logged&#xa;- IP address tracking&#xa;- User agent recording&#xa;- Timestamp for all actions&#xa;&#xa;Contractor Isolation:&#xa;- Restricted workspace access&#xa;- Limited API endpoint access&#xa;- Project-scoped permissions&#xa;- Cannot access admin features" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=11" parent="1" vertex="1">
+      <mxGeometry x="70" y="930" width="1460" height="180" as="geometry"/>
+    </mxCell>
+    
+    <!-- Arrows showing flow -->
+    <mxCell id="17" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#333333;" parent="1" edge="1">
+      <mxGeometry width="50" height="50" relative="1" as="geometry">
+        <mxPoint x="560" y="270" as="sourcePoint"/>
+        <mxPoint x="590" y="270" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    
+    <mxCell id="18" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#333333;" parent="1" edge="1">
+      <mxGeometry width="50" height="50" relative="1" as="geometry">
+        <mxPoint x="1110" y="270" as="sourcePoint"/>
+        <mxPoint x="1140" y="270" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
