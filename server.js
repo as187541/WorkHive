@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const http = require('http');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
 
 // --- CONFIGURATION FIRST ---
 // Load environment variables from .env file BEFORE anything else
@@ -26,6 +28,7 @@ const connectionRouter = require('./routes/connectionRoutes');
 const orderRouter = require('./routes/orderRoutes');
 const analyticsRouter = require('./routes/analyticsRoutes');
 const automationRouter = require('./routes/automationRoutes');
+const transferRouter = require('./routes/transferRoutes');
 const { initSocket } = require('./utils/socket');
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,11 +38,27 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:5173', 'http://localhost:3000'];
 
+// Dynamic origin check: allow any Netlify deploy preview URL and configured origins
+const corsOriginCheck = (origin, callback) => {
+  // Allow requests with no origin (mobile apps, curl, server-to-server)
+  if (!origin) return callback(null, true);
+
+  const isAllowed = allowedOrigins.some(o => o === origin);
+  const isNetlifyPreview = /\.netlify\.app$/i.test(origin);
+
+  if (isAllowed || isNetlifyPreview) {
+    return callback(null, true);
+  }
+  return callback(new Error('Not allowed by CORS'));
+};
+
 app.use(cors({
-  origin: allowedOrigins,
+  origin: corsOriginCheck,
   credentials: true
 }));
-app.use(express.json());
+app.use(helmet());
+app.use(express.json({ limit: '10kb' }));
+app.use(mongoSanitize());
 
 // --- API ROUTES ---
 app.get('/', (req, res) => {
@@ -71,8 +90,28 @@ app.use('/api/v1/tasks', taskRouter);
 app.use('/api/v1/activities', activityRouter);
 app.use('/api/v1/connections', connectionRouter);
 app.use('/api/v1/orders', orderRouter);
+app.use('/api/v1/transfers', transferRouter);
 app.use('/api/v1/analytics', analyticsRouter);
 app.use('/api/v1/automations', automationRouter);
+
+// --- GLOBAL ERROR HANDLING ---
+app.use((err, req, res, next) => {
+  if (err.name === 'CastError' && err.kind === 'ObjectId') {
+    return res.status(400).json({
+      msg: `Invalid ${err.path}: ${err.value} is not a valid ID format`
+    });
+  }
+
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ msg: 'Invalid JSON in request body' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ msg: 'Request body too large' });
+  }
+
+  console.error('Unhandled error:', err);
+  res.status(500).json({ msg: 'Server Error' });
+});
 
 // --- STARTUP LOGIC ---
 const startServer = async () => {

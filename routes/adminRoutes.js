@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/adminMiddleware');
+const { validateObjectId } = require('../middleware/validateObjectId');
 
 const {
   getAllUsers,
@@ -17,8 +18,8 @@ const {
   getAnalytics
 } = require('../controllers/adminController');
 
-// Apply authentication and SuperAdmin authorization to ALL routes below
-router.use(protect, authorizeRoles('SuperAdmin'));
+// Apply authentication, SuperAdmin authorization, and ID validation to ALL routes below
+router.use(protect, authorizeRoles('SuperAdmin'), validateObjectId);
 
 // ─── User Management ───
 router.get('/users', getAllUsers);

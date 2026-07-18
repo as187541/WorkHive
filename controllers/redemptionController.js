@@ -5,11 +5,19 @@ const Project = require('../models/projectModel');
 const { logAuditAction } = require('../middleware/auditMiddleware');
 const { emitRedemptionNotification, emitNotification } = require('../utils/socket');
 const { processTrigger } = require('../utils/automationEngine');
+const { logActivity } = require('../controllers/activityController');
 
 // Helper: Build scope query for approvers
+// SECURITY: This function only uses internally-derived values (userId, userRole)
+// and database-fetched IDs. It does NOT accept user-controlled input for query construction.
 const buildScopeQuery = async (userId, userRole) => {
   if (userRole === 'SuperAdmin') {
     return {}; // No filter — sees everything
+  }
+
+  // Validate inputs to prevent injection
+  if (!userId || typeof userId !== 'string' || !/^[a-f\d]{24}$/i.test(userId)) {
+    return { _id: null }; // Invalid userId = impossible query
   }
 
   // Find workspaces where user is Admin
@@ -230,14 +238,25 @@ const getAllRequests = async (req, res) => {
  */
 const getMyRequests = async (req, res) => {
   try {
-    const requests = await RedemptionRequest.find({ user: req.user._id })
-      .populate('workspace', 'name')
-      .populate('project', 'name')
-      .sort({ requestedAt: -1 });
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [requests, total] = await Promise.all([
+      RedemptionRequest.find({ user: req.user._id })
+        .populate('workspace', 'name')
+        .populate('project', 'name')
+        .sort({ requestedAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      RedemptionRequest.countDocuments({ user: req.user._id })
+    ]);
 
     res.status(200).json({
       success: true,
       count: requests.length,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
       data: requests
     });
   } catch (error) {
@@ -284,45 +303,41 @@ const approveRequest = async (req, res) => {
       return res.status(403).json({ msg: 'You are not authorized to approve this request.' });
     }
 
-    // Self-approval check: user cannot approve their own request
-    if (request.user._id.toString() === req.user._id.toString()) {
-      return res.status(403).json({ msg: 'You cannot approve your own redemption request.' });
-    }
-
-    // Check user still has enough workspace-specific balance
-    const user = await User.findById(request.user._id);
-
-    // Ensure wallet exists
-    if (!user.wallet) {
-      user.wallet = { balance: 0, workspaces: [], history: [] };
-    }
-
-    const workspaceId = request.workspace.toString();
-    const workspaceBalance = (user.wallet.workspaces || []).find(
-      w => w.workspace.toString() === workspaceId
+    // Check user still has enough workspace-specific balance using atomic operation
+    const workspaceIdStr = request.workspace.toString();
+    const atomicResult = await User.findOneAndUpdate(
+      { 
+        _id: request.user._id,
+        'wallet.workspaces.workspace': request.workspace,
+        'wallet.workspaces.balance': { $gte: request.cost }
+      },
+      {
+        $inc: {
+          'wallet.balance': -request.cost,
+          'wallet.workspaces.$.balance': -request.cost
+        },
+        $push: {
+          'wallet.history': {
+            $each: [{
+              amount: -request.cost,
+              reason: `Redeemed: ${request.rewardTitle}`,
+              workspace: request.workspace,
+              date: new Date()
+            }],
+            $slice: -500
+          }
+        }
+      },
+      { new: true }
     );
-    const availableBalance = workspaceBalance ? workspaceBalance.balance : 0;
 
-    if (availableBalance < request.cost) {
+    if (!atomicResult) {
       request.status = 'Denied';
       request.processedAt = new Date();
       request.processedBy = req.user._id;
       await request.save();
-      return res.status(400).json({ msg: `User no longer has sufficient balance in this workspace (${availableBalance} HT available). Request auto-denied.` });
+      return res.status(400).json({ msg: `User no longer has sufficient balance in this workspace. Request auto-denied.` });
     }
-
-    // Deduct tokens from workspace-specific balance
-    user.wallet.balance -= request.cost;
-    if (workspaceBalance) {
-      workspaceBalance.balance -= request.cost;
-    }
-    user.wallet.history.push({
-      amount: -request.cost,
-      reason: `Redeemed: ${request.rewardTitle}`,
-      workspace: request.workspace,
-      date: new Date()
-    });
-    await user.save();
 
     // Update request
     request.status = 'Approved';
@@ -338,13 +353,20 @@ const approveRequest = async (req, res) => {
       data: { requestId: request._id, rewardTitle: request.rewardTitle, cost: request.cost }
     });
 
+    // Log activity for the requester
+    await logActivity(request.user._id, 'redemption_approved', `Redeemed: ${request.rewardTitle}`, {
+      workspace: request.workspace,
+      project: request.project || undefined,
+      metadata: { requestId: request._id, rewardTitle: request.rewardTitle, cost: request.cost }
+    });
+
     // Log audit
-    await logAuditAction(req, 'TOKEN_ALTER', 'User', user._id, {
+    await logAuditAction(req, 'TOKEN_ALTER', 'User', atomicResult._id, {
       action: 'Redemption Approved',
       rewardTitle: request.rewardTitle,
       cost: request.cost,
-      previousBalance: user.wallet.balance + request.cost,
-      newBalance: user.wallet.balance
+      previousBalance: atomicResult.wallet.balance + request.cost,
+      newBalance: atomicResult.wallet.balance
     });
 
     res.status(200).json({
@@ -381,11 +403,6 @@ const denyRequest = async (req, res) => {
       return res.status(403).json({ msg: 'You are not authorized to deny this request.' });
     }
 
-    // Self-approval check: user cannot deny their own request
-    if (request.user.toString() === req.user._id.toString()) {
-      return res.status(403).json({ msg: 'You cannot deny your own redemption request.' });
-    }
-
     request.status = 'Denied';
     request.processedAt = new Date();
     request.processedBy = req.user._id;
@@ -397,6 +414,13 @@ const denyRequest = async (req, res) => {
       title: 'Redemption Denied',
       message: `Your request for "${request.rewardTitle}" was denied.`,
       data: { requestId: request._id, rewardTitle: request.rewardTitle }
+    });
+
+    // Log activity for the requester
+    await logActivity(request.user, 'redemption_denied', `Denied: ${request.rewardTitle}`, {
+      workspace: request.workspace,
+      project: request.project || undefined,
+      metadata: { requestId: request._id, rewardTitle: request.rewardTitle }
     });
 
     res.status(200).json({

@@ -1,6 +1,8 @@
 // routes/workspaceRoutes.js
 const express = require('express');
 const router = express.Router();
+const { validate } = require('../middleware/validationSchemas');
+const { createWorkspaceSchema } = require('../middleware/validationSchemas');
 
 // 1. IMPORT the project router to handle nested routes
 const projectRouter = require('./projectRoutes'); 
@@ -24,7 +26,7 @@ router.use(protect);
 // Global Workspace routes
 router.route('/')
   .get(getWorkspaces)
-  .post(createWorkspace);
+  .post(validate(createWorkspaceSchema), createWorkspace);
 
 // Invitation routes
 router.get('/invitations/me', getMyInvitations);

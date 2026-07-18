@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/multer');
+const { authLimiter, forgotPasswordLimiter } = require('../middleware/rateLimiter');
+const { validate } = require('../middleware/validationSchemas');
+const {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  updateProfileSchema
+} = require('../middleware/validationSchemas');
 
 const { 
   register, 
@@ -20,17 +29,17 @@ const {
 
 const { protect } = require('../middleware/authMiddleware');
 
-// Public routes
-router.post('/register', register);
-router.post('/login', login);
-router.post('/google', googleLogin);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+// Public routes — with rate limiting and validation
+router.post('/register', authLimiter, validate(registerSchema), register);
+router.post('/login', authLimiter, validate(loginSchema), login);
+router.post('/google', authLimiter, googleLogin);
+router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post('/reset-password', authLimiter, validate(resetPasswordSchema), resetPassword);
 
 // Protected routes
 router.get('/me', protect, getMe);
 router.post('/request-otp', protect, requestOTP);
-router.patch('/update-profile', protect, upload.single('avatar'), updateProfile);
+router.patch('/update-profile', protect, upload.single('avatar'), validate(updateProfileSchema), updateProfile);
 router.get('/user/:id', protect, getUserProfile);
 router.post('/redeem', protect, redeemTokens);
 

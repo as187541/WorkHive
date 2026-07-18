@@ -15,7 +15,7 @@ const { emitNotification } = require('../utils/socket');
  */
 const createJobPosting = async (req, res) => {
   try {
-    const { title, description, category, skills, budget, deadline, visibility, workspaceId, projectId } = req.body;
+    const { title, description, category, subCategory, tags, experienceLevel, projectType, skills, budget, deadline, visibility, workspaceId, projectId } = req.body;
 
     if (!title || !description || !category) {
       return res.status(400).json({ msg: 'Please provide title, description, and category.' });
@@ -40,6 +40,10 @@ const createJobPosting = async (req, res) => {
       title,
       description,
       category,
+      subCategory: subCategory || undefined,
+      tags: tags || [],
+      experienceLevel: experienceLevel || 'Mid',
+      projectType: projectType || 'One-time',
       skills: skills || [],
       budget: budget || {},
       deadline: deadline || undefined,
@@ -66,11 +70,23 @@ const createJobPosting = async (req, res) => {
  */
 const browseJobPostings = async (req, res) => {
   try {
-    const { category, skills, minBudget, maxBudget, search, status, visibility, sort, page = 1, limit = 12 } = req.query;
+    const { category, subCategory, experienceLevel, projectType, skills, minBudget, maxBudget, search, status, visibility, sort, page = 1, limit = 12 } = req.query;
     const query = { status: { $in: ['Open', 'In Progress'] }, approvalStatus: 'Approved' };
 
     if (category) {
       query.category = { $regex: category, $options: 'i' };
+    }
+
+    if (subCategory) {
+      query.subCategory = { $regex: subCategory, $options: 'i' };
+    }
+
+    if (experienceLevel) {
+      query.experienceLevel = experienceLevel;
+    }
+
+    if (projectType) {
+      query.projectType = projectType;
     }
 
     if (skills) {

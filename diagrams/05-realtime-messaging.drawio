@@ -1,0 +1,85 @@
+<mxGraphModel dx="1426" dy="709" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    
+    <!-- Real-time Messaging & WebSocket - Page 5 -->
+    
+    <!-- Title -->
+    <mxCell id="2" value="WorkHive Real-time Messaging &amp; WebSocket Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="500" y="20" width="600" height="40" as="geometry"/>
+    </mxCell>
+    
+    <!-- Socket.IO Server Setup -->
+    <mxCell id="3" value="🔌 Socket.IO Server Setup" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#0066CC;fillColor=#E6F2FF;gradientColor=#0066CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="80" width="500" height="320" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="4" value="Server Configuration (utils/socket.js):&#xa;&#xa;1. HTTP Server Creation:&#xa;   const httpServer = http.createServer(app)&#xa;   initSocket(httpServer)&#xa;&#xa;2. Socket.IO Initialization:&#xa;   io = new Server(httpServer, {&#xa;     cors: {&#xa;       origin: allowedOrigins,&#xa;       methods: ['GET', 'POST'],&#xa;       credentials: true&#xa;     }&#xa;   })&#xa;&#xa;3. Authentication Middleware:&#xa;   io.use(async (socket, next) =&gt; {&#xa;     const token = socket.handshake.auth.token&#xa;     const decoded = jwt.verify(token, JWT_SECRET)&#xa;     const user = await User.findById(decoded.userId)&#xa;     socket.userId = user._id&#xa;     socket.user = user&#xa;     socket.join(`user:${user._id}`)&#xa;     next()&#xa;   })&#xa;&#xa;4. Connection Handler:&#xa;   io.on('connection', (socket) =&gt; {&#xa;     // Handle events&#xa;   })" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="70" y="130" width="460" height="260" as="geometry"/>
+    </mxCell>
+    
+    <!-- Socket.IO Client Setup -->
+    <mxCell id="5" value="📱 Socket.IO Client Setup" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#009900;fillColor=#E6FFE6;gradientColor=#009900;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="80" width="500" height="320" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="6" value="Frontend Configuration (SocketContext.jsx):&#xa;&#xa;1. Socket Provider Setup:&#xa;   const SocketProvider = ({ children }) =&gt; {&#xa;     useEffect(() =&gt; {&#xa;       const token = localStorage.getItem('token')&#xa;       const newSocket = io(VITE_SOCKET_URL, {&#xa;         auth: { token },&#xa;         transports: ['polling', 'websocket'],&#xa;         reconnection: true,&#xa;         reconnectionAttempts: 5&#xa;       })&#xa;       setSocket(newSocket)&#xa;     }, [])&#xa;   }&#xa;&#xa;2. Connection Events:&#xa;   newSocket.on('connect', () =&gt; {&#xa;     console.log('🔌 Socket connected')&#xa;     setConnected(true)&#xa;   })&#xa;   &#xa;   newSocket.on('disconnect', (reason) =&gt; {&#xa;     console.log('🔌 Socket disconnected:', reason)&#xa;     setConnected(false)&#xa;   })&#xa;&#xa;3. Helper Functions:&#xa;   - joinConversation(conversationId)&#xa;   - leaveConversation(conversationId)&#xa;   - joinWorkspace(workspaceId)&#xa;   - joinProject(projectId)&#xa;   - sendTyping(conversationId)&#xa;   - stopTyping(conversationId)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="620" y="130" width="460" height="260" as="geometry"/>
+    </mxCell>
+    
+    <!-- Room Management -->
+    <mxCell id="7" value="🏠 Room Management" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#FF6600;fillColor=#FFF2E6;gradientColor=#FF6600;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="1150" y="80" width="400" height="320" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="8" value="Room Types &amp; Usage:&#xa;&#xa;1. Personal Room (auto-joined on connect):&#xa;   Room: user:{userId}&#xa;   Purpose: Personal notifications&#xa;   Emitted to: Single user&#xa;&#xa;2. Conversation Rooms:&#xa;   Room: conversation:{conversationId}&#xa;   Purpose: Real-time chat messages&#xa;   Events:&#xa;     - join_conversation&#xa;     - leave_conversation&#xa;     - typing&#xa;     - stop_typing&#xa;   Participants: 2 users (1-on-1 chat)&#xa;&#xa;3. Workspace Rooms:&#xa;   Room: workspace:{workspaceId}&#xa;   Purpose: Workspace-wide updates&#xa;   Events:&#xa;     - join_workspace&#xa;     - leave_workspace&#xa;   Participants: All workspace members&#xa;   Used for: Task updates, announcements&#xa;&#xa;4. Project Rooms:&#xa;   Room: project:{projectId}&#xa;   Purpose: Project-specific updates&#xa;   Events: join_project&#xa;   Participants: Project members &amp; contractors&#xa;   Used for: Task changes, milestone updates&#xa;&#xa;Room Lifecycle:&#xa;- Joined when user navigates to page&#xa;- Left when user leaves page/component unmounts" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="1170" y="130" width="360" height="260" as="geometry"/>
+    </mxCell>
+    
+    <!-- Message Sending Flow -->
+    <mxCell id="9" value="💬 Message Sending Flow" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#9933CC;fillColor=#F2E6FF;gradientColor=#9933CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="440" width="500" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="10" value="Step-by-Step Flow:&#xa;&#xa;1. User types message in MessagesPage.jsx&#xa;&#xa;2. Frontend sends HTTP POST request:&#xa;   POST /api/v1/messages/conversations/:id/messages&#xa;   Body: { content: &quot;Hello!&quot; }&#xa;   Headers: { Authorization: &quot;Bearer ...&quot; }&#xa;&#xa;3. Backend (messageController.sendMessage):&#xa;   - Validate conversation exists&#xa;   - Check user is participant&#xa;   - Create Message document:&#xa;     {&#xa;       conversation: conversationId,&#xa;       sender: req.user._id,&#xa;       content: messageContent&#xa;     }&#xa;   - Update Conversation.lastMessage&#xa;   - Save to database&#xa;&#xa;4. Emit Socket.IO event:&#xa;   io.to(`conversation:${conversationId}`)&#xa;     .emit('new_message', {&#xa;       _id: message._id,&#xa;       content: message.content,&#xa;       sender: { _id, name, avatar },&#xa;       createdAt: message.createdAt&#xa;     })&#xa;&#xa;5. All users in conversation room receive event&#xa;&#xa;6. Frontend (MessagesPage) listens:&#xa;   socket.on('new_message', (message) =&gt; {&#xa;     setMessages(prev =&gt; [...prev, message])&#xa;   })&#xa;&#xa;7. UI updates in real-time for all participants" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="70" y="490" width="460" height="320" as="geometry"/>
+    </mxCell>
+    
+    <!-- Typing Indicators -->
+    <mxCell id="11" value="⌨️ Typing Indicators" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#0099CC;fillColor=#E6F7FF;gradientColor=#0099CC;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="440" width="500" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="12" value="Typing Indicator Implementation:&#xa;&#xa;1. User starts typing in input field:&#xa;   Frontend detects input focus&#xa;&#xa;2. Frontend emits typing event:&#xa;   socket.emit('typing', { conversationId })&#xa;&#xa;3. Server receives 'typing' event:&#xa;   socket.on('typing', ({ conversationId }) =&gt; {&#xa;     socket.to(`conversation:${conversationId}`)&#xa;       .emit('user_typing', {&#xa;         conversationId,&#xa;         userId: socket.userId&#xa;       })&#xa;   })&#xa;&#xa;4. Other participants receive event:&#xa;   socket.on('user_typing', (data) =&gt; {&#xa;     setTypingUsers(prev =&gt; [...prev, data.userId])&#xa;   })&#xa;&#xa;5. UI displays &quot;User is typing...&quot;&#xa;&#xa;6. User stops typing (or after 2s timeout):&#xa;   socket.emit('stop_typing', { conversationId })&#xa;&#xa;7. Server broadcasts stop_typing:&#xa;   socket.to(`conversation:${id}`)&#xa;     .emit('user_stop_typing', { userId })&#xa;&#xa;8. Frontend removes user from typing list:&#xa;   socket.on('user_stop_typing', (data) =&gt; {&#xa;     setTypingUsers(prev =&gt; prev.filter(id =&gt; id !== data.userId))&#xa;   })&#xa;&#xa;9. &quot;Typing...&quot; indicator disappears" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="620" y="490" width="460" height="320" as="geometry"/>
+    </mxCell>
+    
+    <!-- Notification System -->
+    <mxCell id="13" value="🔔 Notification System" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#CC0000;fillColor=#FFE6E6;gradientColor=#CC0000;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="1150" y="440" width="400" height="380" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="14" value="Notification Events:&#xa;&#xa;1. emitNotification(userId, notification) - utils/socket.js:&#xa;   io.to(`user:${userId}`).emit('notification', {&#xa;     type: 'hire_invitation' | 'proposal' | 'task' | 'automation',&#xa;     title: 'New Hire Invitation',&#xa;     message: 'You have been invited to join a project',&#xa;     data: { invitationId, workspaceId, projectId },&#xa;     timestamp: Date.now()&#xa;   })&#xa;&#xa;2. Triggered from controllers:&#xa;   - hireController.sendInvite&#xa;   - proposalController.submit&#xa;   - taskController.assign&#xa;   - automationEngine.executeAction&#xa;&#xa;3. Frontend listens in SocketContext:&#xa;   socket.on('notification', (notification) =&gt; {&#xa;     // Show toast notification&#xa;     toast.success(notification.message)&#xa;     &#xa;     // Update notification badge&#xa;     setNotifications(prev =&gt; [notification, ...prev])&#xa;     &#xa;     // Increment unread count&#xa;     setUnreadCount(prev =&gt; prev + 1)&#xa;   })&#xa;&#xa;4. Notification Types:&#xa;   - hire_invitation: New project invite&#xa;   - proposal_submitted: New proposal on job&#xa;   - proposal_accepted: Your proposal accepted&#xa;   - task_assigned: New task assigned&#xa;   - task_completed: Task marked done&#xa;   - milestone_submitted: Work submitted&#xa;   - automation: Rule triggered&#xa;&#xa;5. NotificationDropdown component:&#xa;   - Displays list of notifications&#xa;   - Marks as read when viewed&#xa;   - Badge shows unread count" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="1170" y="490" width="360" height="320" as="geometry"/>
+    </mxCell>
+    
+    <!-- Real-time Task Updates -->
+    <mxCell id="15" value="📋 Real-time Task Updates" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#FF9900;fillColor=#FFF2E6;gradientColor=#FF9900;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="50" y="860" width="500" height="280" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="16" value="Task Update Flow:&#xa;&#xa;1. User updates task (status, assignment, etc.)&#xa;   Frontend → PATCH /api/v1/workspaces/:wsId/projects/:projId/tasks/:taskId&#xa;&#xa;2. Backend (taskController.update):&#xa;   - Update task in database&#xa;   - Log activity (activityController.logActivity)&#xa;   - Trigger automation rules (automationEngine)&#xa;&#xa;3. Emit Socket.IO events:&#xa;   io.to(`workspace:${workspaceId}`).emit('task_updated', {&#xa;     taskId: task._id,&#xa;     projectId: task.project,&#xa;     updates: { status, assignedTo, title }&#xa;   })&#xa;   &#xa;   io.to(`project:${projectId}`).emit('task_updated', { ... })&#xa;&#xa;4. All workspace/project members receive update:&#xa;   socket.on('task_updated', (data) =&gt; {&#xa;     // Update task in local state&#xa;     setTasks(prev =&gt; prev.map(t =&gt; &#xa;       t._id === data.taskId ? { ...t, ...data.updates } : t&#xa;     ))&#xa;     &#xa;     // Refresh Kanban board&#xa;     // Update task detail drawer&#xa;   })&#xa;&#xa;5. UI updates in real-time:&#xa;   - KanbanBoard.jsx re-renders&#xa;   - TaskDetailDrawer updates&#xa;   - Task status badges update&#xa;&#xa;6. Automation triggers (if configured):&#xa;   - Sends notifications&#xa;   - Awards tokens&#xa;   - Changes status of related tasks" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="70" y="910" width="460" height="220" as="geometry"/>
+    </mxCell>
+    
+    <!-- Connection Lifecycle -->
+    <mxCell id="17" value="🔄 Connection Lifecycle" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#F5F5F5;gradientColor=#666666;fontSize=16;fontStyle=1" parent="1" vertex="1">
+      <mxGeometry x="600" y="860" width="950" height="280" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="18" value="Connection States:&#xa;&#xa;1. Initial Connection:&#xa;   - User logs in, token stored&#xa;   - App mounts, SocketProvider initializes&#xa;   - Socket.IO connects with JWT token&#xa;   - Server authenticates, assigns userId&#xa;   - User joins personal room&#xa;   - Connection state: connected = true&#xa;&#xa;2. Active Usage:&#xa;   - User navigates pages&#xa;   - Joins conversation/workspace/project rooms&#xa;   - Sends/receives real-time events&#xa;   - Typing indicators active&#xa;   - Notifications received&#xa;&#xa;3. Reconnection Logic:&#xa;   - Network interruption detected&#xa;   - Socket.IO attempts reconnection (max 5 attempts)&#xa;   - Delay: 2s, 4s, 8s, 16s, 32s (exponential backoff)&#xa;   - Re-authenticates with same token&#xa;   - Rejoins rooms automatically&#xa;   - Connection state: connected = false → true&#xa;&#xa;4. Token Expiration:&#xa;   - JWT token expires (7 days)&#xa;   - Socket.IO auth fails&#xa;   - Connection rejected&#xa;   - User must re-login&#xa;   - New token obtained&#xa;   - Socket reconnects with new token&#xa;&#xa;5. Logout:&#xa;   - Frontend clears localStorage&#xa;   - SocketProvider unmounts&#xa;   - Socket closes connection&#xa;   - Server removes from all rooms&#xa;   - Connection state: connected = false&#xa;&#xa;6. Error Handling:&#xa;   - Invalid token → Authentication error&#xa;   - User not found → Connection rejected&#xa;   - Server down → Reconnection attempts&#xa;   - CORS error → Origin not allowed" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=10" parent="1" vertex="1">
+      <mxGeometry x="620" y="910" width="910" height="220" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

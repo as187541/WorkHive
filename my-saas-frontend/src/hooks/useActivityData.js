@@ -24,7 +24,9 @@ export const ACTION_CONFIG = {
   milestone_rejected: { label: 'Milestone rejected', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' },
   counter_offer: { label: 'Counter-offer received', icon: 'FiRepeat', color: '#8b5cf6', bg: '#f5f3ff' },
   counter_offer_accepted: { label: 'Counter-offer accepted', icon: 'FiCheckSquare', color: '#10b981', bg: '#ecfdf5' },
-  counter_offer_rejected: { label: 'Counter-offer declined', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' }
+  counter_offer_rejected: { label: 'Counter-offer declined', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' },
+  redemption_approved: { label: 'Redemption approved', icon: 'FiGift', color: '#10b981', bg: '#ecfdf5' },
+  redemption_denied: { label: 'Redemption denied', icon: 'FiXCircle', color: '#ef4444', bg: '#fef2f2' }
 };
 
 export const ACTION_TYPE_OPTIONS = [
@@ -40,7 +42,9 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'workspace_joined', label: 'Workspace Joined' },
   { value: 'connection_request', label: 'Connection Request' },
   { value: 'connection_accepted', label: 'Connection Accepted' },
-  { value: 'workspace_created', label: 'Workspace Created' }
+  { value: 'workspace_created', label: 'Workspace Created' },
+  { value: 'redemption_approved', label: 'Redemption Approved' },
+  { value: 'redemption_denied', label: 'Redemption Denied' }
 ];
 
 export const formatTimeAgo = (dateString) => {

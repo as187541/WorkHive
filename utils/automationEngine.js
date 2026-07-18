@@ -8,6 +8,9 @@ const { emitNotification } = require('./socket');
 const sendEmail = require('./sendEmail');
 const { logActivity } = require('../controllers/activityController');
 
+// Maximum wallet history entries per user to prevent unbounded growth
+const MAX_WALLET_HISTORY = 500;
+
 /**
  * Evaluate a single condition against the event context.
  * @param {Object} condition - { field, operator, value }
@@ -96,14 +99,32 @@ async function executeAction(action, context) {
 
       if (!targetUserId) break;
 
+      // Check workspace token budget before awarding
+      const workspace = await Workspace.findById(context.workspaceId);
+      if (!workspace) {
+        console.error('Automation award_tokens: Workspace not found');
+        break;
+      }
+      
+      // Enforce workspace token budget if defined
+      const currentBudget = workspace.tokenBudget || Infinity;
+      const spentTokens = workspace.spentTokens || 0;
+      if (spentTokens + amount > currentBudget) {
+        console.error(`Automation award_tokens: Budget exceeded for workspace ${context.workspaceId}`);
+        break;
+      }
+
       const updateOps = {
         $inc: { 'wallet.balance': amount },
         $push: {
           'wallet.history': {
-            amount,
-            reason: config.reason || `Automation reward: ${context.triggerType}`,
-            workspace: context.workspaceId,
-            date: new Date()
+            $each: [{
+              amount,
+              reason: config.reason || `Automation reward: ${context.triggerType}`,
+              workspace: context.workspaceId,
+              date: new Date()
+            }],
+            $slice: -MAX_WALLET_HISTORY
           }
         }
       };
@@ -122,6 +143,11 @@ async function executeAction(action, context) {
       }
 
       await User.findByIdAndUpdate(targetUserId, updateOps);
+      
+      // Update workspace spent tokens
+      await Workspace.findByIdAndUpdate(context.workspaceId, {
+        $inc: { spentTokens: amount }
+      });
 
       // Log activity
       try {

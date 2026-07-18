@@ -92,7 +92,7 @@ const LoginPage = () => {
     /* global google */
     if (window.google) {
       google.accounts.id.initialize({
-        client_id: "612541306739-1q9bke4skpq9t2821hdhr59do6cdmsiu.apps.googleusercontent.com",
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: handleGoogleCallback
       });
 

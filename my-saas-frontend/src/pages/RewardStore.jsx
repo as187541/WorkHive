@@ -28,7 +28,7 @@ const RewardStore = () => {
   const [workspaceBalances, setWorkspaceBalances] = useState([]);
   const [totalBalance, setTotalBalance] = useState(0);
 
-  const isApprover = user?.approverScope?.adminWorkspaces?.length > 0 || user?.approverScope?.leadProjects?.length > 0;
+  const isApprover = user?.role === 'SuperAdmin' || user?.approverScope?.adminWorkspaces?.length > 0 || user?.approverScope?.leadProjects?.length > 0;
 
   useEffect(() => {
     api.get('/workspaces')

@@ -599,19 +599,25 @@ const approveMilestone = async (req, res) => {
           freelancerWsEntry.balance += amount;
         }
 
-        // Wallet history entries
+        // Wallet history entries with cap
         jobOwner.wallet.history.push({
           amount: -amount,
           reason: `Milestone payment: ${milestone.title}`,
           workspace: job.workspace,
           date: new Date()
         });
+        if (jobOwner.wallet.history.length > 500) {
+          jobOwner.wallet.history = jobOwner.wallet.history.slice(-500);
+        }
         freelancer.wallet.history.push({
           amount: amount,
           reason: `Milestone payment received: ${milestone.title}`,
           workspace: job.workspace,
           date: new Date()
         });
+        if (freelancer.wallet.history.length > 500) {
+          freelancer.wallet.history = freelancer.wallet.history.slice(-500);
+        }
 
         await freelancer.save();
       }

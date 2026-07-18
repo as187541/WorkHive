@@ -5,6 +5,8 @@ const Task = require('../models/taskModel');
 const AuditLog = require('../models/auditLogModel');
 const { logAuditAction } = require('../middleware/auditMiddleware');
 
+// ─── USER MANAGEMENT CONTROLLER ───
+
 /**
  * @desc    Get all users (SuperAdmin only)
  * @route   GET /api/v1/admin/users
@@ -22,27 +24,6 @@ const getAllUsers = async (req, res) => {
     });
   } catch (error) {
     console.error('getAllUsers error:', error);
-    res.status(500).json({ msg: 'Server Error' });
-  }
-};
-
-/**
- * @desc    Get all workspaces with member details (SuperAdmin only)
- * @route   GET /api/v1/admin/workspaces
- */
-const getAllWorkspaces = async (req, res) => {
-  try {
-    const workspaces = await Workspace.find()
-      .populate('members.user', 'name email avatar')
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: workspaces.length,
-      data: workspaces
-    });
-  } catch (error) {
-    console.error('getAllWorkspaces error:', error);
     res.status(500).json({ msg: 'Server Error' });
   }
 };
@@ -122,6 +103,62 @@ const updateUserRole = async (req, res) => {
     res.status(500).json({ msg: 'Server Error' });
   }
 };
+
+// ─── WORKSPACE MANAGEMENT CONTROLLER ───
+
+/**
+ * @desc    Get all workspaces with member details (SuperAdmin only)
+ * @route   GET /api/v1/admin/workspaces
+ */
+const getAllWorkspaces = async (req, res) => {
+  try {
+    const workspaces = await Workspace.find()
+      .populate('members.user', 'name email avatar')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: workspaces.length,
+      data: workspaces
+    });
+  } catch (error) {
+    console.error('getAllWorkspaces error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+/**
+ * @desc    Delete any workspace (SuperAdmin only)
+ * @route   DELETE /api/v1/admin/workspaces/:id
+ */
+const deleteWorkspace = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const workspace = await Workspace.findById(id);
+    if (!workspace) {
+      return res.status(404).json({ msg: 'Workspace not found.' });
+    }
+
+    await Workspace.findByIdAndDelete(id);
+
+    // Log audit
+    await logAuditAction(req, 'WORKSPACE_DELETE', 'Workspace', id, {
+      workspaceName: workspace.name,
+      memberCount: workspace.members?.length || 0
+    });
+
+    res.status(200).json({
+      success: true,
+      msg: 'Workspace deleted successfully.'
+    });
+  } catch (error) {
+    console.error('deleteWorkspace error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+// ─── TOKEN ADMINISTRATION CONTROLLER ───
 
 /**
  * @desc    Alter user tokens (SuperAdmin only) — unlimited power
@@ -224,78 +261,7 @@ const alterUserTokens = async (req, res) => {
   }
 };
 
-/**
- * @desc    Delete any workspace (SuperAdmin only)
- * @route   DELETE /api/v1/admin/workspaces/:id
- */
-const deleteWorkspace = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const workspace = await Workspace.findById(id);
-    if (!workspace) {
-      return res.status(404).json({ msg: 'Workspace not found.' });
-    }
-
-    await Workspace.findByIdAndDelete(id);
-
-    // Log audit
-    await logAuditAction(req, 'WORKSPACE_DELETE', 'Workspace', id, {
-      workspaceName: workspace.name,
-      memberCount: workspace.members?.length || 0
-    });
-
-    res.status(200).json({
-      success: true,
-      msg: 'Workspace deleted successfully.'
-    });
-  } catch (error) {
-    console.error('deleteWorkspace error:', error);
-    res.status(500).json({ msg: 'Server Error' });
-  }
-};
-
-/**
- * @desc    Get platform statistics (SuperAdmin only)
- * @route   GET /api/v1/admin/stats
- */
-const getPlatformStats = async (req, res) => {
-  try {
-    const [userCount, workspaceCount, taskCount, superAdminCount] = await Promise.all([
-      User.countDocuments(),
-      Workspace.countDocuments(),
-      Task.countDocuments(),
-      User.countDocuments({ role: 'SuperAdmin' })
-    ]);
-
-    // Calculate total tokens in circulation
-    const tokenAggregation = await User.aggregate([
-      { $group: { _id: null, totalTokens: { $sum: '$wallet.balance' } } }
-    ]);
-    const totalTokens = tokenAggregation[0]?.totalTokens || 0;
-
-    // Recent audit logs (last 5)
-    const recentLogs = await AuditLog.find()
-      .populate('adminId', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(5);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        users: userCount,
-        workspaces: workspaceCount,
-        tasks: taskCount,
-        superAdmins: superAdminCount,
-        totalTokens,
-        recentLogs
-      }
-    });
-  } catch (error) {
-    console.error('getPlatformStats error:', error);
-    res.status(500).json({ msg: 'Server Error' });
-  }
-};
+// ─── AUDIT LOG CONTROLLER ───
 
 /**
  * @desc    Get audit logs with pagination and filters (SuperAdmin only)
@@ -335,6 +301,56 @@ const getAuditLogs = async (req, res) => {
     });
   } catch (error) {
     console.error('getAuditLogs error:', error);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
+// ─── PLATFORM ANALYTICS CONTROLLER ───
+
+const Order = require('../models/orderModel');
+const JobPosting = require('../models/jobPostingModel');
+const Proposal = require('../models/proposalModel');
+const Activity = require('../models/activityModel');
+const Project = require('../models/projectModel');
+
+/**
+ * @desc    Get platform statistics (SuperAdmin only)
+ * @route   GET /api/v1/admin/stats
+ */
+const getPlatformStats = async (req, res) => {
+  try {
+    const [userCount, workspaceCount, taskCount, superAdminCount] = await Promise.all([
+      User.countDocuments(),
+      Workspace.countDocuments(),
+      Task.countDocuments(),
+      User.countDocuments({ role: 'SuperAdmin' })
+    ]);
+
+    // Calculate total tokens in circulation
+    const tokenAggregation = await User.aggregate([
+      { $group: { _id: null, totalTokens: { $sum: '$wallet.balance' } } }
+    ]);
+    const totalTokens = tokenAggregation[0]?.totalTokens || 0;
+
+    // Recent audit logs (last 5)
+    const recentLogs = await AuditLog.find()
+      .populate('adminId', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: userCount,
+        workspaces: workspaceCount,
+        tasks: taskCount,
+        superAdmins: superAdminCount,
+        totalTokens,
+        recentLogs
+      }
+    });
+  } catch (error) {
+    console.error('getPlatformStats error:', error);
     res.status(500).json({ msg: 'Server Error' });
   }
 };
@@ -391,12 +407,6 @@ const getTokenStats = async (req, res) => {
     res.status(500).json({ msg: 'Server Error' });
   }
 };
-
-const Order = require('../models/orderModel');
-const JobPosting = require('../models/jobPostingModel');
-const Proposal = require('../models/proposalModel');
-const Activity = require('../models/activityModel');
-const Project = require('../models/projectModel');
 
 /**
  * @desc    Get platform analytics (SuperAdmin only)

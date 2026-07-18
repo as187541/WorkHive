@@ -2,6 +2,13 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { validate } = require('../middleware/validationSchemas');
+const {
+  createOrderSchema,
+  disputeSchema,
+  resolveDisputeSchema
+} = require('../middleware/validationSchemas');
+
 const {
   createOrder,
   fundOrder,
@@ -26,14 +33,14 @@ router.get('/my-seller', protect, getMySellerOrders);
 router.get('/workspace/:workspaceId', protect, getWorkspaceOrders);
 
 // Order actions
-router.post('/', protect, createOrder);
+router.post('/', protect, validate(createOrderSchema), createOrder);
 router.post('/:id/fund', protect, fundOrder);
 router.patch('/:id/start', protect, startOrder);
 router.patch('/:id/deliver', protect, deliverOrder);
 router.patch('/:id/accept', protect, acceptDelivery);
 router.patch('/:id/revision', protect, requestRevision);
-router.post('/:id/dispute', protect, openDispute);
-router.patch('/:id/resolve-dispute', protect, resolveDispute);
+router.post('/:id/dispute', protect, validate(disputeSchema), openDispute);
+router.patch('/:id/resolve-dispute', protect, validate(resolveDisputeSchema), resolveDispute);
 router.patch('/:id/cancel', protect, cancelOrder);
 router.post('/:id/notes', protect, addOrderNote);
 router.get('/:id/invoice', protect, getOrderInvoice);

@@ -8,6 +8,10 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
     title: '',
     description: '',
     category: '',
+    subCategory: '',
+    tags: [],
+    experienceLevel: 'Mid',
+    projectType: 'One-time',
     skills: [],
     budget: { min: '', max: '', currency: 'HT' },
     deadline: '',
@@ -16,6 +20,7 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
     projectId: ''
   });
   const [newSkill, setNewSkill] = useState('');
+  const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [workspaces, setWorkspaces] = useState([]);
@@ -79,6 +84,21 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
     setFormData(prev => ({
       ...prev,
       skills: prev.skills.filter(s => s !== skillToRemove)
+    }));
+  };
+
+  const handleAddTag = () => {
+    const trimmed = newTag.trim();
+    if (!trimmed) return;
+    if (formData.tags.includes(trimmed)) return;
+    setFormData(prev => ({ ...prev, tags: [...prev.tags, trimmed] }));
+    setNewTag('');
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t !== tagToRemove)
     }));
   };
 
@@ -169,10 +189,42 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
             </div>
 
             <div className="form-group">
+              <label>Sub-Category</label>
+              <input
+                type="text"
+                name="subCategory"
+                value={formData.subCategory}
+                onChange={handleChange}
+                placeholder="e.g., E-commerce, Landing Page"
+              />
+            </div>
+
+            <div className="form-group">
               <label>Visibility</label>
               <select name="visibility" value={formData.visibility} onChange={handleChange}>
                 <option value="Public">🌍 Public</option>
                 <option value="Workspace">🔒 Workspace Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Experience Level</label>
+              <select name="experienceLevel" value={formData.experienceLevel} onChange={handleChange}>
+                <option value="Junior">Junior</option>
+                <option value="Mid">Mid-Level</option>
+                <option value="Senior">Senior</option>
+                <option value="Expert">Expert</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Project Type</label>
+              <select name="projectType" value={formData.projectType} onChange={handleChange}>
+                <option value="One-time">One-time</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Complex">Complex</option>
               </select>
             </div>
           </div>
@@ -249,6 +301,29 @@ const CreateJobPostingModal = ({ onClose, onSuccess }) => {
               value={formData.deadline}
               onChange={handleChange}
             />
+          </div>
+
+          <div className="form-group">
+            <label>Tags (Custom)</label>
+            <div className="skill-input-row">
+              <input
+                type="text"
+                value={newTag}
+                onChange={e => setNewTag(e.target.value)}
+                placeholder="Add custom tags..."
+              />
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddTag}>
+                Add
+              </button>
+            </div>
+            <div className="skill-tags">
+              {formData.tags.map(tag => (
+                <span key={tag} className="skill-tag" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+                  {tag}
+                  <button type="button" onClick={() => handleRemoveTag(tag)}>&times;</button>
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="form-group">

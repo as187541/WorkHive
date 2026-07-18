@@ -5,6 +5,7 @@ import api from '../services/api';
 import RatingStars from '../components/RatingStars';
 import SubmitProposalModal from '../components/SubmitProposalModal';
 import AcceptProposalModal from '../components/AcceptProposalModal';
+import CounterOfferModal from '../components/CounterOfferModal';
 import MilestoneTracker from '../components/MilestoneTracker';
 
 const JobPostingDetail = () => {
@@ -14,6 +15,8 @@ const JobPostingDetail = () => {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCounterOfferModal, setShowCounterOfferModal] = useState(false);
+  const [counterOfferProposal, setCounterOfferProposal] = useState(null);
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [acceptingProposal, setAcceptingProposal] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
@@ -71,6 +74,17 @@ const JobPostingDetail = () => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleCounterOffer = (proposal) => {
+    setCounterOfferProposal(proposal);
+    setShowCounterOfferModal(true);
+  };
+
+  const handleCounterOfferSuccess = () => {
+    setShowCounterOfferModal(false);
+    setCounterOfferProposal(null);
+    fetchJobDetails();
   };
 
   const isOwner = job && String(job.postedBy?._id || job.postedBy) === String(currentUserId);
@@ -201,6 +215,13 @@ const JobPostingDetail = () => {
                           >
                             ✕ Reject
                           </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => handleCounterOffer(proposal)}
+                            disabled={actionLoading === proposal._id}
+                          >
+                            🔄 Counter-Offer
+                          </button>
                         </div>
                       )}
 
@@ -305,6 +326,18 @@ const JobPostingDetail = () => {
           )}
         </div>
       </div>
+
+      {showCounterOfferModal && counterOfferProposal && (
+        <CounterOfferModal
+          proposal={counterOfferProposal}
+          job={job}
+          onClose={() => {
+            setShowCounterOfferModal(false);
+            setCounterOfferProposal(null);
+          }}
+          onSuccess={handleCounterOfferSuccess}
+        />
+      )}
 
       {showProposalModal && (
         <SubmitProposalModal

@@ -22,6 +22,24 @@ const jobPostingSchema = new mongoose.Schema({
     required: [true, 'Please provide a category'],
     trim: true
   },
+  subCategory: {
+    type: String,
+    trim: true
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  experienceLevel: {
+    type: String,
+    enum: ['Junior', 'Mid', 'Senior', 'Expert'],
+    default: 'Mid'
+  },
+  projectType: {
+    type: String,
+    enum: ['One-time', 'Ongoing', 'Complex'],
+    default: 'One-time'
+  },
   skills: [{
     type: String,
     trim: true

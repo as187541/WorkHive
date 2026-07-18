@@ -23,7 +23,8 @@ const initSocket = (httpServer) => {
   // Authentication middleware
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+      // Only accept token via handshake.auth (not query string) to prevent token leakage in logs
+      const token = socket.handshake.auth?.token;
       
       if (!token) {
         return next(new Error('Authentication error: No token provided'));

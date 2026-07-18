@@ -26,8 +26,7 @@ import ServicePackageDetail from './pages/ServicePackageDetail';
 import MessagesPage from './pages/MessagesPage';
 import JobPostingsPage from './pages/JobPostingsPage';
 import JobPostingDetail from './pages/JobPostingDetail';
-import MyJobPostings from './pages/MyJobPostings';
-import MyProposals from './pages/MyProposals';
+
 import MyTasksPage from './pages/MyTasksPage';
 import ActivityLogPage from './pages/ActivityLogPage';
 import ConnectionsPage from './pages/ConnectionsPage';
@@ -69,8 +68,8 @@ function App() {
           <Route path="connections" element={<ConnectionsPage />} />
           <Route path="jobs" element={<JobPostingsPage />} />
           <Route path="jobs/:jobId" element={<JobPostingDetail />} />
-          <Route path="my-jobs" element={<MyJobPostings />} />
-          <Route path="my-proposals" element={<MyProposals />} />
+          <Route path="my-jobs" element={<Navigate to="/jobs" replace />} />
+          <Route path="my-proposals" element={<Navigate to="/jobs" replace />} />
           <Route path="my-tasks" element={<MyTasksPage />} />
           <Route path="activity-log" element={<ActivityLogPage />} />
           <Route path="orders" element={<OrdersPage />} />
