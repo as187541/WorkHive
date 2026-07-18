@@ -10,7 +10,8 @@ const crypto = require('crypto');
 // Helper: Hash OTP using SHA-256
 const hashOTP = (otp) => crypto.createHash('sha256').update(otp).digest('hex');
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleClientId = (process.env.GOOGLE_CLIENT_ID || '612541306739-1q9bke4skpq9t2821hdhr59do6cdmsiu.apps.googleusercontent.com').trim();
+const client = new OAuth2Client(googleClientId);
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -133,7 +134,7 @@ const googleLogin = async (req, res) => {
   try {
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: googleClientId,
     });
     const payload = ticket.getPayload();
     let user = await User.findOne({ email: payload.email });

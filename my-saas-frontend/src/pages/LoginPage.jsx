@@ -90,16 +90,27 @@ const LoginPage = () => {
 
   useEffect(() => {
     /* global google */
-    if (window.google) {
-      google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback: handleGoogleCallback
-      });
+    const googleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '612541306739-1q9bke4skpq9t2821hdhr59do6cdmsiu.apps.googleusercontent.com').trim();
 
-      google.accounts.id.renderButton(
-        document.getElementById("signInDiv"),
-        { theme: "outline", size: "large", width: "350px"}
-      );
+    if (!window.google) {
+      setError('Google Sign-In script is unavailable. Please refresh the page and try again.');
+      return;
+    }
+
+    if (!googleClientId) {
+      setError('Google Sign-In is not configured yet. Please set VITE_GOOGLE_CLIENT_ID.');
+      return;
+    }
+
+    google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleGoogleCallback,
+      ux_mode: 'popup'
+    });
+
+    const signInDiv = document.getElementById('signInDiv');
+    if (signInDiv) {
+      google.accounts.id.renderButton(signInDiv, { theme: 'outline', size: 'large', width: '350px' });
     }
   }, []);
 
